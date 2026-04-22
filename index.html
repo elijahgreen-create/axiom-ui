@@ -6,7 +6,7 @@
 <title>AXIOM</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
- 
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    AXIOM UI v4
    Default state: almost nothing. Just you and the chat.
@@ -15,7 +15,7 @@
    Inspired by: Linear, Raycast, Superhuman
    Aesthetic:   NGE amber on near-black
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
- 
+
 :root {
   --bg:           #0d0d18;
   --bg2:          #111120;
@@ -23,38 +23,38 @@
   --surface2:     #1c1c32;
   --border:       #242440;
   --border2:      #2e2e50;
- 
+
   --amber:        #e89610;
   --amber-bright: #ffb82a;
   --amber-dim:    #8a5510;
   --amber-muted:  #3a2210;
   --amber-glow:   rgba(232,150,16,0.12);
- 
+
   --red:          #e03030;
   --red-dim:      #602020;
   --green:        #22c460;
   --green-dim:    #0e4a28;
   --blue:         #4488ff;
   --blue-dim:     #1a3060;
- 
+
   --text:         #a0a0c8;
   --text-mid:     #c4c4e0;
   --text-bright:  #eeeef8;
   --text-dim:     #505070;
- 
+
   --panel-w:      360px;
   --header-h:     52px;
 }
- 
+
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); }
- 
+
 body {
   font-family: 'Share Tech Mono', monospace;
   font-size: 14px;
   color: var(--text);
 }
- 
+
 /* Subtle grain */
 body::after {
   content:''; position:fixed; inset:0; z-index:8000; pointer-events:none;
@@ -67,11 +67,11 @@ body::after {
   0%,100%{background-position:0 0}
   50%{background-position:-30px -20px}
 }
- 
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    HEADER — minimal. Just logo + status dots + clock.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
- 
+
 header {
   position: fixed;
   top:0; left:0; right:0;
@@ -85,7 +85,7 @@ header {
   gap: 0;
   z-index: 500;
 }
- 
+
 /* Amber glow line under header */
 header::after {
   content:'';
@@ -99,13 +99,13 @@ header::after {
   );
   opacity: 0.5;
 }
- 
+
 .logo {
   display:flex; align-items:center; gap:10px;
   flex-shrink:0;
   cursor:pointer;
 }
- 
+
 .gem {
   width:18px; height:18px;
   border:1.5px solid var(--amber);
@@ -115,24 +115,24 @@ header::after {
   flex-shrink:0;
   transition:box-shadow 0.2s;
 }
- 
+
 .logo:hover .gem {
   box-shadow:0 0 16px var(--amber);
 }
- 
+
 .logo-name {
   font-family:'Bebas Neue',sans-serif;
   font-size:22px; letter-spacing:0.25em;
   color:var(--amber);
   text-shadow:0 0 12px rgba(232,150,16,0.4);
 }
- 
+
 /* Status indicators — clickable, reveal panels */
 .h-indicators {
   display:flex; align-items:center; gap:6px;
   margin-left:24px;
 }
- 
+
 .indicator {
   display:flex; align-items:center; gap:5px;
   padding:4px 10px;
@@ -145,40 +145,40 @@ header::after {
   color:var(--text-dim);
   font-family:'Share Tech Mono',monospace;
 }
- 
+
 .indicator:hover {
   border-color:var(--amber-dim);
   color:var(--text-mid);
   background:var(--amber-muted);
 }
- 
+
 .indicator.active {
   border-color:var(--amber);
   color:var(--amber);
   background:var(--amber-muted);
 }
- 
+
 .ind-dot {
   width:5px; height:5px; border-radius:50%; flex-shrink:0;
 }
- 
+
 .d-green { background:var(--green); box-shadow:0 0 4px var(--green); animation:dp 2s ease-in-out infinite; }
 .d-amber { background:var(--amber); box-shadow:0 0 4px var(--amber); animation:dp 2s ease-in-out infinite 0.5s; }
 .d-red   { background:var(--red);   box-shadow:0 0 5px var(--red);   animation:dp 1s ease-in-out infinite; }
- 
+
 @keyframes dp { 0%,100%{opacity:1} 50%{opacity:0.2} }
- 
+
 .ind-count {
   font-family:'Bebas Neue',sans-serif;
   font-size:16px; line-height:1;
 }
- 
+
 /* Right side of header */
 .h-right {
   margin-left:auto;
   display:flex; align-items:center; gap:12px;
 }
- 
+
 .slash-hint {
   font-size:11px; color:var(--text-dim);
   border:1px solid var(--border2);
@@ -186,32 +186,32 @@ header::after {
   cursor:pointer;
   transition:all 0.15s;
 }
- 
+
 .slash-hint:hover {
   border-color:var(--amber-dim);
   color:var(--amber);
   background:var(--amber-muted);
 }
- 
+
 .clock {
   font-size:13px; letter-spacing:0.12em;
   color:var(--amber); opacity:0.7;
 }
- 
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MAIN — full width chat by default
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
- 
+
 .main {
   display:flex;
   height:100vh;
   padding-top:var(--header-h);
 }
- 
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    CHAT — takes all available space
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
- 
+
 .chat {
   flex:1;
   display:flex; flex-direction:column;
@@ -219,27 +219,27 @@ header::after {
   position:relative;
   transition:margin-right 0.3s cubic-bezier(0.4,0,0.2,1);
 }
- 
+
 .chat.panel-open { margin-right: var(--panel-w); }
- 
+
 /* Halftone — barely there */
 .chat::before {
   content:''; position:absolute; inset:0; pointer-events:none;
   background-image:radial-gradient(circle,rgba(232,150,16,0.03) 1px,transparent 1px);
   background-size:32px 32px;
 }
- 
+
 /* Messages scroll area */
 .msgs {
   flex:1; overflow-y:auto; overflow-anchor:none;
   scroll-behavior:smooth;
   position:relative; z-index:1;
 }
- 
+
 .msgs::-webkit-scrollbar { width:3px; }
 .msgs::-webkit-scrollbar-thumb { background:var(--amber-dim); border-radius:0; }
 .msgs::-webkit-scrollbar-track { background:transparent; }
- 
+
 /* ── Empty state — centered, spacious, ChatGPT-like ── */
 .empty {
   display:flex; flex-direction:column;
@@ -248,9 +248,9 @@ header::after {
   padding:60px 24px 20px;
   gap:36px;
 }
- 
+
 .empty.gone { display:none; }
- 
+
 .empty-logo {
   font-family:'Bebas Neue',sans-serif;
   font-size:56px; letter-spacing:0.4em;
@@ -258,19 +258,19 @@ header::after {
   text-shadow:0 0 40px rgba(232,150,16,0.25);
   line-height:1;
 }
- 
+
 .empty-sub {
   font-size:13px; letter-spacing:0.1em;
   color:var(--text-dim); text-align:center;
   line-height:2;
 }
- 
+
 /* Suggestion grid */
 .sugs {
   display:grid; grid-template-columns:1fr 1fr;
   gap:10px; width:100%; max-width:560px;
 }
- 
+
 .sug {
   background:var(--surface);
   border:1px solid var(--border2);
@@ -280,7 +280,7 @@ header::after {
   transition:all 0.15s;
   position:relative; overflow:hidden;
 }
- 
+
 .sug::before {
   content:''; position:absolute;
   bottom:0; left:0; right:0; height:1px;
@@ -288,78 +288,78 @@ header::after {
   transform:scaleX(0); transform-origin:left;
   transition:transform 0.2s;
 }
- 
+
 .sug:hover {
   border-color:var(--amber-dim);
   background:var(--surface2);
   color:var(--text-bright);
   transform:translateY(-1px);
 }
- 
+
 .sug:hover::before { transform:scaleX(1); }
- 
+
 .sug-icon { font-size:18px; display:block; margin-bottom:8px; }
 .sug-title { font-size:13px; letter-spacing:0.04em; color:var(--text-bright); display:block; margin-bottom:4px; }
 .sug-desc  { font-size:11px; letter-spacing:0.04em; color:var(--text-dim); display:block; line-height:1.6; }
- 
+
 /* ── Message list ── */
 .msg-list {
   padding:24px;
   display:flex; flex-direction:column; gap:16px;
   max-width:780px; width:100%; margin:0 auto;
 }
- 
+
 .msg { display:flex; gap:12px; animation:mIn 0.2s ease; }
- 
+
 @keyframes mIn {
   from{opacity:0;transform:translateY(8px)}
   to{opacity:1;transform:translateY(0)}
 }
- 
+
 .av {
   width:28px; height:28px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
   font-size:11px; border:1px solid; margin-top:2px;
 }
- 
+
 .msg.u .av { border-color:var(--border2); color:var(--text-dim); background:var(--surface); }
 .msg.j .av { border-color:var(--amber-dim); color:var(--amber); background:var(--amber-muted); }
- 
+
 .msg-body { flex:1; min-width:0; }
- 
+
 .msg-meta {
   font-size:10px; letter-spacing:0.1em;
   color:var(--text-dim); margin-bottom:6px;
   display:flex; align-items:center; gap:8px;
   text-transform:uppercase;
 }
- 
+
 .mtag {
   padding:1px 5px; border:1px solid; font-size:8px; letter-spacing:0.08em;
 }
 .mt-s { color:var(--green); border-color:var(--green-dim); }
 .mt-o { color:var(--amber); border-color:var(--amber-dim); background:var(--amber-muted); }
- 
+
 .bubble {
   padding:14px 18px;
   border:1px solid; line-height:1.8;
   font-size:14px; position:relative;
 }
- 
+
 .msg.u .bubble {
   background:var(--surface);
   border-color:var(--border2);
   color:var(--text-mid);
   border-radius:0 4px 4px 4px;
 }
- 
+
 .msg.j .bubble {
   background:var(--bg2);
   border-color:var(--amber-dim);
   color:var(--text-bright);
   border-radius:4px 0 4px 4px;
 }
- 
+
 /* NGE corner marks */
 .msg.j .bubble::before {
   content:''; position:absolute; top:-1px; right:-1px;
@@ -373,13 +373,13 @@ header::after {
   border-bottom:1.5px solid var(--amber-dim);
   border-left:1.5px solid var(--amber-dim);
 }
- 
+
 .tl {
   font-size:10px; letter-spacing:0.12em; color:var(--amber);
   margin-bottom:9px; display:flex; align-items:center; gap:6px;
 }
 .tl::before { content:''; width:16px; height:1px; background:var(--amber-dim); }
- 
+
 /* Bubble content */
 .bc h4 {
   font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:0.18em;
@@ -394,7 +394,7 @@ header::after {
 .bc .w   { color:var(--amber); }
 .bc .bad { color:var(--red); }
 .bc .dim { color:var(--text); }
- 
+
 /* Typing */
 .type-bar { width:100%; height:1px; background:var(--border2); position:relative; overflow:hidden; }
 .type-bar::after {
@@ -404,22 +404,22 @@ header::after {
 }
 @keyframes sw { to{left:140%} }
 .type-lbl { font-size:11px; letter-spacing:0.15em; color:var(--amber); margin-top:8px; text-transform:uppercase; }
- 
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    INPUT — centered, prominent, clean
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
- 
+
 .input-zone {
   padding:16px 24px 20px;
   position:relative; z-index:1;
   display:flex; flex-direction:column;
   align-items:center;
 }
- 
+
 .input-wrap {
   width:100%; max-width:720px;
 }
- 
+
 .input-box {
   display:flex; align-items:flex-end; gap:10px;
   border:1px solid var(--border2);
@@ -428,12 +428,12 @@ header::after {
   transition:border-color 0.2s, box-shadow 0.2s;
   position:relative;
 }
- 
+
 .input-box:focus-within {
   border-color:var(--amber);
   box-shadow:0 0 0 1px var(--amber-muted), 0 4px 24px rgba(232,150,16,0.1);
 }
- 
+
 .input-box::before {
   content:''; position:absolute; top:-1px; left:-1px;
   width:10px; height:10px;
@@ -441,9 +441,9 @@ header::after {
   transition:border-color 0.2s;
 }
 .input-box:focus-within::before { border-color:var(--amber); }
- 
+
 .ps { color:var(--amber); font-size:13px; flex-shrink:0; padding-bottom:2px; opacity:0.6; }
- 
+
 textarea {
   flex:1; background:transparent; border:none; outline:none;
   resize:none; color:var(--text-bright);
@@ -453,7 +453,7 @@ textarea {
   caret-color:var(--amber);
 }
 textarea::placeholder { color:var(--text-dim); }
- 
+
 .send-btn {
   background:var(--amber-muted); border:1px solid var(--amber-dim);
   color:var(--amber); padding:8px 18px;
@@ -462,19 +462,19 @@ textarea::placeholder { color:var(--text-dim); }
 }
 .send-btn:hover { background:var(--amber); color:var(--bg); border-color:var(--amber); box-shadow:0 0 20px rgba(232,150,16,0.3); }
 .send-btn:active { transform:scale(0.97); }
- 
+
 .input-meta {
   display:flex; align-items:center; gap:16px;
   margin-top:8px; padding:0 2px;
   font-size:11px; letter-spacing:0.08em; color:var(--text-dim);
 }
 .hk { color:var(--amber-dim); }
- 
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    SLIDE PANEL — one panel at a time, from the right
    Triggered by header indicator clicks
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
- 
+
 .panel {
   position:fixed;
   top:var(--header-h); right:0; bottom:0;
@@ -487,9 +487,9 @@ textarea::placeholder { color:var(--text-dim); }
   display:flex; flex-direction:column;
   overflow:hidden;
 }
- 
+
 .panel.open { transform:translateX(0); }
- 
+
 .panel-head {
   padding:16px 18px;
   border-bottom:1px solid var(--border);
@@ -497,13 +497,13 @@ textarea::placeholder { color:var(--text-dim); }
   flex-shrink:0;
   background:var(--bg2);
 }
- 
+
 .panel-title {
   font-family:'Bebas Neue',sans-serif;
   font-size:16px; letter-spacing:0.2em;
   color:var(--amber);
 }
- 
+
 .panel-close {
   margin-left:auto;
   background:none; border:none;
@@ -513,24 +513,24 @@ textarea::placeholder { color:var(--text-dim); }
   font-family:'Share Tech Mono',monospace;
 }
 .panel-close:hover { color:var(--amber); }
- 
+
 .panel-body {
   flex:1; overflow-y:auto; padding:16px;
 }
- 
+
 .panel-body::-webkit-scrollbar { width:2px; }
 .panel-body::-webkit-scrollbar-thumb { background:var(--amber-dim); }
- 
+
 /* Panel sections */
 .ps-block { margin-bottom:20px; }
- 
+
 .ps-label {
   font-size:9px; letter-spacing:0.25em; color:var(--text-dim);
   text-transform:uppercase; margin-bottom:10px;
   display:flex; align-items:center; gap:8px;
 }
 .ps-label::after { content:''; flex:1; height:1px; background:var(--border2); }
- 
+
 .dr {
   display:flex; justify-content:space-between; align-items:center;
   padding:8px 0; border-bottom:1px solid var(--border);
@@ -541,7 +541,7 @@ textarea::placeholder { color:var(--text-dim); }
 .dr-v { color:var(--amber); }
 .dr-v.ok  { color:var(--green); }
 .dr-v.bad { color:var(--red); }
- 
+
 /* Memory bars */
 .mbar { margin-bottom:10px; }
 .mbar-row { display:flex; justify-content:space-between; font-size:11px; color:var(--text-mid); margin-bottom:5px; }
@@ -559,7 +559,7 @@ textarea::placeholder { color:var(--text-dim); }
   box-shadow:0 0 5px var(--amber);
   animation:dp 1.8s ease-in-out infinite;
 }
- 
+
 /* Signal cards */
 .sig {
   background:var(--surface);
@@ -570,17 +570,17 @@ textarea::placeholder { color:var(--text-dim); }
   display:flex; gap:10px;
 }
 .sig:hover { border-left-color:var(--amber); background:var(--surface2); transform:translateX(2px); }
- 
+
 .sig-score {
   font-family:'Bebas Neue',sans-serif; font-size:28px; line-height:1;
   color:var(--amber); opacity:0.3; flex-shrink:0; width:28px; text-align:right;
 }
 .sig:hover .sig-score { opacity:0.8; }
- 
+
 .sig-body { flex:1; min-width:0; }
 .sig-src { font-size:9px; letter-spacing:0.15em; color:var(--amber); margin-bottom:4px; text-transform:uppercase; }
 .sig-title { font-size:12px; line-height:1.5; color:var(--text-bright); }
- 
+
 /* Error items */
 .ei {
   display:flex; align-items:flex-start; gap:10px;
@@ -590,17 +590,17 @@ textarea::placeholder { color:var(--text-dim); }
 .ei:last-of-type { border-bottom:none; }
 .ei:hover { color:var(--amber); }
 .ei:hover .em { color:var(--amber); }
- 
+
 .ed { width:6px; height:6px; border-radius:50%; margin-top:5px; flex-shrink:0; }
 .ed.e { background:var(--red); box-shadow:0 0 5px var(--red); animation:dp 1s infinite; }
 .ed.w { background:var(--amber); box-shadow:0 0 3px var(--amber); }
- 
+
 .em { flex:1; font-size:13px; color:var(--text-mid); line-height:1.5; }
 .et { font-size:10px; color:var(--text-dim); flex-shrink:0; margin-top:2px; }
- 
+
 /* Stat grid in panel */
 .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
- 
+
 .stat-card {
   background:var(--surface);
   border:1px solid var(--border);
@@ -608,7 +608,7 @@ textarea::placeholder { color:var(--text-dim); }
   transition:all 0.15s;
 }
 .stat-card:hover { border-color:var(--amber-dim); background:var(--surface2); }
- 
+
 .sc-label { font-size:9px; letter-spacing:0.15em; color:var(--text-dim); text-transform:uppercase; margin-bottom:6px; }
 .sc-val {
   font-family:'Bebas Neue',sans-serif; font-size:28px; line-height:1;
@@ -617,7 +617,7 @@ textarea::placeholder { color:var(--text-dim); }
 .sc-val.r { color:var(--red); }
 .sc-val.g { color:var(--green); }
 .sc-sub { font-size:10px; color:var(--text-dim); margin-top:3px; }
- 
+
 /* Panel nav tabs */
 .panel-tabs {
   display:flex;
@@ -633,11 +633,11 @@ textarea::placeholder { color:var(--text-dim); }
 }
 .ptab:hover { color:var(--text-mid); }
 .ptab.active { color:var(--amber); border-bottom-color:var(--amber); }
- 
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    COMMAND PALETTE — / key opens it
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
- 
+
 .palette-overlay {
   position:fixed; inset:0; z-index:9000;
   background:rgba(5,5,10,0.75);
@@ -647,9 +647,9 @@ textarea::placeholder { color:var(--text-dim); }
   opacity:0; pointer-events:none;
   transition:opacity 0.15s;
 }
- 
+
 .palette-overlay.open { opacity:1; pointer-events:all; }
- 
+
 .palette {
   width:100%; max-width:580px;
   background:var(--bg2);
@@ -659,39 +659,39 @@ textarea::placeholder { color:var(--text-dim); }
   transform:translateY(-8px);
   transition:transform 0.15s;
 }
- 
+
 .palette-overlay.open .palette { transform:translateY(0); }
- 
+
 .palette-input-wrap {
   display:flex; align-items:center; gap:10px;
   padding:16px 18px;
   border-bottom:1px solid var(--border);
 }
- 
+
 .palette-ps {
   color:var(--amber); font-size:15px; flex-shrink:0;
 }
- 
+
 #paletteInput {
   flex:1; background:transparent; border:none; outline:none;
   color:var(--text-bright); font-family:'Share Tech Mono',monospace;
   font-size:15px; caret-color:var(--amber);
 }
 #paletteInput::placeholder { color:var(--text-dim); }
- 
+
 .palette-hint { font-size:10px; color:var(--text-dim); flex-shrink:0; }
- 
+
 .palette-results { max-height:360px; overflow-y:auto; }
 .palette-results::-webkit-scrollbar { width:2px; }
 .palette-results::-webkit-scrollbar-thumb { background:var(--amber-dim); }
- 
+
 .palette-section {
   padding:10px 18px 4px;
   font-size:9px; letter-spacing:0.25em;
   color:var(--text-dim); text-transform:uppercase;
   border-bottom:1px solid var(--border);
 }
- 
+
 .cmd {
   display:flex; align-items:center; gap:12px;
   padding:12px 18px;
@@ -703,7 +703,7 @@ textarea::placeholder { color:var(--text-dim); }
   background:var(--amber-muted);
   color:var(--amber);
 }
- 
+
 .cmd-icon { font-size:16px; width:20px; text-align:center; flex-shrink:0; }
 .cmd-body { flex:1; min-width:0; }
 .cmd-title { font-size:13px; color:var(--text-bright); margin-bottom:2px; }
@@ -714,24 +714,24 @@ textarea::placeholder { color:var(--text-dim); }
   border:1px solid var(--border2); padding:2px 6px;
   flex-shrink:0;
 }
- 
+
 .palette-footer {
   padding:10px 18px;
   border-top:1px solid var(--border);
   display:flex; gap:16px;
   font-size:9px; color:var(--text-dim); letter-spacing:0.08em;
 }
- 
+
 .palette-footer span { display:flex; align-items:center; gap:4px; }
 .pf-key {
   background:var(--surface2); border:1px solid var(--border2);
   padding:1px 5px; font-size:9px; color:var(--text-mid);
 }
- 
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    BOOT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
- 
+
 .boot {
   position:fixed; inset:0; z-index:9999; background:var(--bg);
   display:flex; flex-direction:column;
@@ -739,36 +739,36 @@ textarea::placeholder { color:var(--text-dim); }
   animation:bootOut 0.5s ease 2.6s forwards;
 }
 @keyframes bootOut { to{opacity:0;pointer-events:none} }
- 
+
 .b-logo {
   font-family:'Bebas Neue',sans-serif; font-size:64px; letter-spacing:0.35em;
   color:var(--amber); text-shadow:0 0 40px rgba(232,150,16,0.5);
   animation:bL 0.4s ease 0.15s both;
 }
 @keyframes bL { from{opacity:0;filter:blur(8px);letter-spacing:0.8em} to{opacity:1;filter:blur(0);letter-spacing:0.35em} }
- 
+
 .b-sub { font-size:10px; letter-spacing:0.3em; color:var(--amber-dim); animation:bF .3s ease .7s both; }
- 
+
 .b-bar { width:220px; animation:bF .3s ease .9s both; }
 .b-bar-l { font-size:9px; letter-spacing:0.2em; color:var(--text-dim); margin-bottom:6px; }
 .b-bar-bg { height:1px; background:var(--border); overflow:hidden; }
 .b-bar-f { height:100%; background:linear-gradient(90deg,var(--amber-dim),var(--amber-bright)); animation:bBar 1.8s ease 1s both; }
 @keyframes bBar { from{width:0} to{width:100%} }
- 
+
 .b-lines { font-size:10px; color:var(--text-dim); line-height:2.2; animation:bF .3s ease 1.1s both; }
 .b-lines span { display:block; }
 .b-lines span:nth-child(1){animation:bF .2s ease 1.2s both}
 .b-lines span:nth-child(2){animation:bF .2s ease 1.5s both}
 .b-lines span:nth-child(3){animation:bF .2s ease 1.8s both}
 .b-lines span:nth-child(4){animation:bF .2s ease 2.1s both;color:var(--amber)}
- 
+
 @keyframes bF { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
- 
- 
+
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    RENAME MODAL
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
- 
+
 .rename-overlay {
   position:fixed; inset:0; z-index:9500;
   background:rgba(5,5,10,0.8);
@@ -777,9 +777,9 @@ textarea::placeholder { color:var(--text-dim); }
   opacity:0; pointer-events:none;
   transition:opacity 0.2s;
 }
- 
+
 .rename-overlay.open { opacity:1; pointer-events:all; }
- 
+
 .rename-modal {
   width:100%; max-width:440px;
   background:var(--bg2);
@@ -790,9 +790,9 @@ textarea::placeholder { color:var(--text-dim); }
   transform:translateY(-10px);
   transition:transform 0.2s;
 }
- 
+
 .rename-overlay.open .rename-modal { transform:translateY(0); }
- 
+
 /* Corner marks — same signature as Axiom messages */
 .rename-modal::before {
   content:''; position:absolute; top:-1px; right:-1px;
@@ -806,23 +806,23 @@ textarea::placeholder { color:var(--text-dim); }
   border-bottom:1.5px solid var(--amber-dim);
   border-left:1.5px solid var(--amber-dim);
 }
- 
+
 .rm-title {
   font-family:'Bebas Neue',sans-serif; font-size:18px;
   letter-spacing:0.2em; color:var(--amber);
   margin-bottom:6px;
 }
- 
+
 .rm-desc {
   font-size:11px; letter-spacing:0.06em; color:var(--text-dim);
   line-height:1.7; margin-bottom:20px;
 }
- 
+
 .rm-label {
   font-size:9px; letter-spacing:0.2em; color:var(--text-dim);
   text-transform:uppercase; margin-bottom:6px; display:block;
 }
- 
+
 .rm-input-wrap {
   display:flex; gap:8px; margin-bottom:8px;
   border:1px solid var(--border2);
@@ -830,60 +830,60 @@ textarea::placeholder { color:var(--text-dim); }
   padding:10px 14px;
   transition:border-color 0.15s;
 }
- 
+
 .rm-input-wrap:focus-within {
   border-color:var(--amber);
   box-shadow:0 0 0 1px var(--amber-muted);
 }
- 
+
 #renameInput {
   flex:1; background:transparent; border:none; outline:none;
   color:var(--text-bright); font-family:'Bebas Neue',sans-serif;
   font-size:22px; letter-spacing:0.2em; caret-color:var(--amber);
   text-transform:uppercase;
 }
- 
+
 #renameInput::placeholder {
   color:var(--text-dim); font-size:18px;
 }
- 
+
 .rm-preview {
   font-size:10px; letter-spacing:0.1em; color:var(--text-dim);
   margin-bottom:20px; line-height:1.8;
 }
- 
+
 .rm-preview span { color:var(--amber); }
- 
+
 .rm-actions { display:flex; gap:8px; }
- 
+
 .rm-save {
   flex:1; background:var(--amber-muted); border:1px solid var(--amber-dim);
   color:var(--amber); padding:10px 0;
   font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:0.2em;
   cursor:pointer; transition:all 0.12s;
 }
- 
+
 .rm-save:hover {
   background:var(--amber); color:var(--bg);
   box-shadow:0 0 20px rgba(232,150,16,0.3);
 }
- 
+
 .rm-cancel {
   background:transparent; border:1px solid var(--border2);
   color:var(--text-dim); padding:10px 20px;
   font-family:'Share Tech Mono',monospace; font-size:11px;
   letter-spacing:0.1em; cursor:pointer; transition:all 0.12s;
 }
- 
+
 .rm-cancel:hover { border-color:var(--border); color:var(--text-mid); }
- 
+
 .rm-hint {
   font-size:9px; color:var(--text-dim); letter-spacing:0.08em;
   margin-top:12px; text-align:center;
 }
- 
+
 .rm-hint span { color:var(--amber-dim); }
- 
+
 /* Logo clickable hint */
 .logo { cursor:pointer; position:relative; }
 .logo:hover .logo-name { text-shadow:0 0 20px rgba(232,150,16,0.8); }
@@ -895,13 +895,13 @@ textarea::placeholder { color:var(--text-dim); }
   pointer-events:none;
 }
 .logo:hover .logo-edit-hint { opacity:1; }
- 
+
 ::selection { background:var(--amber-muted); color:var(--amber-bright); }
- 
+
 </style>
 </head>
 <body>
- 
+
 <!-- BOOT -->
 <div class="boot">
   <div class="b-logo" id="bootName">AXIOM</div>
@@ -917,7 +917,7 @@ textarea::placeholder { color:var(--text-dim); }
     <span id="bootReady">▸ Ready — welcome back, Boss.</span>
   </div>
 </div>
- 
+
 <!-- HEADER -->
 <header>
   <div class="logo" onclick="openRename()" title="Click to rename">
@@ -925,40 +925,40 @@ textarea::placeholder { color:var(--text-dim); }
     <div class="logo-name" id="headerName">AXIOM</div>
     <div class="logo-edit-hint">✎ rename</div>
   </div>
- 
+
   <!-- Clickable status indicators — each opens a panel -->
   <div class="h-indicators">
     <button class="indicator" id="ind-status" onclick="togglePanel('status')">
       <div class="ind-dot d-green"></div>
       Online
     </button>
- 
+
     <button class="indicator" id="ind-trends" onclick="togglePanel('trends')">
       <div class="ind-dot d-amber"></div>
       Trends
       <span class="ind-count" style="color:var(--amber)">2</span>
     </button>
- 
+
     <button class="indicator" id="ind-errors" onclick="togglePanel('errors')">
       <div class="ind-dot d-green"></div>
       Errors
       <span class="ind-count" style="color:var(--green)">0</span>
     </button>
   </div>
- 
+
   <div class="h-right">
     <div class="slash-hint" onclick="openPalette()">/ commands</div>
     <div class="clock" id="clock">--:--:--</div>
   </div>
 </header>
- 
+
 <!-- MAIN -->
 <div class="main">
   <div class="chat" id="chat">
- 
+
     <!-- Messages -->
     <div class="msgs" id="msgsWrap">
- 
+
       <!-- Empty state -->
       <div class="empty" id="empty">
         <div style="text-align:center">
@@ -967,7 +967,7 @@ textarea::placeholder { color:var(--text-dim); }
             56 tools · Claude Sonnet 4.5 · What do you need?
           </div>
         </div>
- 
+
         <div class="sugs">
           <button class="sug" onclick="qs('what can you do')">
             <span class="sug-icon">🤖</span>
@@ -991,12 +991,12 @@ textarea::placeholder { color:var(--text-dim); }
           </button>
         </div>
       </div>
- 
+
       <!-- Message list -->
       <div class="msg-list" id="msgList"></div>
- 
+
     </div>
- 
+
     <!-- Input -->
     <div class="input-zone">
       <div class="input-wrap">
@@ -1012,14 +1012,14 @@ textarea::placeholder { color:var(--text-dim); }
         </div>
       </div>
     </div>
- 
+
   </div><!-- /chat -->
 </div><!-- /main -->
- 
+
 <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      SLIDE PANELS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
- 
+
 <!-- STATUS PANEL -->
 <div class="panel" id="panel-status">
   <div class="panel-head">
@@ -1027,7 +1027,7 @@ textarea::placeholder { color:var(--text-dim); }
     <button class="panel-close" onclick="closePanel('status')">✕</button>
   </div>
   <div class="panel-body">
- 
+
     <div class="stat-grid">
       <div class="stat-card" onclick="ip('knowledge library')">
         <div class="sc-label">Knowledge</div>
@@ -1050,7 +1050,7 @@ textarea::placeholder { color:var(--text-dim); }
         <div class="sc-sub">API spend</div>
       </div>
     </div>
- 
+
     <div class="ps-block">
       <div class="ps-label">AI Models</div>
       <div class="dr"><span class="dr-l">Brain</span><span class="dr-v">Sonnet 4.5</span></div>
@@ -1058,7 +1058,7 @@ textarea::placeholder { color:var(--text-dim); }
       <div class="dr"><span class="dr-l">API Key</span><span class="dr-v bad">Not Set</span></div>
       <div class="dr"><span class="dr-l">Tools Loaded</span><span class="dr-v ok">56</span></div>
     </div>
- 
+
     <div class="ps-block">
       <div class="ps-label">Memory</div>
       <div class="mbar">
@@ -1074,7 +1074,7 @@ textarea::placeholder { color:var(--text-dim); }
         <div class="mbar-bg"><div class="mbar-fill" style="width:2%"></div></div>
       </div>
     </div>
- 
+
     <div class="ps-block">
       <div class="ps-label">Quick Actions</div>
       <div class="dr" style="cursor:pointer" onclick="ip('axiom status')"><span class="dr-l">▸ Full status report</span></div>
@@ -1082,23 +1082,23 @@ textarea::placeholder { color:var(--text-dim); }
       <div class="dr" style="cursor:pointer" onclick="ip('propose feature')"><span class="dr-l">▸ Propose next feature</span></div>
       <div class="dr" style="cursor:pointer" onclick="ip('selfmod status')"><span class="dr-l">▸ Self-mod status</span></div>
     </div>
- 
+
   </div>
 </div>
- 
+
 <!-- TRENDS PANEL -->
 <div class="panel" id="panel-trends">
   <div class="panel-head">
     <div class="panel-title">Live Signals</div>
     <button class="panel-close" onclick="closePanel('trends')">✕</button>
   </div>
- 
+
   <div class="panel-tabs">
     <div class="ptab active" onclick="trendTab(this,'watching')">Watching</div>
     <div class="ptab" onclick="trendTab(this,'top')">Top Signals</div>
     <div class="ptab" onclick="trendTab(this,'emerging')">Emerging</div>
   </div>
- 
+
   <div class="panel-body">
     <div id="trends-watching">
       <div class="ps-block">
@@ -1139,7 +1139,7 @@ textarea::placeholder { color:var(--text-dim); }
     </div>
   </div>
 </div>
- 
+
 <!-- ERRORS PANEL -->
 <div class="panel" id="panel-errors">
   <div class="panel-head">
@@ -1147,14 +1147,14 @@ textarea::placeholder { color:var(--text-dim); }
     <button class="panel-close" onclick="closePanel('errors')">✕</button>
   </div>
   <div class="panel-body">
- 
+
     <div class="ps-block">
       <div class="ps-label">Unresolved · 0</div>
       <div style="font-size:11px;color:var(--text-dim);padding:12px 0;text-align:center;letter-spacing:0.1em">
         No open errors — system healthy
       </div>
     </div>
- 
+
     <div class="ps-block">
       <div class="ps-label">Actions</div>
       <div class="dr" style="cursor:pointer" onclick="ip('diagnose latest')"><span class="dr-l">▸ Diagnose latest error</span></div>
@@ -1162,21 +1162,21 @@ textarea::placeholder { color:var(--text-dim); }
       <div class="dr" style="cursor:pointer" onclick="ip('error stats')"><span class="dr-l">▸ System health report</span></div>
       <div class="dr" style="cursor:pointer" onclick="ip('setup alerts')"><span class="dr-l">▸ Setup error alerts</span></div>
     </div>
- 
+
     <div class="ps-block">
       <div class="ps-label">Self-Healing</div>
       <div class="dr"><span class="dr-l">Auto-retry (network)</span><span class="dr-v ok">On</span></div>
       <div class="dr"><span class="dr-l">Auto-install (packages)</span><span class="dr-v ok">On</span></div>
       <div class="dr"><span class="dr-l">Git rollback</span><span class="dr-v ok">Ready</span></div>
     </div>
- 
+
   </div>
 </div>
- 
+
 <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      COMMAND PALETTE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
- 
+
 <div class="palette-overlay" id="palette" onclick="closePaletteOutside(event)">
   <div class="palette">
     <div class="palette-input-wrap">
@@ -1184,7 +1184,7 @@ textarea::placeholder { color:var(--text-dim); }
       <input id="paletteInput" placeholder="Search commands..." oninput="filterCmds(this.value)" onkeydown="palKey(event)">
       <span class="palette-hint">ESC to close</span>
     </div>
- 
+
     <div class="palette-results" id="palResults">
       <div class="palette-section">Chat</div>
       <div class="cmd" onclick="runCmd('what can you do')">
@@ -1208,7 +1208,7 @@ textarea::placeholder { color:var(--text-dim); }
           <div class="cmd-desc">Axiom picks the single highest-value thing to build</div>
         </div>
       </div>
- 
+
       <div class="palette-section">Learning</div>
       <div class="cmd" onclick="runCmd('knowledge library')">
         <span class="cmd-icon">◈</span>
@@ -1232,7 +1232,7 @@ textarea::placeholder { color:var(--text-dim); }
         </div>
         <span class="cmd-shortcut">type topic</span>
       </div>
- 
+
       <div class="palette-section">Trends</div>
       <div class="cmd" onclick="runCmd('daily briefing')">
         <span class="cmd-icon">📡</span>
@@ -1257,7 +1257,7 @@ textarea::placeholder { color:var(--text-dim); }
         </div>
         <span class="cmd-shortcut">type name</span>
       </div>
- 
+
       <div class="palette-section">System</div>
       <div class="cmd" onclick="runCmd('axiom status')">
         <span class="cmd-icon">◎</span>
@@ -1297,7 +1297,7 @@ textarea::placeholder { color:var(--text-dim); }
         <span class="cmd-shortcut">describe change</span>
       </div>
     </div>
- 
+
     <div class="palette-footer">
       <span><span class="pf-key">↑↓</span> navigate</span>
       <span><span class="pf-key">Enter</span> run</span>
@@ -1305,7 +1305,7 @@ textarea::placeholder { color:var(--text-dim); }
     </div>
   </div>
 </div>
- 
+
 <script>
 /* ── Boot ──────────────────────────────────────────── */
 setTimeout(() => {
@@ -1313,17 +1313,17 @@ setTimeout(() => {
   b.style.cssText='opacity:0;transition:opacity 0.4s;pointer-events:none';
   setTimeout(()=>b.remove(),400);
 }, 2900);
- 
+
 /* ── Clock ─────────────────────────────────────────── */
 const tick = () => document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
 setInterval(tick,1000); tick();
- 
+
 /* ── State ─────────────────────────────────────────── */
 let started = false;
 let cost    = 0;
 const hist  = []; let hidx = -1;
 let currentPanel = null;
- 
+
 /* ── Panel management ──────────────────────────────── */
 function togglePanel(name) {
   if (currentPanel === name) {
@@ -1333,21 +1333,21 @@ function togglePanel(name) {
     openPanel(name);
   }
 }
- 
+
 function openPanel(name) {
   document.getElementById('panel-'+name).classList.add('open');
   document.getElementById('chat').classList.add('panel-open');
   document.getElementById('ind-'+name)?.classList.add('active');
   currentPanel = name;
 }
- 
+
 function closePanel(name) {
   document.getElementById('panel-'+name)?.classList.remove('open');
   document.getElementById('ind-'+name)?.classList.remove('active');
   document.getElementById('chat').classList.remove('panel-open');
   currentPanel = null;
 }
- 
+
 function closePanels() {
   ['status','trends','errors'].forEach(n => {
     document.getElementById('panel-'+n)?.classList.remove('open');
@@ -1356,29 +1356,29 @@ function closePanels() {
   document.getElementById('chat').classList.remove('panel-open');
   currentPanel = null;
 }
- 
+
 /* ── Trend tabs ────────────────────────────────────── */
 function trendTab(el, tab) {
   document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
 }
- 
+
 /* ── Command palette ───────────────────────────────── */
 function openPalette() {
   document.getElementById('palette').classList.add('open');
   setTimeout(()=>document.getElementById('paletteInput').focus(),50);
 }
- 
+
 function closePalette() {
   document.getElementById('palette').classList.remove('open');
   document.getElementById('paletteInput').value = '';
   document.querySelectorAll('.cmd').forEach(c=>c.classList.remove('highlighted'));
 }
- 
+
 function closePaletteOutside(e) {
   if (e.target === document.getElementById('palette')) closePalette();
 }
- 
+
 function filterCmds(q) {
   const cmds = document.querySelectorAll('.cmd');
   const lower = q.toLowerCase();
@@ -1387,7 +1387,7 @@ function filterCmds(q) {
     cmd.style.display = (!q || text.includes(lower)) ? '' : 'none';
   });
 }
- 
+
 let palIdx = -1;
 function palKey(e) {
   const visible = [...document.querySelectorAll('.cmd')].filter(c=>c.style.display!=='none');
@@ -1409,13 +1409,13 @@ function palKey(e) {
     closePalette();
   }
 }
- 
+
 function runCmd(cmd) {
   closePalette();
   ip(cmd);
   setTimeout(send,80);
 }
- 
+
 /* ── Global / key ──────────────────────────────────── */
 document.addEventListener('keydown', e => {
   if (e.key==='Escape') { closePalette(); closePanels(); }
@@ -1425,22 +1425,22 @@ document.addEventListener('keydown', e => {
     e.preventDefault(); openPalette();
   }
 });
- 
+
 /* ── Input helpers ─────────────────────────────────── */
 function ip(txt) {
   const el = document.getElementById('inp');
   el.value = txt; el.focus(); resize(el);
 }
- 
+
 function qs(txt) { ip(txt); setTimeout(send,80); }
- 
+
 function resize(el) {
   el.style.height='auto';
   el.style.height=Math.min(el.scrollHeight,180)+'px';
   const w = el.value.trim().split(/\s+/).filter(Boolean).length;
   document.getElementById('toks').textContent = `~${Math.ceil(w*1.3)} tokens`;
 }
- 
+
 function onKey(e) {
   const el=document.getElementById('inp');
   if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); send(); return; }
@@ -1454,7 +1454,7 @@ function onKey(e) {
     resize(el);
   }
 }
- 
+
 /* ── Send ──────────────────────────────────────────── */
 function send() {
   const el=document.getElementById('inp');
@@ -1462,15 +1462,22 @@ function send() {
   hist.push(txt); hidx=-1;
   el.value=''; resize(el);
   document.getElementById('toks').textContent='~0 tokens';
- 
+
   if (!started) {
     started=true;
-    document.getElementById('empty').classList.add('gone');
+    const empty = document.getElementById('empty');
+    if(empty) empty.classList.add('gone');
   }
- 
-  addMsg('u',txt); respond(txt);
+
+  addMsg('u',txt);
+  // respond is async — call it and catch any errors
+  respond(txt).catch(err => {
+    hideTyping();
+    addMsg('j', 'Something went wrong. Try again.', 'sonnet');
+    console.error('respond error:', err);
+  });
 }
- 
+
 /* ── Messages ──────────────────────────────────────── */
 function addMsg(role,content,model='sonnet',tool=null) {
   const c=document.getElementById('msgList');
@@ -1481,7 +1488,7 @@ function addMsg(role,content,model='sonnet',tool=null) {
     ?'<span class="mtag mt-o">Opus</span>'
     :'<span class="mtag mt-s">Sonnet</span>';
   const tl=tool?`<div class="tl">▸ ${tool}</div>`:'';
- 
+
   if(role==='u'){
     d.innerHTML=`
       <div class="av" style="border-color:var(--border2);color:var(--text-dim);background:var(--surface)">U</div>
@@ -1501,7 +1508,7 @@ function addMsg(role,content,model='sonnet',tool=null) {
   const mw=document.getElementById('msgsWrap'); mw.scrollTop=mw.scrollHeight;
   return d;
 }
- 
+
 function showTyping(){
   const c=document.getElementById('msgList');
   const d=document.createElement('div');
@@ -1519,10 +1526,10 @@ function showTyping(){
   const mw=document.getElementById('msgsWrap'); mw.scrollTop=mw.scrollHeight;
   return d;
 }
- 
+
 function hideTyping(){const t=document.getElementById('typ');if(t)t.remove();}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
- 
+
 /* ── Responses ─────────────────────────────────────── */
 const R = {
   'what can you do':{ tool:'what_can_you_do',model:'sonnet',r:`
@@ -1534,14 +1541,14 @@ const R = {
     <span class="ok">◈ Memory</span> — Permanent storage across sessions. Semantic recall.<br>
     <span class="dim">◈ Web, Notes, Files, System</span> — Search, scrape, calculator, timers.<br><br>
     Not yet built: voice, trading, email.<br>Say <code>selfmod build: [feature]</code> — Axiom writes it, you approve.`},
- 
+
   'show errors':{ tool:'show_errors',model:'sonnet',r:`
     <h4>Open Errors</h4>
     <span class="bad">✕ web_search</span> — ConnectionError: Could not reach server<br>
     <span class="bad">✕ spotify_play</span> — Rate limit 429<br>
     <span class="w">⚠ spotify_play</span> — API approaching limit<br><br>
     Run <code>diagnose be53c42b</code> for AI-powered fix.`},
- 
+
   'axiom status':{ tool:'axiom_status',model:'sonnet',r:`
     <h4>System Status</h4>
     <span class="ok">✓</span> Brain: claude-sonnet-4-20250514<br>
@@ -1550,14 +1557,14 @@ const R = {
     <span class="ok">✓</span> Tools: 56 loaded<br>
     <span class="ok">✓</span> Memory: 44 entries<br>
     <span class="w">⚠</span> Errors: 2 open`},
- 
+
   'how can i improve you':{ tool:'how_to_improve',model:'sonnet',r:`
     <h4>Honest Self-Assessment</h4>
     <span class="bad">1. Voice</span> — You're still typing. Wake word + ElevenLabs changes everything.<br><br>
     <span class="w">2. Email</span> — Gmail API is in requirements. One file. Highest ROI right now.<br><br>
     <span class="w">3. Scheduler</span> — Auto-run daily briefing at 8am. Library already installed.<br><br>
     My pick: <code>selfmod build: Gmail email integration</code>`},
- 
+
   'selfmod status':{ tool:'selfmod_status',model:'sonnet',r:`
     <h4>Self-Modification Engine</h4>
     Code model: <span class="w">Claude Opus 4.5</span><br>
@@ -1565,13 +1572,13 @@ const R = {
     <span class="ok">✓</span> Can write: tools/, integrations/, voice/, ui/<br>
     <span class="bad">✕</span> Cannot touch: core/, memory/, config/<br><br>
     Try: <code>selfmod build: weather tool</code> or <code>selfmod ui: add Bitcoin widget</code>`},
- 
+
   'propose feature':{ tool:'propose_feature',model:'sonnet',r:`
     <h4>Best Next Feature: Voice</h4>
     Every other feature still requires typing. Voice is the one that changes the product category — from chat tool to actual AI assistant.<br><br>
     Wake word → speak → Axiom responds out loud. No keyboard.<br><br>
     <code>selfmod build: voice module with pvporcupine wake word, SpeechRecognition STT, ElevenLabs TTS</code>`},
- 
+
   'daily briefing':{ tool:'trend_daily_briefing',model:'sonnet',r:`
     <h4>Morning Briefing</h4>
     <span class="w">📡 AI Agents</span> — 4 high-signal stories overnight<br>
@@ -1587,35 +1594,35 @@ const R = {
     </ul>
     <code>trend briefing: AI agents</code> for the full report.`},
 };
- 
+
 /* ── Railway backend connection ─────────────────────── */
-const API_URL = const API_URL = 'https://162.243.225.72.nip.io';
+const API_URL = 'https://162.243.225.72.nip.io';
 const SESSION_ID = Math.random().toString(36).slice(2,10);
- 
+
 async function respond(input) {
   showTyping();
- 
+
   try {
     // 60 second timeout — Claude with web search can take a moment
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
- 
+
     const res = await fetch(`${API_URL}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: input, session_id: SESSION_ID }),
       signal: controller.signal
     });
- 
+
     clearTimeout(timeout);
- 
+
     if (!res.ok) throw new Error('HTTP ' + res.status);
- 
+
     const data = await res.json();
     const reply = data.response;
- 
+
     hideTyping();
- 
+
     if (reply) {
       cost += 0.004;
       ['costCard'].forEach(id => {
@@ -1628,7 +1635,7 @@ async function respond(input) {
     } else {
       addMsg('j', 'Got an empty response — try again.', 'sonnet');
     }
- 
+
   } catch(err) {
     hideTyping();
     if (err.name === 'AbortError') {
@@ -1648,40 +1655,40 @@ async function respond(input) {
     console.error('Backend error:', err.message);
   }
 }
- 
- 
+
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    RENAME SYSTEM
    Persists to localStorage — survives page refresh
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
- 
+
 // Load saved name on boot — runs immediately
 const DEFAULT_NAME = 'AXIOM';
 let AI_NAME = localStorage.getItem('axiom_ai_name') || DEFAULT_NAME;
- 
+
 function applyNameEverywhere(name) {
   const upper = name.toUpperCase().trim() || DEFAULT_NAME;
   AI_NAME = upper;
- 
+
   // Header
   const h = document.getElementById('headerName');
   if (h) h.textContent = upper;
- 
+
   // Boot screen
   const b = document.getElementById('bootName');
   if (b) b.textContent = upper;
- 
+
   // Empty state
   const e = document.getElementById('emptyName');
   if (e) e.textContent = upper;
- 
+
   // Page title
   document.title = upper;
- 
+
   // Boot ready line
   const r = document.getElementById('bootReady');
   if (r) r.textContent = `▸ ${upper} ready — welcome back, Boss.`;
- 
+
   // Update suggestion cards that reference name
   document.querySelectorAll('.sug-desc').forEach(el => {
     if (el.textContent.includes('Axiom') || el.textContent.includes(AI_NAME)) {
@@ -1689,10 +1696,10 @@ function applyNameEverywhere(name) {
     }
   });
 }
- 
+
 // Apply saved name immediately on load
 applyNameEverywhere(AI_NAME);
- 
+
 function openRename() {
   const overlay = document.getElementById('renameOverlay');
   const input   = document.getElementById('renameInput');
@@ -1701,15 +1708,15 @@ function openRename() {
   updateRenamePreview();
   setTimeout(() => input.focus(), 100);
 }
- 
+
 function closeRename() {
   document.getElementById('renameOverlay').classList.remove('open');
 }
- 
+
 function closeRenameOutside(e) {
   if (e.target === document.getElementById('renameOverlay')) closeRename();
 }
- 
+
 function updateRenamePreview() {
   const val   = document.getElementById('renameInput').value.trim().toUpperCase() || DEFAULT_NAME;
   const ids   = ['pvHeader','pvBoot','pvMsg'];
@@ -1718,21 +1725,21 @@ function updateRenamePreview() {
     if (el) el.textContent = val;
   });
 }
- 
+
 function applyRename() {
   const val = document.getElementById('renameInput').value.trim();
   const name = val.toUpperCase() || DEFAULT_NAME;
- 
+
   // Save to localStorage
   if (name === DEFAULT_NAME) {
     localStorage.removeItem('axiom_ai_name');
   } else {
     localStorage.setItem('axiom_ai_name', name);
   }
- 
+
   applyNameEverywhere(name);
   closeRename();
- 
+
   // Confirm in chat
   if (started) {
     addMsg('j',
@@ -1742,14 +1749,14 @@ function applyRename() {
     );
   }
 }
- 
+
 function renameKey(e) {
   if (e.key === 'Enter') applyRename();
   if (e.key === 'Escape') closeRename();
 }
- 
+
 </script>
- 
+
 <!-- RENAME MODAL -->
 <div class="rename-overlay" id="renameOverlay" onclick="closeRenameOutside(event)">
   <div class="rename-modal">
@@ -1778,6 +1785,6 @@ function renameKey(e) {
     </div>
   </div>
 </div>
- 
+
 </body>
 </html>
