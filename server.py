@@ -1,13 +1,15 @@
-# AXIOM — server.py v1.7
-# FastAPI backend with real web search via Claude
+# AXIOM — server.py v1.8
+# Streaming responses — no more timeouts
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import os
 import anthropic
+import json
 
-app = FastAPI(title="Axiom API", version="1.7")
+app = FastAPI(title="Axiom API", version="1.8")
 
 app.add_middleware(CORSMiddleware,
   allow_origins=["*"],
@@ -19,40 +21,32 @@ client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 SYSTEM_PROMPT = """You are Axiom, a personal AI operating system built by Elijah Green.
 You are sharp, direct, and capable. You don't over-explain. You get things done.
 
-ABOUT AXIOM:
-- Created by Elijah Green as a personal AI OS
-- Built on Claude (Anthropic)
-- Version 1.7
-- Deployed at axiom-ui-puce.vercel.app
+ABOUT YOU:
+- You are Axiom. Created by Elijah Green.
+- Built on Claude by Anthropic.
+- Version 1.8. Live at axiom-ui-puce.vercel.app.
 
-YOUR CAPABILITIES (web version):
-- Chat and answer questions on any topic
-- Real-time web search — you can search the internet right now
-- Research any topic, find current news, look up prices, check facts
-- Explain concepts, teach topics, summarize content
-- Write, code, brainstorm, plan
-- Remember context within a conversation
+WHAT YOU CAN DO RIGHT NOW (web version):
+- Answer any question
+- Search the web in real time for current news, prices, facts, scores
+- Research and summarize any topic
+- Write, code, analyze, plan, brainstorm
+- Remember the full conversation context
 
-FEATURES THAT REQUIRE LOCAL BACKEND:
-- Self-modification engine (selfmod build:) — requires local Python install
-- Persistent memory across sessions — requires local SQLite
-- Trend monitoring watchlist — requires local scheduler
-- Error dashboard — requires local error logs
-- Knowledge library ingestion — requires local file system
-- Spotify integration — requires local OAuth
+WHAT NEEDS THE LOCAL INSTALL (axiom_v1.6.zip):
+- Self-modification engine
+- Persistent memory across sessions
+- Trend monitoring watchlist
+- Error dashboard
+- Knowledge library / URL ingestion
+- Spotify control
 
-When asked about local features, explain what's needed to unlock them.
-Don't say "I can't" — say what's needed.
+For local features: tell the user to download axiom_v1.6.zip, 
+add their API key to .env, and run python axiom.py locally.
 
-TONE:
-- Direct and confident. No "Certainly!" or "Great question!"
-- First person. You ARE Axiom, not an assistant playing a role.
-- When you search the web, lead with the answer not "I searched for..."
-- Keep responses focused. No unnecessary padding.
-
+TONE: Direct. No filler. First person — you ARE Axiom.
 The user's name is Boss."""
 
-# Claude's built-in web search tool
 WEB_SEARCH_TOOL = {
     "type": "web_search_20250305",
     "name": "web_search"
@@ -62,23 +56,22 @@ class ChatRequest(BaseModel):
     message: str
     session_id: str = ""
 
-# In-memory conversation history
 sessions = {}
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "name": "Axiom", "version": "1.7"}
+    return {"status": "ok", "name": "Axiom", "version": "1.8"}
 
 @app.get("/status")
 async def status():
-    api_key = os.getenv("ANTHROPIC_API_KEY", "")
     return {
         "name": os.getenv("AXIOM_NAME", "Axiom"),
-        "version": "1.7",
+        "version": "1.8",
         "status": "online",
-        "api_key_set": bool(api_key),
+        "api_key_set": bool(os.getenv("ANTHROPIC_API_KEY")),
         "model": os.getenv("AXIOM_MODEL", "claude-sonnet-4-20250514"),
         "web_search": True,
+        "streaming": True,
         "created_by": "Elijah Green"
     }
 
@@ -95,79 +88,57 @@ async def chat(req: ChatRequest):
 
     history = sessions[sid][-20:]
 
-    try:
-        # Always offer web search — Claude decides when to use it
-        response = client.messages.create(
-            model=os.getenv("AXIOM_MODEL", "claude-sonnet-4-20250514"),
-            max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            tools=[WEB_SEARCH_TOOL],
-            messages=history
-        )
-
-        # Collect all text blocks from response
-        reply_parts = []
-        for block in response.content:
-            if hasattr(block, 'type') and block.type == 'text':
-                reply_parts.append(block.text)
-
-        reply = ' '.join(reply_parts).strip()
-
-        # Handle tool use loop if Claude searched the web
-        if response.stop_reason == 'tool_use' and not reply:
-            tool_results = []
-            for block in response.content:
-                if hasattr(block, 'type') and block.type == 'tool_use':
-                    tool_results.append({
-                        "type": "tool_result",
-                        "tool_use_id": block.id,
-                        "content": "Search results retrieved."
-                    })
-
-            followup = client.messages.create(
+    def stream_response():
+        full_reply = ""
+        try:
+            with client.messages.stream(
                 model=os.getenv("AXIOM_MODEL", "claude-sonnet-4-20250514"),
                 max_tokens=1024,
                 system=SYSTEM_PROMPT,
                 tools=[WEB_SEARCH_TOOL],
-                messages=history + [
-                    {"role": "assistant", "content": response.content},
-                    {"role": "user", "content": tool_results}
-                ]
-            )
-
-            for block in followup.content:
-                if hasattr(block, 'type') and block.type == 'text':
-                    reply_parts.append(block.text)
-
-            reply = ' '.join(reply_parts).strip()
-
-        if not reply:
-            reply = "Processed your request. Try rephrasing if this seems wrong."
-
-    except Exception as e:
-        # Fallback without web search
-        try:
-            response = client.messages.create(
-                model=os.getenv("AXIOM_MODEL", "claude-sonnet-4-20250514"),
-                max_tokens=1024,
-                system=SYSTEM_PROMPT,
                 messages=history
-            )
-            reply = response.content[0].text
-        except Exception as e2:
-            reply = f"Error connecting to AI: {str(e2)}"
+            ) as stream:
+                for text in stream.text_stream:
+                    full_reply += text
+                    # Send each chunk as SSE
+                    chunk = json.dumps({"text": text, "done": False})
+                    yield f"data: {chunk}\n\n"
 
-    sessions[sid].append({
-        "role": "assistant",
-        "content": reply
-    })
+        except Exception as e:
+            # Fallback without web search tool
+            try:
+                with client.messages.stream(
+                    model=os.getenv("AXIOM_MODEL", "claude-sonnet-4-20250514"),
+                    max_tokens=1024,
+                    system=SYSTEM_PROMPT,
+                    messages=history
+                ) as stream:
+                    for text in stream.text_stream:
+                        full_reply += text
+                        chunk = json.dumps({"text": text, "done": False})
+                        yield f"data: {chunk}\n\n"
+            except Exception as e2:
+                error_msg = f"Connection error: {str(e2)}"
+                full_reply = error_msg
+                yield f"data: {json.dumps({'text': error_msg, 'done': False})}\n\n"
 
-    return {
-        "response": reply,
-        "model": os.getenv("AXIOM_MODEL", "claude-sonnet-4-20250514"),
-        "session_id": sid,
-        "web_search_enabled": True
-    }
+        # Save to session history
+        sessions[sid].append({
+            "role": "assistant",
+            "content": full_reply
+        })
+
+        # Send done signal
+        yield f"data: {json.dumps({'text': '', 'done': True})}\n\n"
+
+    return StreamingResponse(
+        stream_response(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 @app.delete("/chat/{session_id}")
 async def clear_session(session_id: str):
