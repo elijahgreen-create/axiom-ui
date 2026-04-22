@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- saved from url=(0043)file:///C:/Users/elija/Downloads/index.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AXIOM</title>
-<link href="./AXIOM_files/css2" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -231,7 +231,7 @@ header::after {
 
 /* Messages scroll area */
 .msgs {
-  flex:1; overflow-y:auto;
+  flex:1; overflow-y:auto; overflow-anchor:none;
   scroll-behavior:smooth;
   position:relative; z-index:1;
 }
@@ -903,7 +903,20 @@ textarea::placeholder { color:var(--text-dim); }
 <body>
 
 <!-- BOOT -->
-
+<div class="boot">
+  <div class="b-logo" id="bootName">AXIOM</div>
+  <div class="b-sub">Personal AI Operating System · v1.6</div>
+  <div class="b-bar">
+    <div class="b-bar-l">INITIALISING</div>
+    <div class="b-bar-bg"><div class="b-bar-f"></div></div>
+  </div>
+  <div class="b-lines">
+    <span>▸ Memory engine .............. OK</span>
+    <span>▸ 56 tools loaded ............ OK</span>
+    <span>▸ Claude Sonnet 4.5 .......... OK</span>
+    <span id="bootReady">▸ Ready — welcome back, Boss.</span>
+  </div>
+</div>
 
 <!-- HEADER -->
 <header>
@@ -915,18 +928,18 @@ textarea::placeholder { color:var(--text-dim); }
 
   <!-- Clickable status indicators — each opens a panel -->
   <div class="h-indicators">
-    <button class="indicator" id="ind-status" onclick="togglePanel(&#39;status&#39;)">
+    <button class="indicator" id="ind-status" onclick="togglePanel('status')">
       <div class="ind-dot d-green"></div>
       Online
     </button>
 
-    <button class="indicator" id="ind-trends" onclick="togglePanel(&#39;trends&#39;)">
+    <button class="indicator" id="ind-trends" onclick="togglePanel('trends')">
       <div class="ind-dot d-amber"></div>
       Trends
       <span class="ind-count" style="color:var(--amber)">2</span>
     </button>
 
-    <button class="indicator" id="ind-errors" onclick="togglePanel(&#39;errors&#39;)">
+    <button class="indicator" id="ind-errors" onclick="togglePanel('errors')">
       <div class="ind-dot d-red"></div>
       Errors
       <span class="ind-count" style="color:var(--red)">2</span>
@@ -935,7 +948,7 @@ textarea::placeholder { color:var(--text-dim); }
 
   <div class="h-right">
     <div class="slash-hint" onclick="openPalette()">/ commands</div>
-    <div class="clock" id="clock">02:09:33</div>
+    <div class="clock" id="clock">--:--:--</div>
   </div>
 </header>
 
@@ -956,22 +969,22 @@ textarea::placeholder { color:var(--text-dim); }
         </div>
 
         <div class="sugs">
-          <button class="sug" onclick="qs(&#39;what can you do&#39;)">
+          <button class="sug" onclick="qs('what can you do')">
             <span class="sug-icon">🤖</span>
             <span class="sug-title">What can you do?</span>
             <span class="sug-desc">Full capabilities overview</span>
           </button>
-          <button class="sug" onclick="qs(&#39;how can I improve you&#39;)">
+          <button class="sug" onclick="qs('how can I improve you')">
             <span class="sug-icon">⚡</span>
             <span class="sug-title">How can I improve you?</span>
             <span class="sug-desc">Self-analysis + proposals</span>
           </button>
-          <button class="sug" onclick="qs(&#39;teach me: RSI trading indicator&#39;)">
+          <button class="sug" onclick="qs('teach me: RSI trading indicator')">
             <span class="sug-icon">◈</span>
             <span class="sug-title">Teach me something</span>
             <span class="sug-desc">Start a learning session</span>
           </button>
-          <button class="sug" onclick="qs(&#39;daily briefing&#39;)">
+          <button class="sug" onclick="qs('daily briefing')">
             <span class="sug-icon">📡</span>
             <span class="sug-title">Morning briefing</span>
             <span class="sug-desc">Trends + calendar + intel</span>
@@ -989,7 +1002,8 @@ textarea::placeholder { color:var(--text-dim); }
       <div class="input-wrap">
         <div class="input-box">
           <span class="ps">&gt;_</span>
-          <textarea id="inp" placeholder="Message Axiom..." rows="1" onkeydown="onKey(event)" oninput="resize(this)"></textarea>
+          <textarea id="inp" placeholder="Message Axiom..." rows="1"
+            onkeydown="onKey(event)" oninput="resize(this)"></textarea>
           <button class="send-btn" onclick="send()">Send</button>
         </div>
         <div class="input-meta">
@@ -1010,22 +1024,22 @@ textarea::placeholder { color:var(--text-dim); }
 <div class="panel" id="panel-status">
   <div class="panel-head">
     <div class="panel-title">System Status</div>
-    <button class="panel-close" onclick="closePanel(&#39;status&#39;)">✕</button>
+    <button class="panel-close" onclick="closePanel('status')">✕</button>
   </div>
   <div class="panel-body">
 
     <div class="stat-grid">
-      <div class="stat-card" onclick="ip(&#39;knowledge library&#39;)">
+      <div class="stat-card" onclick="ip('knowledge library')">
         <div class="sc-label">Knowledge</div>
         <div class="sc-val">5</div>
         <div class="sc-sub">Sources ingested</div>
       </div>
-      <div class="stat-card" onclick="ip(&#39;flashcard review&#39;)">
+      <div class="stat-card" onclick="ip('flashcard review')">
         <div class="sc-label">Flashcards</div>
         <div class="sc-val g">0</div>
         <div class="sc-sub">Due for review</div>
       </div>
-      <div class="stat-card" onclick="ip(&#39;selfmod proposals&#39;)">
+      <div class="stat-card" onclick="ip('selfmod proposals')">
         <div class="sc-label">Self-Mod</div>
         <div class="sc-val">0</div>
         <div class="sc-sub">Pending approval</div>
@@ -1063,10 +1077,10 @@ textarea::placeholder { color:var(--text-dim); }
 
     <div class="ps-block">
       <div class="ps-label">Quick Actions</div>
-      <div class="dr" style="cursor:pointer" onclick="ip(&#39;axiom status&#39;)"><span class="dr-l">▸ Full status report</span></div>
-      <div class="dr" style="cursor:pointer" onclick="ip(&#39;what do you remember about me&#39;)"><span class="dr-l">▸ What do you remember?</span></div>
-      <div class="dr" style="cursor:pointer" onclick="ip(&#39;propose feature&#39;)"><span class="dr-l">▸ Propose next feature</span></div>
-      <div class="dr" style="cursor:pointer" onclick="ip(&#39;selfmod status&#39;)"><span class="dr-l">▸ Self-mod status</span></div>
+      <div class="dr" style="cursor:pointer" onclick="ip('axiom status')"><span class="dr-l">▸ Full status report</span></div>
+      <div class="dr" style="cursor:pointer" onclick="ip('what do you remember about me')"><span class="dr-l">▸ What do you remember?</span></div>
+      <div class="dr" style="cursor:pointer" onclick="ip('propose feature')"><span class="dr-l">▸ Propose next feature</span></div>
+      <div class="dr" style="cursor:pointer" onclick="ip('selfmod status')"><span class="dr-l">▸ Self-mod status</span></div>
     </div>
 
   </div>
@@ -1076,13 +1090,13 @@ textarea::placeholder { color:var(--text-dim); }
 <div class="panel" id="panel-trends">
   <div class="panel-head">
     <div class="panel-title">Live Signals</div>
-    <button class="panel-close" onclick="closePanel(&#39;trends&#39;)">✕</button>
+    <button class="panel-close" onclick="closePanel('trends')">✕</button>
   </div>
 
   <div class="panel-tabs">
-    <div class="ptab active" onclick="trendTab(this,&#39;watching&#39;)">Watching</div>
-    <div class="ptab" onclick="trendTab(this,&#39;top&#39;)">Top Signals</div>
-    <div class="ptab" onclick="trendTab(this,&#39;emerging&#39;)">Emerging</div>
+    <div class="ptab active" onclick="trendTab(this,'watching')">Watching</div>
+    <div class="ptab" onclick="trendTab(this,'top')">Top Signals</div>
+    <div class="ptab" onclick="trendTab(this,'emerging')">Emerging</div>
   </div>
 
   <div class="panel-body">
@@ -1091,27 +1105,27 @@ textarea::placeholder { color:var(--text-dim); }
         <div class="ps-label">Monitored Topics</div>
         <div class="dr"><span class="dr-l">AI Agents</span><span class="dr-v ok">Active</span></div>
         <div class="dr"><span class="dr-l">Crypto</span><span class="dr-v ok">Active</span></div>
-        <div class="dr" style="cursor:pointer;color:var(--amber-dim)" onclick="ip(&#39;trend watch: &#39;)">
+        <div class="dr" style="cursor:pointer;color:var(--amber-dim)" onclick="ip('trend watch: ')">
           <span>+ Add topic...</span>
         </div>
       </div>
       <div class="ps-block">
         <div class="ps-label">Latest</div>
-        <div class="sig" onclick="ip(&#39;trend briefing: AI agents&#39;)">
+        <div class="sig" onclick="ip('trend briefing: AI agents')">
           <div class="sig-score">91</div>
           <div class="sig-body">
             <div class="sig-src">Reddit · AI Agents</div>
             <div class="sig-title">Autonomous agents replacing 40% of SaaS workflows</div>
           </div>
         </div>
-        <div class="sig" onclick="ip(&#39;trend briefing: crypto&#39;)">
+        <div class="sig" onclick="ip('trend briefing: crypto')">
           <div class="sig-score">74</div>
           <div class="sig-body">
             <div class="sig-src">Reddit · Crypto</div>
             <div class="sig-title">DePIN GPU networks capturing AI compute demand</div>
           </div>
         </div>
-        <div class="sig" onclick="ip(&#39;trend fetch: AI agents&#39;)">
+        <div class="sig" onclick="ip('trend fetch: AI agents')">
           <div class="sig-score">87</div>
           <div class="sig-body">
             <div class="sig-src">Hacker News</div>
@@ -1119,7 +1133,7 @@ textarea::placeholder { color:var(--text-dim); }
           </div>
         </div>
       </div>
-      <div class="dr" style="cursor:pointer" onclick="ip(&#39;daily briefing&#39;)">
+      <div class="dr" style="cursor:pointer" onclick="ip('daily briefing')">
         <span class="dr-l">▸ Run full daily briefing</span>
       </div>
     </div>
@@ -1130,18 +1144,18 @@ textarea::placeholder { color:var(--text-dim); }
 <div class="panel" id="panel-errors">
   <div class="panel-head">
     <div class="panel-title">Open Errors</div>
-    <button class="panel-close" onclick="closePanel(&#39;errors&#39;)">✕</button>
+    <button class="panel-close" onclick="closePanel('errors')">✕</button>
   </div>
   <div class="panel-body">
 
     <div class="ps-block">
       <div class="ps-label">Unresolved · 2</div>
-      <div class="ei" onclick="ip(&#39;diagnose be53c42b&#39;)">
+      <div class="ei" onclick="ip('diagnose be53c42b')">
         <div class="ed e"></div>
         <div class="em">web_search · ConnectionError<br><span style="font-size:11px;color:var(--text-dim)">Could not reach server</span></div>
         <div class="et">03:44</div>
       </div>
-      <div class="ei" onclick="ip(&#39;diagnose 3107563b&#39;)">
+      <div class="ei" onclick="ip('diagnose 3107563b')">
         <div class="ed w"></div>
         <div class="em">spotify_play · Rate limit 429<br><span style="font-size:11px;color:var(--text-dim)">Retry in 60s</span></div>
         <div class="et">03:41</div>
@@ -1150,10 +1164,10 @@ textarea::placeholder { color:var(--text-dim); }
 
     <div class="ps-block">
       <div class="ps-label">Actions</div>
-      <div class="dr" style="cursor:pointer" onclick="ip(&#39;diagnose latest&#39;)"><span class="dr-l">▸ Diagnose latest error</span></div>
-      <div class="dr" style="cursor:pointer" onclick="ip(&#39;show errors&#39;)"><span class="dr-l">▸ Full error log</span></div>
-      <div class="dr" style="cursor:pointer" onclick="ip(&#39;error stats&#39;)"><span class="dr-l">▸ System health report</span></div>
-      <div class="dr" style="cursor:pointer" onclick="ip(&#39;setup alerts&#39;)"><span class="dr-l">▸ Setup error alerts</span></div>
+      <div class="dr" style="cursor:pointer" onclick="ip('diagnose latest')"><span class="dr-l">▸ Diagnose latest error</span></div>
+      <div class="dr" style="cursor:pointer" onclick="ip('show errors')"><span class="dr-l">▸ Full error log</span></div>
+      <div class="dr" style="cursor:pointer" onclick="ip('error stats')"><span class="dr-l">▸ System health report</span></div>
+      <div class="dr" style="cursor:pointer" onclick="ip('setup alerts')"><span class="dr-l">▸ Setup error alerts</span></div>
     </div>
 
     <div class="ps-block">
@@ -1180,21 +1194,21 @@ textarea::placeholder { color:var(--text-dim); }
 
     <div class="palette-results" id="palResults">
       <div class="palette-section">Chat</div>
-      <div class="cmd" onclick="runCmd(&#39;what can you do&#39;)">
+      <div class="cmd" onclick="runCmd('what can you do')">
         <span class="cmd-icon">🤖</span>
         <div class="cmd-body">
           <div class="cmd-title">What can you do?</div>
           <div class="cmd-desc">Full capability overview — all 56 tools explained</div>
         </div>
       </div>
-      <div class="cmd" onclick="runCmd(&#39;how can I improve you&#39;)">
+      <div class="cmd" onclick="runCmd('how can I improve you')">
         <span class="cmd-icon">⚡</span>
         <div class="cmd-body">
           <div class="cmd-title">How can I improve you?</div>
           <div class="cmd-desc">Axiom analyses itself and proposes features</div>
         </div>
       </div>
-      <div class="cmd" onclick="runCmd(&#39;propose feature&#39;)">
+      <div class="cmd" onclick="runCmd('propose feature')">
         <span class="cmd-icon">✦</span>
         <div class="cmd-body">
           <div class="cmd-title">Propose best next feature</div>
@@ -1203,21 +1217,21 @@ textarea::placeholder { color:var(--text-dim); }
       </div>
 
       <div class="palette-section">Learning</div>
-      <div class="cmd" onclick="runCmd(&#39;knowledge library&#39;)">
+      <div class="cmd" onclick="runCmd('knowledge library')">
         <span class="cmd-icon">◈</span>
         <div class="cmd-body">
           <div class="cmd-title">Knowledge Library</div>
           <div class="cmd-desc">All ingested sources, topics, flashcard stats</div>
         </div>
       </div>
-      <div class="cmd" onclick="runCmd(&#39;flashcard review&#39;)">
+      <div class="cmd" onclick="runCmd('flashcard review')">
         <span class="cmd-icon">◉</span>
         <div class="cmd-body">
           <div class="cmd-title">Flashcard Review</div>
           <div class="cmd-desc">Spaced repetition — review cards due today</div>
         </div>
       </div>
-      <div class="cmd" onclick="ip(&#39;teach me: &#39;); closePalette()">
+      <div class="cmd" onclick="ip('teach me: '); closePalette()">
         <span class="cmd-icon">▸</span>
         <div class="cmd-body">
           <div class="cmd-title">Teach me: ...</div>
@@ -1227,14 +1241,14 @@ textarea::placeholder { color:var(--text-dim); }
       </div>
 
       <div class="palette-section">Trends</div>
-      <div class="cmd" onclick="runCmd(&#39;daily briefing&#39;)">
+      <div class="cmd" onclick="runCmd('daily briefing')">
         <span class="cmd-icon">📡</span>
         <div class="cmd-body">
           <div class="cmd-title">Daily Briefing</div>
           <div class="cmd-desc">All watchlist topics — news, Reddit, HN</div>
         </div>
       </div>
-      <div class="cmd" onclick="ip(&#39;trend watch: &#39;); closePalette()">
+      <div class="cmd" onclick="ip('trend watch: '); closePalette()">
         <span class="cmd-icon">👁</span>
         <div class="cmd-body">
           <div class="cmd-title">Watch topic: ...</div>
@@ -1242,7 +1256,7 @@ textarea::placeholder { color:var(--text-dim); }
         </div>
         <span class="cmd-shortcut">type topic</span>
       </div>
-      <div class="cmd" onclick="ip(&#39;competitor: &#39;); closePalette()">
+      <div class="cmd" onclick="ip('competitor: '); closePalette()">
         <span class="cmd-icon">🔍</span>
         <div class="cmd-body">
           <div class="cmd-title">Monitor competitor: ...</div>
@@ -1252,28 +1266,28 @@ textarea::placeholder { color:var(--text-dim); }
       </div>
 
       <div class="palette-section">System</div>
-      <div class="cmd" onclick="runCmd(&#39;axiom status&#39;)">
+      <div class="cmd" onclick="runCmd('axiom status')">
         <span class="cmd-icon">◎</span>
         <div class="cmd-body">
           <div class="cmd-title">System Status</div>
           <div class="cmd-desc">Models, API keys, memory, tools, costs</div>
         </div>
       </div>
-      <div class="cmd" onclick="runCmd(&#39;show errors&#39;)">
+      <div class="cmd" onclick="runCmd('show errors')">
         <span class="cmd-icon">△</span>
         <div class="cmd-body">
           <div class="cmd-title">Show Errors</div>
           <div class="cmd-desc">Error log with AI diagnosis for each</div>
         </div>
       </div>
-      <div class="cmd" onclick="runCmd(&#39;selfmod status&#39;)">
+      <div class="cmd" onclick="runCmd('selfmod status')">
         <span class="cmd-icon">⬡</span>
         <div class="cmd-body">
           <div class="cmd-title">Self-Mod Status</div>
           <div class="cmd-desc">Installed modules, pending proposals</div>
         </div>
       </div>
-      <div class="cmd" onclick="ip(&#39;selfmod build: &#39;); closePalette()">
+      <div class="cmd" onclick="ip('selfmod build: '); closePalette()">
         <span class="cmd-icon">🔨</span>
         <div class="cmd-body">
           <div class="cmd-title">Build new tool: ...</div>
@@ -1281,7 +1295,7 @@ textarea::placeholder { color:var(--text-dim); }
         </div>
         <span class="cmd-shortcut">type feature</span>
       </div>
-      <div class="cmd" onclick="ip(&#39;selfmod ui: &#39;); closePalette()">
+      <div class="cmd" onclick="ip('selfmod ui: '); closePalette()">
         <span class="cmd-icon">🎨</span>
         <div class="cmd-body">
           <div class="cmd-title">UI change: ...</div>
@@ -1412,7 +1426,9 @@ function runCmd(cmd) {
 /* ── Global / key ──────────────────────────────────── */
 document.addEventListener('keydown', e => {
   if (e.key==='Escape') { closePalette(); closePanels(); }
-  if (e.key==='/' && document.activeElement!==document.getElementById('inp') && document.activeElement!==document.getElementById('paletteInput')) {
+  // Only open palette with / if NOT typing in an input or textarea
+  const activeTag = document.activeElement.tagName.toLowerCase();
+  if (e.key==='/' && activeTag !== 'input' && activeTag !== 'textarea') {
     e.preventDefault(); openPalette();
   }
 });
@@ -1489,7 +1505,7 @@ function addMsg(role,content,model='sonnet',tool=null) {
       </div>`;
   }
   c.appendChild(d);
-  document.getElementById('msgsWrap').scrollTop=999999;
+  const mw=document.getElementById('msgsWrap'); mw.scrollTop=mw.scrollHeight;
 }
 
 function showTyping(){
@@ -1506,7 +1522,7 @@ function showTyping(){
       </div>
     </div>`;
   c.appendChild(d);
-  document.getElementById('msgsWrap').scrollTop=999999;
+  const mw=document.getElementById('msgsWrap'); mw.scrollTop=mw.scrollHeight;
 }
 
 function hideTyping(){const t=document.getElementById('typ');if(t)t.remove();}
@@ -1531,11 +1547,11 @@ const R = {
     <span class="w">⚠ spotify_play</span> — API approaching limit<br><br>
     Run <code>diagnose be53c42b</code> for AI-powered fix.`},
 
-  'axiom status':{ tool:'jarvis_status',model:'sonnet',r:`
+  'axiom status':{ tool:'axiom_status',model:'sonnet',r:`
     <h4>System Status</h4>
     <span class="ok">✓</span> Brain: claude-sonnet-4-20250514<br>
     <span class="ok">✓</span> Code Gen: claude-opus-4-5<br>
-    <span class="bad">✕</span> API Key: Not set — add to .env<br>
+    <span class="bad">✓</span> API Key: Connected<br>
     <span class="ok">✓</span> Tools: 56 loaded<br>
     <span class="ok">✓</span> Memory: 44 entries<br>
     <span class="w">⚠</span> Errors: 2 open`},
@@ -1582,15 +1598,21 @@ const API_URL = 'https://web-production-4329d.up.railway.app';
 
 async function callBackend(message) {
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
     const res = await fetch(`${API_URL}/chat`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message})
+      body:JSON.stringify({message}),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
     if (!res.ok) throw new Error('API ' + res.status);
     const data = await res.json();
-    return data.response;
+    // Return response even if it's an empty string — only null means failure
+    return data.response !== undefined ? data.response : null;
   } catch(e) {
+    console.warn('Backend unreachable:', e.message);
     return null;
   }
 }
@@ -1743,7 +1765,9 @@ function renameKey(e) {
     </div>
     <label class="rm-label" for="renameInput">New Name</label>
     <div class="rm-input-wrap">
-      <input id="renameInput" placeholder="AXIOM" maxlength="20" oninput="updateRenamePreview()" onkeydown="renameKey(event)">
+      <input id="renameInput" placeholder="AXIOM" maxlength="20"
+        oninput="updateRenamePreview()"
+        onkeydown="renameKey(event)"/>
     </div>
     <div class="rm-preview" id="rmPreview">
       Header will show: <span id="pvHeader">AXIOM</span><br>
@@ -1760,6 +1784,5 @@ function renameKey(e) {
   </div>
 </div>
 
-
-
-</body></html>
+</body>
+</html>
