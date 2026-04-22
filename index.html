@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   JARVIS UI v3.1 — Contrast Fix
+   Philosophy: ChatGPT's frictionless entry +
+               NGE amber command center as you go deeper
+   
+   State 1: Empty  — almost nothing. Just the input.
+   State 2: Active — panels slide in as conversation grows
+   State 3: Deep   — full command center revealed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+:root {
+  /* Backgrounds — lifted off pure black, easier on eyes */
+  --black:        #080810;
+  --bg:           #0d0d18;
+  --bg2:          #111120;
+  --surface:      #161628;
+  --surface2:     #1a1a30;
+  --border:       #252540;
+  --border2:      #30305a;
+
+  /* Amber — unchanged, it works */
+  --amber:        #e89610;
+  --amber-bright: #ffb82a;
+  --amber-dim:    #8a5510;
+  --amber-muted:  #3a2210;
+  --amber-glow:   rgba(232,150,16,0.12);
+  --amber-glow2:  rgba(232,150,16,0.05);
+
+  /* Status colors — brighter for legibility */
+  --red:          #e03030;
+  --red-dim:      #602020;
+  --green:        #22c460;
+  --green-dim:    #0e4a28;
+
+  /* TEXT — this was the problem. All values lifted significantly */
+  --text:         #a0a0c8;   /* was #5858a0 — now actually readable */
+  --text-mid:     #c4c4e0;   /* was #9898c0 — clear on dark bg */
+  --text-bright:  #eeeef8;   /* was #d8d8f4 — near white, for important content */
+  --text-dim:     #606080;   /* was #28284a — visible labels, not invisible */
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); }
+
+body {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* Grain */
+body::after {
+  content:''; position:fixed; inset:0; z-index:9000; pointer-events:none;
+  opacity:0.22;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  background-size:300px 300px; mix-blend-mode:overlay;
+  animation:grn 1.5s steps(1) infinite;
+}
+@keyframes grn {
+  0%,100%{background-position:0 0} 33%{background-position:-40px -20px} 66%{background-position:20px 40px}
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HEADER — always visible, minimal
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 50px;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 14px;
+  z-index: 200;
+  transition: border-color 0.4s;
+}
+
+header.active { border-bottom-color: var(--amber-dim); }
+
+.logo {
+  display: flex; align-items: center; gap: 9px;
+  flex-shrink: 0;
+}
+
+.logo-gem {
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--amber);
+  transform: rotate(45deg);
+  background: var(--amber-muted);
+  box-shadow: 0 0 6px var(--amber-dim);
+  flex-shrink: 0;
+}
+
+.logo-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 0.25em;
+  color: var(--amber);
+  text-shadow: 0 0 12px rgba(232,150,16,0.4);
+}
+
+.h-sep { width:1px; height:20px; background:var(--border2); }
+
+/* Status pills — hidden until active */
+.h-status {
+  display: flex; gap: 12px;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 0.3s ease 0.1s;
+}
+
+.h-status.visible { opacity:1; transform:translateY(0); }
+
+.s-pill {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 10px; letter-spacing: 0.1em;
+  color: var(--text-mid); text-transform: uppercase;
+}
+
+.s-dot {
+  width:4px; height:4px; border-radius:50%; flex-shrink:0;
+  animation: dp 2s ease-in-out infinite;
+}
+.ok   { background:var(--green); box-shadow:0 0 4px var(--green); }
+.warn { background:var(--amber); box-shadow:0 0 4px var(--amber); animation-delay:0.4s; }
+.err  { background:var(--red);   box-shadow:0 0 4px var(--red);   animation-delay:0s; animation-duration:1s; }
+
+@keyframes dp { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+.h-right {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 12px;
+}
+
+.clock {
+  font-size: 13px; letter-spacing: 0.12em;
+  color: var(--amber); opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+header.active .clock { opacity: 1; }
+
+/* Panel toggle — hidden until active */
+.panel-toggle {
+  display: flex; gap: 4px;
+  opacity: 0;
+  transition: opacity 0.3s 0.2s;
+}
+
+header.active .panel-toggle { opacity: 1; }
+
+.tog {
+  width: 28px; height: 24px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 10px; cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.tog:hover, .tog.on {
+  border-color: var(--amber-dim);
+  color: var(--amber);
+  background: var(--amber-muted);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MAIN LAYOUT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.layout {
+  display: flex;
+  height: 100vh;
+  padding-top: 50px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   LEFT SIDEBAR — slides in from left
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.sidebar {
+  width: 0;
+  overflow: hidden;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+  transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
+  display: flex; flex-direction: column;
+}
+
+.sidebar.open { width: 200px; }
+
+.sidebar-inner {
+  width: 200px;
+  padding-top: 8px;
+  display: flex; flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.nav-label {
+  font-size: 9px; letter-spacing: 0.2em;
+  color: var(--text); text-transform: uppercase;
+  padding: 12px 14px 4px;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  color: var(--text);
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+
+.nav-item:hover { color:var(--text-mid); background:var(--amber-glow2); }
+.nav-item.active {
+  border-left-color: var(--amber);
+  color: var(--amber);
+  background: var(--amber-glow2);
+}
+
+.nav-icon { width:14px; text-align:center; font-size:11px; flex-shrink:0; }
+
+.nav-txt {
+  font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nav-badge {
+  margin-left: auto; font-size:9px; padding:1px 5px;
+  border:1px solid; line-height:1.4;
+}
+
+.nb-err { color:var(--red);   border-color:var(--red-dim);   }
+.nb-warn{ color:var(--amber); border-color:var(--amber-dim); }
+
+.sidebar-bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding: 10px;
+  display: grid; grid-template-columns:1fr 1fr; gap:5px;
+}
+
+.st {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 7px 8px; cursor:pointer;
+  transition: all 0.12s;
+}
+
+.st:hover { border-color:var(--amber-dim); background:var(--amber-muted); }
+
+.st-l { font-size:8px; letter-spacing:0.08em; color:var(--text-mid); margin-bottom:3px; }
+.st-v {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:20px; line-height:1; color:var(--amber);
+}
+.st-v.r { color:var(--red); }
+.st-v.g { color:var(--green); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CHAT — the center, always full attention first
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.chat {
+  flex: 1;
+  display: flex; flex-direction: column;
+  min-width: 0;
+  position: relative;
+}
+
+/* Halftone — barely there */
+.chat::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background-image:radial-gradient(circle,rgba(232,150,16,0.035) 1px,transparent 1px);
+  background-size:30px 30px;
+}
+
+/* Messages */
+.msgs {
+  flex:1; overflow-y:auto;
+  display:flex; flex-direction:column;
+  position:relative; z-index:1;
+  scroll-behavior:smooth;
+}
+
+.msgs::-webkit-scrollbar { width:2px; }
+.msgs::-webkit-scrollbar-thumb { background:var(--amber-dim); }
+.msgs::-webkit-scrollbar-track { background:transparent; }
+
+/* ─── EMPTY STATE — full width centered, ChatGPT feel ── */
+.empty-state {
+  flex:1;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:40px 20px;
+  gap:32px;
+  transition:opacity 0.3s;
+}
+
+.empty-state.hidden { display:none; }
+
+.empty-logo {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:48px; letter-spacing:0.4em;
+  color:var(--amber);
+  text-shadow:0 0 40px rgba(232,150,16,0.3);
+  line-height:1;
+}
+
+.empty-sub {
+  font-size:12px; letter-spacing:0.15em;
+  color:var(--text-mid); text-align:center;
+  line-height:2.2;
+}
+
+/* Suggestion pills — like ChatGPT's examples */
+.suggestions {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  width:100%; max-width:520px;
+}
+
+.sug {
+  background:var(--surface);
+  border:1px solid var(--border2);
+  padding:12px 14px;
+  cursor:pointer;
+  transition:all 0.15s;
+  text-align:left;
+  color:var(--text);
+}
+
+.sug:hover {
+  border-color:var(--amber-dim);
+  background:var(--amber-muted);
+  color:var(--amber);
+  transform:translateY(-1px);
+}
+
+.sug-icon { font-size:14px; display:block; margin-bottom:5px; }
+.sug-title { font-size:12px; letter-spacing:0.04em; color:inherit; display:block; margin-bottom:3px; }
+.sug-desc  { font-size:10px; letter-spacing:0.06em; color:var(--text); display:block; line-height:1.6; }
+
+/* ─── Messages list ───────────────────────────────────── */
+.msg-list {
+  padding:20px;
+  display:flex; flex-direction:column; gap:14px;
+  max-width:760px;
+  width:100%;
+  margin:0 auto;
+}
+
+.msg { display:flex; gap:10px; animation:mIn 0.2s ease; }
+
+@keyframes mIn {
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.av {
+  width:26px; height:26px; flex-shrink:0; margin-top:2px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; border:1px solid;
+}
+
+.msg.u .av { border-color:var(--border2); color:var(--text-dim); background:var(--surface); }
+.msg.j .av { border-color:var(--amber-dim); color:var(--amber); background:var(--amber-muted); }
+
+.msg-body { flex:1; min-width:0; }
+
+.msg-meta {
+  font-size:9px; letter-spacing:0.12em;
+  color:var(--text-mid); margin-bottom:5px;
+  display:flex; align-items:center; gap:6px;
+  text-transform:uppercase;
+}
+
+.m-tag {
+  padding:0 4px; border:1px solid; font-size:7px; letter-spacing:0.08em;
+}
+.mt-s { color:var(--green); border-color:var(--green-dim); }
+.mt-o { color:var(--amber); border-color:var(--amber-dim); background:var(--amber-muted); }
+
+.bubble {
+  padding:12px 16px;
+  border:1px solid; line-height:1.75;
+  font-size:14px; position:relative;
+}
+
+.msg.u .bubble {
+  background:var(--surface);
+  border-color:var(--border2);
+  color:var(--text-mid);
+  border-radius:0 3px 3px 3px;
+}
+
+.msg.j .bubble {
+  background:var(--bg2);
+  border-color:var(--amber-dim);
+  color:var(--text-bright);
+  border-radius:3px 0 3px 3px;
+}
+
+/* Corner marks — the one visual signature */
+.msg.j .bubble::before {
+  content:''; position:absolute; top:-1px; right:-1px;
+  width:9px; height:9px;
+  border-top:1.5px solid var(--amber);
+  border-right:1.5px solid var(--amber);
+}
+.msg.j .bubble::after {
+  content:''; position:absolute; bottom:-1px; left:-1px;
+  width:9px; height:9px;
+  border-bottom:1.5px solid var(--amber-dim);
+  border-left:1.5px solid var(--amber-dim);
+}
+
+.tool-line {
+  font-size:9px; letter-spacing:0.12em; color:var(--amber);
+  margin-bottom:8px; display:flex; align-items:center; gap:5px;
+}
+.tool-line::before { content:''; width:14px; height:1px; background:var(--amber-dim); }
+
+/* Bubble formatting */
+.bc h4 {
+  font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:0.2em;
+  color:var(--amber); margin:10px 0 4px;
+  border-bottom:1px solid var(--amber-muted); padding-bottom:2px;
+}
+.bc h4:first-child { margin-top:0; }
+.bc ul { list-style:none; margin:4px 0; display:flex; flex-direction:column; gap:2px; }
+.bc ul li::before { content:'▸ '; color:var(--amber-dim); }
+.bc code { background:var(--surface); border:1px solid var(--border2); padding:1px 5px; color:var(--amber); font-size:11px; }
+.bc .ok  { color:var(--green); }
+.bc .w   { color:var(--amber); }
+.bc .bad { color:var(--red); }
+.bc .dim { color:var(--text); }
+
+/* Typing */
+.type-wrap { padding:12px 16px; }
+.type-bar {
+  width:100%; height:1px; background:var(--border2);
+  position:relative; overflow:hidden;
+}
+.type-bar::after {
+  content:''; position:absolute; top:0; left:-40%;
+  width:40%; height:100%;
+  background:linear-gradient(90deg,transparent,var(--amber),transparent);
+  animation:sweep 1s ease-in-out infinite;
+}
+@keyframes sweep { to{left:140%} }
+.type-lbl { font-size:9px; letter-spacing:0.15em; color:var(--amber); margin-top:7px; text-transform:uppercase; }
+
+/* ─── INPUT ───────────────────────────────────────────── */
+.input-zone {
+  padding:16px 20px 18px;
+  position:relative; z-index:1;
+  display:flex; flex-direction:column; align-items:center;
+}
+
+/* Wider in empty state, narrows once chatting */
+.input-wrap {
+  width:100%; max-width:680px;
+  display:flex; flex-direction:column; gap:0;
+}
+
+.input-box {
+  display:flex; align-items:flex-end; gap:8px;
+  border:1px solid var(--border2);
+  background:var(--surface);
+  padding:12px 14px;
+  transition:border-color 0.2s, box-shadow 0.2s;
+  position:relative;
+}
+
+.input-box:focus-within {
+  border-color:var(--amber);
+  box-shadow:0 0 0 1px var(--amber-muted), 0 4px 20px rgba(232,150,16,0.08);
+}
+
+.input-box::before {
+  content:''; position:absolute; top:-1px; left:-1px;
+  width:9px; height:9px;
+  border-top:1px solid var(--amber-dim); border-left:1px solid var(--amber-dim);
+  transition:border-color 0.2s;
+}
+.input-box:focus-within::before { border-color:var(--amber); }
+
+.ps { color:var(--amber); font-size:12px; flex-shrink:0; padding-bottom:2px; opacity:0.6; }
+
+textarea {
+  flex:1; background:transparent; border:none; outline:none;
+  resize:none; color:var(--text-bright);
+  font-family:'Share Tech Mono',monospace;
+  font-size:14px; line-height:1.55;
+  min-height:22px; max-height:160px;
+  caret-color:var(--amber);
+}
+textarea::placeholder { color:var(--text-dim); font-size:13px; }
+
+.send-btn {
+  background:var(--amber-muted); border:1px solid var(--amber-dim);
+  color:var(--amber);
+  padding:7px 16px;
+  font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:0.15em;
+  cursor:pointer; transition:all 0.12s; flex-shrink:0;
+}
+.send-btn:hover { background:var(--amber); color:var(--black); border-color:var(--amber); box-shadow:0 0 16px rgba(232,150,16,0.3); }
+.send-btn:active { transform:scale(0.97); }
+
+.input-hints {
+  display:flex; gap:14px; margin-top:7px; padding:0 2px;
+  font-size:9px; letter-spacing:0.08em; color:var(--text);
+  justify-content:space-between;
+}
+
+.hk { color:var(--amber-dim); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   RIGHT PANEL — slides in from right
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.rpanel {
+  width: 0; overflow:hidden;
+  background:var(--bg2);
+  border-left:1px solid var(--border);
+  flex-shrink:0;
+  transition:width 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+
+.rpanel.open { width:256px; }
+
+.rpanel-inner {
+  width:256px; height:100%;
+  overflow-y:auto; overflow-x:hidden;
+}
+
+.rpanel-inner::-webkit-scrollbar { width:2px; }
+.rpanel-inner::-webkit-scrollbar-thumb { background:var(--border2); }
+
+.pb { border-bottom:1px solid var(--border); padding:12px 14px; }
+
+.pt {
+  font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:0.2em;
+  color:var(--amber); margin-bottom:10px;
+  display:flex; align-items:center; gap:7px;
+}
+.pt::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,var(--amber-muted),transparent); }
+
+.qa-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; }
+
+.qa {
+  background:var(--surface); border:1px solid var(--border);
+  padding:7px 4px; font-size:9px; letter-spacing:0.06em;
+  text-transform:uppercase; text-align:center;
+  cursor:pointer; color:var(--text-mid); transition:all 0.12s;
+}
+.qa:hover { border-color:var(--amber-dim); color:var(--amber); background:var(--amber-muted); }
+.qa-i { display:block; font-size:12px; margin-bottom:2px; }
+
+.dr { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--border); font-size:10px; }
+.dr:last-child { border-bottom:none; }
+.dr-l { color:var(--text); letter-spacing:0.07em; }
+.dr-v { color:var(--amber); }
+.dr-v.ok  { color:var(--green); }
+.dr-v.bad { color:var(--red); }
+
+.sig {
+  background:var(--surface); border:1px solid var(--border);
+  border-left:2px solid var(--amber-muted);
+  padding:8px 10px; margin-bottom:5px;
+  cursor:pointer; transition:all 0.12s;
+  display:flex; gap:9px; align-items:flex-start;
+}
+.sig:hover { border-left-color:var(--amber); background:var(--amber-muted); transform:translateX(1px); }
+
+.sig-n {
+  font-family:'Bebas Neue',sans-serif; font-size:22px; line-height:1;
+  color:var(--amber); opacity:0.35; flex-shrink:0; width:24px; text-align:right;
+}
+.sig:hover .sig-n { opacity:0.75; }
+
+.sig-b { flex:1; min-width:0; }
+.sig-s { font-size:9px; letter-spacing:0.12em; color:var(--amber); margin-bottom:3px; text-transform:uppercase; }
+.sig-t { font-size:11px; line-height:1.5; color:var(--text-bright); }
+
+.ei {
+  display:flex; align-items:flex-start; gap:7px;
+  padding:5px 0; border-bottom:1px solid var(--border);
+  cursor:pointer; transition:color 0.12s;
+}
+.ei:last-of-type { border-bottom:none; }
+.ei:hover { color:var(--amber); }
+
+.ed { width:5px; height:5px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+.ed.e { background:var(--red);   box-shadow:0 0 4px var(--red);   animation:dp 1s infinite; }
+.ed.w { background:var(--amber); box-shadow:0 0 3px var(--amber); }
+
+.em { flex:1; font-size:11px; color:var(--text-bright); line-height:1.5; }
+.et { font-size:9px; color:var(--text); flex-shrink:0; margin-top:1px; }
+
+.mbar { margin-bottom:6px; }
+.mbar-r { display:flex; justify-content:space-between; font-size:9px; letter-spacing:0.07em; color:var(--text-mid); margin-bottom:3px; }
+.mbar-r span:last-child { color:var(--amber); }
+.mbar-bg { height:2px; background:var(--border); overflow:hidden; }
+.mbar-f { height:100%; background:linear-gradient(90deg,var(--amber-dim),var(--amber)); transition:width 1s cubic-bezier(0.4,0,0.2,1); position:relative; }
+.mbar-f.live::after {
+  content:''; position:absolute; right:0; top:-1px;
+  width:2px; height:4px; background:var(--amber-bright);
+  box-shadow:0 0 4px var(--amber); animation:dp 1.8s ease-in-out infinite;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BOTTOM STRIP — fades up once chatting starts
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.bstrip {
+  position:fixed;
+  bottom:0; left:0; right:0;
+  height:0; overflow:hidden;
+  background:var(--black);
+  border-top:1px solid var(--border);
+  display:flex;
+  transition:height 0.35s cubic-bezier(0.4,0,0.2,1);
+  z-index:100;
+}
+
+.bstrip.open { height:80px; }
+
+/* Push chat up when bottom strip opens */
+.chat { transition:padding-bottom 0.35s cubic-bezier(0.4,0,0.2,1); }
+.chat.shifted { padding-bottom:80px; }
+
+.bc {
+  flex:1; padding:12px 16px;
+  border-right:1px solid var(--border);
+  cursor:pointer; transition:background 0.12s;
+  position:relative; overflow:hidden;
+}
+.bc:last-child { border-right:none; }
+.bc:hover { background:var(--amber-muted); }
+.bc::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:var(--amber); transform:scaleX(0); transform-origin:left;
+  transition:transform 0.2s;
+}
+.bc:hover::before { transform:scaleX(1); }
+
+.bc-l { font-size:8px; letter-spacing:0.15em; color:var(--text-mid); text-transform:uppercase; margin-bottom:4px; }
+.bc-v { font-family:'Bebas Neue',sans-serif; font-size:26px; line-height:1; color:var(--amber); }
+.bc-v.r { color:var(--red); }
+.bc-v.g { color:var(--green); }
+.bc-v.c { color:#20b8d0; }
+.bc-s { font-size:8px; color:var(--text); letter-spacing:0.1em; margin-top:2px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BOOT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.boot {
+  position:fixed; inset:0; z-index:9999;
+  background:var(--black);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:16px;
+  animation:bootOut 0.4s ease 2.5s forwards;
+}
+@keyframes bootOut { to{opacity:0;pointer-events:none} }
+
+.bl {
+  font-family:'Bebas Neue',sans-serif; font-size:56px; letter-spacing:0.35em;
+  color:var(--amber); text-shadow:0 0 30px rgba(232,150,16,0.5);
+  animation:bL 0.4s ease 0.1s both;
+}
+@keyframes bL { from{opacity:0;filter:blur(6px);letter-spacing:0.8em} to{opacity:1;filter:blur(0);letter-spacing:0.35em} }
+
+.bs { font-size:9px; letter-spacing:0.3em; color:var(--amber-dim); animation:bF .3s ease .7s both; }
+
+.bp { width:220px; animation:bF .3s ease .9s both; }
+.bp-l { font-size:8px; letter-spacing:0.2em; color:var(--text-dim); margin-bottom:5px; }
+.bp-bg { height:1px; background:var(--border); overflow:hidden; }
+.bp-f { height:100%; background:linear-gradient(90deg,var(--amber-dim),var(--amber-bright)); animation:bBar 1.8s ease 1s both; }
+@keyframes bBar { from{width:0} to{width:100%} }
+
+.blines { font-size:9px; color:var(--text-dim); line-height:2; letter-spacing:0.1em; animation:bF .3s ease 1.1s both; }
+.blines span { display:block; }
+.blines span:nth-child(1){animation:bF .2s ease 1.2s both}
+.blines span:nth-child(2){animation:bF .2s ease 1.5s both}
+.blines span:nth-child(3){animation:bF .2s ease 1.8s both}
+.blines span:nth-child(4){animation:bF .2s ease 2.1s both;color:var(--amber)}
+
+@keyframes bF { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:none} }
+
+::selection { background:var(--amber-muted); color:var(--amber-bright); }
+
+</style>
+</head>
+<body>
+
+<!-- BOOT -->
+<div class="boot">
+  <div class="bl">JARVIS</div>
+  <div class="bs">Personal AI Operating System · v1.5</div>
+  <div class="bp">
+    <div class="bp-l">INITIALISING NEURAL CORE</div>
+    <div class="bp-bg"><div class="bp-f"></div></div>
+  </div>
+  <div class="blines">
+    <span>▸ Memory engine online ............. OK</span>
+    <span>▸ Tool registry: 56 modules ........ OK</span>
+    <span>▸ Claude Sonnet 4.5 connected ...... OK</span>
+    <span>▸ All systems operational — welcome back, Boss.</span>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header id="hdr">
+  <div class="logo">
+    <div class="logo-gem"></div>
+    <div class="logo-name">JARVIS</div>
+  </div>
+
+  <div class="h-sep"></div>
+
+  <div class="h-status" id="hStatus">
+    <div class="s-pill"><div class="s-dot ok"></div>Online</div>
+    <div class="s-pill"><div class="s-dot warn"></div>56 Tools</div>
+    <div class="s-pill"><div class="s-dot err"></div>2 Errors</div>
+  </div>
+
+  <div class="h-right">
+    <div class="panel-toggle">
+      <button class="tog" id="togL" onclick="toggleSidebar()" title="Nav">☰</button>
+      <button class="tog" id="togR" onclick="togglePanel()" title="Intel">⊞</button>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="nav-label">Core</div>
+      <div class="nav-item active" onclick="navTo(this,'what can you do')">
+        <span class="nav-icon">⬡</span><span class="nav-txt">Chat</span>
+      </div>
+      <div class="nav-item" onclick="navTo(this,'trend watchlist')">
+        <span class="nav-icon">◈</span><span class="nav-txt">Trends</span>
+        <span class="nav-badge nb-warn">2</span>
+      </div>
+      <div class="nav-item" onclick="navTo(this,'knowledge library')">
+        <span class="nav-icon">◉</span><span class="nav-txt">Learning</span>
+      </div>
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="navTo(this,'selfmod status')">
+        <span class="nav-icon">⚡</span><span class="nav-txt">Self-Mod</span>
+      </div>
+      <div class="nav-item" onclick="navTo(this,'show errors')">
+        <span class="nav-icon">△</span><span class="nav-txt">Errors</span>
+        <span class="nav-badge nb-err">2</span>
+      </div>
+      <div class="nav-item" onclick="navTo(this,'jarvis status')">
+        <span class="nav-icon">◎</span><span class="nav-txt">Status</span>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="st" onclick="ip('show errors')">
+          <div class="st-l">Errors</div><div class="st-v r">2</div>
+        </div>
+        <div class="st" onclick="ip('knowledge library')">
+          <div class="st-l">KB</div><div class="st-v">5</div>
+        </div>
+        <div class="st" onclick="ip('flashcard review')">
+          <div class="st-l">Cards</div><div class="st-v g">0</div>
+        </div>
+        <div class="st" onclick="ip('selfmod proposals')">
+          <div class="st-l">Mods</div><div class="st-v">0</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CHAT -->
+  <main class="chat" id="chat">
+    <div class="msgs" id="msgsWrap">
+
+      <!-- EMPTY STATE -->
+      <div class="empty-state" id="emptyState">
+        <div>
+          <div class="empty-logo">JARVIS</div>
+          <div class="empty-sub">
+            Personal AI Operating System · 56 tools · Claude Sonnet 4.5<br>
+            What do you want to do today?
+          </div>
+        </div>
+        <div class="suggestions">
+          <button class="sug" onclick="quickSend('what can you do')">
+            <span class="sug-icon">🤖</span>
+            <span class="sug-title">What can you do?</span>
+            <span class="sug-desc">Full capability overview</span>
+          </button>
+          <button class="sug" onclick="quickSend('how can I improve you')">
+            <span class="sug-icon">⚡</span>
+            <span class="sug-title">How can I improve you?</span>
+            <span class="sug-desc">Self-analysis + proposals</span>
+          </button>
+          <button class="sug" onclick="quickSend('teach me: RSI trading indicator')">
+            <span class="sug-icon">◈</span>
+            <span class="sug-title">Teach me something</span>
+            <span class="sug-desc">Start a learning session</span>
+          </button>
+          <button class="sug" onclick="quickSend('show errors')">
+            <span class="sug-icon">△</span>
+            <span class="sug-title">Show open errors</span>
+            <span class="sug-desc">2 issues need review</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- MESSAGE LIST -->
+      <div class="msg-list" id="msgList"></div>
+
+    </div>
+
+    <div class="input-zone">
+      <div class="input-wrap">
+        <div class="input-box">
+          <span class="ps">&gt;_</span>
+          <textarea id="inp" placeholder="Message Jarvis..." rows="1"
+            onkeydown="onKey(event)" oninput="resize(this)"></textarea>
+          <button class="send-btn" onclick="send()">Send</button>
+        </div>
+        <div class="input-hints">
+          <span><span class="hk">Enter</span> send</span>
+          <span><span class="hk">Shift+Enter</span> newline</span>
+          <span><span class="hk">↑</span> history</span>
+          <span id="toks" style="color:var(--amber-dim)">~0 tokens</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="rpanel" id="rpanel">
+    <div class="rpanel-inner">
+
+      <div class="pb">
+        <div class="pt">Quick Actions</div>
+        <div class="qa-grid">
+          <button class="qa" onclick="ip('what can you do')"><span class="qa-i">🤖</span>Capabilities</button>
+          <button class="qa" onclick="ip('daily briefing')"><span class="qa-i">📡</span>Briefing</button>
+          <button class="qa" onclick="ip('show errors')"><span class="qa-i">△</span>Errors</button>
+          <button class="qa" onclick="ip('how can I improve you')"><span class="qa-i">⚡</span>Improve</button>
+          <button class="qa" onclick="ip('jarvis status')"><span class="qa-i">◉</span>Status</button>
+          <button class="qa" onclick="ip('propose feature')"><span class="qa-i">✦</span>Propose</button>
+        </div>
+      </div>
+
+      <div class="pb">
+        <div class="pt">System</div>
+        <div class="dr"><span class="dr-l">Brain</span><span class="dr-v">Sonnet 4.5</span></div>
+        <div class="dr"><span class="dr-l">Code Gen</span><span class="dr-v">Opus 4.5</span></div>
+        <div class="dr"><span class="dr-l">API Key</span><span class="dr-v bad">Not Set</span></div>
+        <div class="dr"><span class="dr-l">Tools</span><span class="dr-v ok">56</span></div>
+        <div class="dr"><span class="dr-l">Cost</span><span class="dr-v" id="cost">$0.000</span></div>
+      </div>
+
+      <div class="pb">
+        <div class="pt">Memory</div>
+        <div class="mbar">
+          <div class="mbar-r"><span>Episodic</span><span>41</span></div>
+          <div class="mbar-bg"><div class="mbar-f live" style="width:82%"></div></div>
+        </div>
+        <div class="mbar">
+          <div class="mbar-r"><span>Semantic</span><span>2</span></div>
+          <div class="mbar-bg"><div class="mbar-f" style="width:4%"></div></div>
+        </div>
+        <div class="mbar">
+          <div class="mbar-r"><span>Procedural</span><span>1</span></div>
+          <div class="mbar-bg"><div class="mbar-f" style="width:2%"></div></div>
+        </div>
+      </div>
+
+      <div class="pb">
+        <div class="pt">Live Signals</div>
+        <div class="sig" onclick="ip('trend briefing: AI agents')">
+          <div class="sig-n">91</div>
+          <div class="sig-b">
+            <div class="sig-s">Reddit · AI Agents</div>
+            <div class="sig-t">Autonomous agents replacing 40% of SaaS workflows</div>
+          </div>
+        </div>
+        <div class="sig" onclick="ip('trend briefing: LLM')">
+          <div class="sig-n">87</div>
+          <div class="sig-b">
+            <div class="sig-s">Hacker News</div>
+            <div class="sig-t">LangGraph 0.3 — stateful agent memory production-ready</div>
+          </div>
+        </div>
+        <div class="sig" onclick="ip('trend briefing: crypto')">
+          <div class="sig-n">74</div>
+          <div class="sig-b">
+            <div class="sig-s">Reddit · Crypto</div>
+            <div class="sig-t">DePIN GPU networks capturing AI compute demand</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pb">
+        <div class="pt">Open Errors</div>
+        <div class="ei" onclick="ip('diagnose latest')">
+          <div class="ed e"></div><div class="em">web_search · ConnectionError</div><div class="et">03:44</div>
+        </div>
+        <div class="ei" onclick="ip('show errors')">
+          <div class="ed w"></div><div class="em">spotify_play · Rate limit</div><div class="et">03:41</div>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+</div>
+
+<!-- BOTTOM STRIP -->
+<div class="bstrip" id="bstrip">
+  <div class="bc" onclick="ip('knowledge library')">
+    <div class="bc-l">Knowledge</div>
+    <div class="bc-v">5</div>
+    <div class="bc-s">Sources</div>
+  </div>
+  <div class="bc" onclick="ip('trend watchlist')">
+    <div class="bc-l">Monitoring</div>
+    <div class="bc-v">2</div>
+    <div class="bc-s">Topics</div>
+  </div>
+  <div class="bc" onclick="ip('error stats')">
+    <div class="bc-l">Errors</div>
+    <div class="bc-v r">2</div>
+    <div class="bc-s">Open</div>
+  </div>
+  <div class="bc">
+    <div class="bc-l">Session Cost</div>
+    <div class="bc-v c" id="costB">$0.000</div>
+    <div class="bc-s">API Spend</div>
+  </div>
+</div>
+
+<script>
+/* ── Boot ──────────────────────────────────────────── */
+setTimeout(() => {
+  const b = document.querySelector('.boot');
+  b.style.cssText = 'opacity:0;transition:opacity 0.4s;pointer-events:none';
+  setTimeout(() => b.remove(), 400);
+}, 2900);
+
+/* ── Clock ─────────────────────────────────────────── */
+const tick = () => document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
+setInterval(tick,1000); tick();
+
+/* ── State ─────────────────────────────────────────── */
+let hasMessages   = false;
+let sidebarOpen   = false;
+let rpanelOpen    = false;
+let bottomOpen    = false;
+let cost          = 0;
+const hist        = []; let hidx = -1;
+
+function activateApp() {
+  if (hasMessages) return;
+  hasMessages = true;
+
+  // Header activates
+  document.getElementById('hdr').classList.add('active');
+  document.getElementById('hStatus').classList.add('visible');
+
+  // Hide empty state
+  document.getElementById('emptyState').classList.add('hidden');
+
+  // Auto-open right panel and bottom strip
+  setTimeout(() => { openPanel(); }, 200);
+  setTimeout(() => { openBottom(); }, 400);
+}
+
+/* ── Sidebar ───────────────────────────────────────── */
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
+  document.getElementById('togL').classList.toggle('on', sidebarOpen);
+}
+
+function openPanel() {
+  rpanelOpen = true;
+  document.getElementById('rpanel').classList.add('open');
+  document.getElementById('togR').classList.add('on');
+}
+
+function togglePanel() {
+  rpanelOpen = !rpanelOpen;
+  document.getElementById('rpanel').classList.toggle('open', rpanelOpen);
+  document.getElementById('togR').classList.toggle('on', rpanelOpen);
+}
+
+function openBottom() {
+  bottomOpen = true;
+  document.getElementById('bstrip').classList.add('open');
+  document.getElementById('chat').classList.add('shifted');
+}
+
+/* ── Nav ───────────────────────────────────────────── */
+function navTo(el, cmd) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  if (cmd) ip(cmd);
+}
+
+/* ── Input ─────────────────────────────────────────── */
+function ip(txt) {
+  const el = document.getElementById('inp');
+  el.value = txt; el.focus(); resize(el);
+}
+
+function quickSend(txt) {
+  ip(txt); setTimeout(send, 80);
+}
+
+function resize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+  const w = el.value.trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('toks').textContent = `~${Math.ceil(w*1.3)} tokens`;
+}
+
+function onKey(e) {
+  const el = document.getElementById('inp');
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); send(); return; }
+  if (e.key==='ArrowUp' && !el.value) {
+    e.preventDefault();
+    if (hidx < hist.length-1) { hidx++; el.value = hist[hist.length-1-hidx]; resize(el); }
+  }
+  if (e.key==='ArrowDown') {
+    e.preventDefault();
+    hidx > 0 ? (hidx--, el.value=hist[hist.length-1-hidx]) : (hidx=-1, el.value='');
+    resize(el);
+  }
+}
+
+/* ── Send ──────────────────────────────────────────── */
+function send() {
+  const el  = document.getElementById('inp');
+  const txt = el.value.trim();
+  if (!txt) return;
+  hist.push(txt); hidx = -1;
+  el.value = ''; resize(el);
+  document.getElementById('toks').textContent = '~0 tokens';
+  activateApp();
+  addMsg('u', txt);
+  respond(txt);
+}
+
+/* ── Messages ──────────────────────────────────────── */
+function addMsg(role, content, model='sonnet', tool=null) {
+  const c = document.getElementById('msgList');
+  const d = document.createElement('div');
+  d.className = 'msg ' + role;
+  const ts = new Date().toTimeString().slice(0,8);
+
+  const tag = model==='opus'
+    ? '<span class="m-tag mt-o">Opus</span>'
+    : '<span class="m-tag mt-s">Sonnet</span>';
+
+  const tl = tool ? `<div class="tool-line">▸ ${tool}</div>` : '';
+
+  if (role==='u') {
+    d.innerHTML = `
+      <div class="av" style="border-color:var(--border2);color:var(--text-dim);background:var(--surface)">U</div>
+      <div class="msg-body">
+        <div class="msg-meta">YOU <span style="margin-left:auto">${ts}</span></div>
+        <div class="bubble" style="border-color:var(--border2);background:var(--surface);color:var(--text-mid)">${esc(content)}</div>
+      </div>`;
+  } else {
+    d.innerHTML = `
+      <div class="av">⬡</div>
+      <div class="msg-body">
+        <div class="msg-meta">JARVIS ${tag} <span style="margin-left:auto">${ts}</span></div>
+        <div class="bubble">${tl}<div class="bc">${content}</div></div>
+      </div>`;
+  }
+
+  c.appendChild(d);
+  document.getElementById('msgsWrap').scrollTop = 999999;
+}
+
+function showTyping() {
+  const c = document.getElementById('msgList');
+  const d = document.createElement('div');
+  d.className='msg j'; d.id='typ';
+  d.innerHTML=`
+    <div class="av">⬡</div>
+    <div class="msg-body">
+      <div class="msg-meta">JARVIS <span class="m-tag mt-s">Sonnet</span></div>
+      <div class="bubble">
+        <div class="type-wrap">
+          <div class="type-bar"></div>
+          <div class="type-lbl">Processing</div>
+        </div>
+      </div>
+    </div>`;
+  c.appendChild(d);
+  document.getElementById('msgsWrap').scrollTop = 999999;
+}
+
+function hideTyping() {
+  const t = document.getElementById('typ'); if(t) t.remove();
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ── Responses ─────────────────────────────────────── */
+const R = {
+  'what can you do': { tool:'what_can_you_do', model:'sonnet', r:`
+    <h4>Capabilities</h4>
+    56 tools, 8 categories. The ones that matter:<br><br>
+    <span class="ok">◈ Learning</span> — Ingest any URL, PDF, YouTube. Teach, quiz, flashcards, curricula.<br>
+    <span class="w">◈ Trends</span> — Daily intel: news, Reddit, HN, Google Trends. Competitor monitoring.<br>
+    <span class="w">◈ Self-Mod</span> — Build new tools with Claude Opus. Full code review before install.<br>
+    <span class="ok">◈ Memory</span> — Permanent storage. Semantic recall across all sessions.<br>
+    <span class="dim">◈ Web, Notes, Files, System</span> — Search, scrape, calculator, timers, file ops.<br><br>
+    Not built yet: voice, trading, email — say <code>selfmod build: [feature]</code> to add them.` },
+
+  'show errors': { tool:'show_errors', model:'sonnet', r:`
+    <h4>Open Errors — Last 24h</h4>
+    2 errors · 1 warning · 2 unresolved<br><br>
+    <span class="bad">✕ [03:44] [be53c42b]</span> — web_search · ConnectionError<br>
+    <span class="bad">✕ [03:41] [3107563b]</span> — spotify_play · Rate limit 429<br>
+    <span class="w">⚠ [03:38] [f2a91c44]</span> — spotify_play · API approaching limit<br><br>
+    Run <code>diagnose be53c42b</code> for the fix.` },
+
+  'jarvis status': { tool:'jarvis_status', model:'sonnet', r:`
+    <h4>System Status</h4>
+    <span class="ok">✓</span> Brain: claude-sonnet-4-20250514<br>
+    <span class="ok">✓</span> Code Gen: claude-opus-4-5<br>
+    <span class="bad">✕</span> API Key: Not set — add to .env<br>
+    <span class="ok">✓</span> Tools: 56 loaded across 8 categories<br>
+    <span class="ok">✓</span> Memory: 44 entries<br>
+    <span class="w">⚠</span> Errors: 2 open, 0 critical` },
+
+  'how can i improve you': { tool:'how_to_improve', model:'sonnet', r:`
+    <h4>Honest Self-Assessment</h4>
+    <span class="bad">1. Voice</span> [High Impact / Medium Effort]<br>
+    &nbsp;&nbsp;You're still typing everything. Wake word + ElevenLabs changes the product entirely.<br><br>
+    <span class="w">2. Email</span> [High Impact / Low Effort]<br>
+    &nbsp;&nbsp;Gmail API already in requirements. Highest ROI of anything right now. One file to write.<br><br>
+    <span class="w">3. Scheduler</span> [Medium Impact / Low Effort]<br>
+    &nbsp;&nbsp;Auto-run daily briefing at 8am. schedule library already installed.<br><br>
+    My pick: <code>selfmod build: Gmail email integration</code>` },
+
+  'selfmod status': { tool:'selfmod_status', model:'sonnet', r:`
+    <h4>Self-Modification Engine</h4>
+    Code model: <span class="w">Claude Opus 4.5</span> — most capable<br>
+    Proposals installed: <span class="ok">0</span> · Pending: <span class="ok">0</span><br><br>
+    <span class="ok">✓ Can write:</span> tools/, integrations/, voice/<br>
+    <span class="bad">✕ Cannot touch:</span> core/, memory/, config/, jarvis.py<br><br>
+    Try: <code>selfmod build: create a weather tool using wttr.in</code>` },
+
+  'propose feature': { tool:'propose_feature', model:'sonnet', r:`
+    <h4>Best Next Feature: Voice Module</h4>
+    Everything else still requires typing. Voice removes the last barrier between
+    this feeling like a real AI assistant versus a chat window.<br><br>
+    With it: wake word → speak → Jarvis responds out loud.<br>
+    Without it: you're at a keyboard, which limits when and where you use this.<br><br>
+    Build it: <code>selfmod build: voice module with pvporcupine wake word, SpeechRecognition STT, ElevenLabs TTS</code>` },
+
+  'teach me': { tool:'teach_me', model:'sonnet', r:`
+    <h4>RSI — Relative Strength Index</h4>
+    <strong>Big picture:</strong> RSI tells you if an asset is overbought or oversold — has price moved too far, too fast?<br><br>
+    It oscillates 0–100. Default period: 14 candles.<br><br>
+    <span class="ok">Above 70</span> → Overbought. Potential reversal down.<br>
+    <span class="bad">Below 30</span> → Oversold. Potential bounce up.<br><br>
+    <strong>The catch:</strong> RSI lies in strong trends. Can stay above 70 for weeks in a bull run. Never use it alone.<br><br>
+    <span class="w">Quick check: RSI hits 28 on a stock you're watching. What does that suggest?</span>` },
+};
+
+function respond(input) {
+  showTyping();
+  const lower = input.toLowerCase().trim();
+
+  let match = null;
+  for (const [k,v] of Object.entries(R)) {
+    if (lower.includes(k) || k.split(' ').every(w => lower.includes(w))) {
+      match = v; break;
+    }
+  }
+
+  const c = match?.model==='opus' ? 0.14 : 0.004;
+  cost += c;
+  ['cost','costB'].forEach(id => document.getElementById(id).textContent = '$'+cost.toFixed(3));
+
+  setTimeout(() => {
+    hideTyping();
+    if (match) {
+      addMsg('j', match.r, match.model, match.tool);
+    } else {
+      addMsg('j',
+        `<span class="dim">Demo mode — no API key. Add </span><code>ANTHROPIC_API_KEY</code><span class="dim"> to .env for live responses.</span><br><br>
+        You said: <code>${esc(input)}</code><br><br>
+        Try: <code>what can you do</code> · <code>show errors</code> · <code>jarvis status</code> · <code>propose feature</code>`,
+        'sonnet');
+    }
+  }, 500 + Math.random()*400);
+}
+</script>
+</body>
+</html>
