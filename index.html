@@ -940,9 +940,9 @@ textarea::placeholder { color:var(--text-dim); }
     </button>
 
     <button class="indicator" id="ind-errors" onclick="togglePanel('errors')">
-      <div class="ind-dot d-red"></div>
+      <div class="ind-dot d-green"></div>
       Errors
-      <span class="ind-count" style="color:var(--red)">2</span>
+      <span class="ind-count" style="color:var(--green)">0</span>
     </button>
   </div>
 
@@ -1149,16 +1149,9 @@ textarea::placeholder { color:var(--text-dim); }
   <div class="panel-body">
 
     <div class="ps-block">
-      <div class="ps-label">Unresolved · 2</div>
-      <div class="ei" onclick="ip('diagnose be53c42b')">
-        <div class="ed e"></div>
-        <div class="em">web_search · ConnectionError<br><span style="font-size:11px;color:var(--text-dim)">Could not reach server</span></div>
-        <div class="et">03:44</div>
-      </div>
-      <div class="ei" onclick="ip('diagnose 3107563b')">
-        <div class="ed w"></div>
-        <div class="em">spotify_play · Rate limit 429<br><span style="font-size:11px;color:var(--text-dim)">Retry in 60s</span></div>
-        <div class="et">03:41</div>
+      <div class="ps-label">Unresolved · 0</div>
+      <div style="font-size:11px;color:var(--text-dim);padding:12px 0;text-align:center;letter-spacing:0.1em">
+        No open errors — system healthy
       </div>
     </div>
 
