@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1603,9 +1604,22 @@ async function respond(input) {
   showTyping();
 
   try {
-    // 60 second timeout — Claude with web search can take a moment
+    // Timeout — selfmod build needs 3 minutes, everything else 60 seconds
+    const isSelfmod = /selfmod\s*build/i.test(input);
+    const timeoutMs = isSelfmod ? 180000 : 60000;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    // Update typing label for long selfmod builds
+    if (isSelfmod) {
+      setTimeout(() => {
+        const typ = document.getElementById('typ');
+        if (typ) {
+          const lbl = typ.querySelector('.type-lbl');
+          if (lbl) lbl.textContent = 'Opus writing code — 60-90 seconds...';
+        }
+      }, 3000);
+    }
 
     const res = await fetch(`${API_URL}/chat`, {
       method: 'POST',
