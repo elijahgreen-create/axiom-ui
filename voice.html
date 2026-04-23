@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d0d18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>AXIOM Voice</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0d18; --bg2:#111120; --surface:#161628; --border:#242440;
+  --amber:#e89610; --amber-bright:#ffb82a; --amber-dim:#8a5510; --amber-muted:#3a2210;
+  --red:#e03030; --green:#22c460;
+  --text:#a0a0c8; --text-mid:#c4c4e0; --text-bright:#eeeef8; --text-dim:#505070;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:var(--bg);overflow:hidden;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Share Tech Mono',monospace;color:var(--text);display:flex;flex-direction:column;}
+body::after{content:'';position:fixed;inset:0;z-index:9000;pointer-events:none;opacity:0.15;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  background-size:200px 200px;mix-blend-mode:overlay;}
+
+.header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(13,13,24,0.95);backdrop-filter:blur(12px);flex-shrink:0;position:relative;z-index:10;}
+.header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--amber-dim) 30%,var(--amber) 50%,var(--amber-dim) 70%,transparent);opacity:0.5;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.25em;color:var(--amber);text-shadow:0 0 12px rgba(232,150,16,0.4);}
+.back-btn{font-size:11px;letter-spacing:0.12em;color:var(--text-dim);text-decoration:none;border:1px solid var(--border);padding:5px 12px;transition:all 0.15s;}
+.back-btn:hover{border-color:var(--amber-dim);color:var(--amber);}
+.status-chip{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:4px 10px;border:1px solid;}
+.status-chip.ready{color:var(--text-dim);border-color:var(--border);}
+.status-chip.listening{color:var(--amber);border-color:var(--amber-dim);background:var(--amber-muted);}
+.status-chip.thinking{color:var(--text-mid);border-color:var(--border);}
+.status-chip.speaking{color:var(--green);border-color:#0e4a28;}
+.status-chip.error{color:var(--red);border-color:#602020;}
+
+.msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;}
+.msgs::-webkit-scrollbar{width:2px;}
+.msgs::-webkit-scrollbar-thumb{background:var(--amber-dim);}
+.msg{display:flex;gap:10px;animation:mIn 0.2s ease;}
+@keyframes mIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg-av{width:28px;height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;border:1px solid;margin-top:2px;}
+.msg.user .msg-av{border-color:var(--border);color:var(--text-dim);background:var(--surface);}
+.msg.axiom .msg-av{border-color:var(--amber-dim);color:var(--amber);background:var(--amber-muted);}
+.msg-body{flex:1;}
+.msg-meta{font-size:9px;letter-spacing:0.12em;color:var(--text-dim);margin-bottom:4px;text-transform:uppercase;}
+.msg-text{font-size:14px;line-height:1.75;color:var(--text-mid);padding:12px 14px;border:1px solid;}
+.msg.user .msg-text{border-color:var(--border);background:var(--surface);border-radius:0 3px 3px 3px;}
+.msg.axiom .msg-text{border-color:var(--amber-dim);background:var(--bg2);color:var(--text-bright);border-radius:3px 0 3px 3px;}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px 20px;text-align:center;}
+.empty-logo{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:0.4em;color:var(--amber);opacity:0.4;}
+.empty-sub{font-size:11px;letter-spacing:0.12em;color:var(--text-dim);line-height:2;}
+
+.controls{padding:20px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;}
+.mode-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px;}
+.mode-label{font-size:10px;letter-spacing:0.12em;color:var(--text-dim);}
+.mode-toggle{display:flex;border:1px solid #2e2e50;overflow:hidden;}
+.mode-btn{padding:6px 14px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;background:transparent;border:none;color:var(--text-dim);transition:all 0.15s;font-family:'Share Tech Mono',monospace;}
+.mode-btn.active{background:var(--amber-muted);color:var(--amber);}
+
+.mic-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.mic-btn{width:88px;height:88px;border-radius:50%;border:2px solid var(--amber-dim);background:var(--amber-muted);color:var(--amber);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;position:relative;-webkit-user-select:none;user-select:none;touch-action:none;}
+.mic-btn:hover{border-color:var(--amber);box-shadow:0 0 20px rgba(232,150,16,0.2);}
+.mic-btn.recording{border-color:var(--red);background:rgba(224,48,48,0.15);color:var(--red);animation:pulse 1s ease-out infinite;}
+.mic-btn.continuous{border-color:var(--green);background:rgba(34,196,96,0.1);color:var(--green);}
+.mic-btn.disabled{opacity:0.3;cursor:not-allowed;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(224,48,48,0.5);}100%{box-shadow:0 0 0 20px rgba(224,48,48,0);}}
+.mic-btn.recording::before,.mic-btn.recording::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid var(--red);animation:ripple 1.5s ease-out infinite;}
+.mic-btn.recording::after{animation-delay:0.75s;}
+@keyframes ripple{0%{transform:scale(1);opacity:0.6;}100%{transform:scale(1.4);opacity:0;}}
+.mic-icon{font-size:28px;}
+.mic-hint{font-size:10px;letter-spacing:0.12em;color:var(--text-dim);text-align:center;min-height:16px;}
+
+.viz{display:flex;align-items:center;gap:3px;height:32px;width:120px;justify-content:center;}
+.viz-bar{width:4px;background:var(--amber-dim);border-radius:2px;min-height:4px;transition:height 0.1s ease;}
+
+.secure-badge{font-size:9px;letter-spacing:0.1em;color:var(--green);text-align:center;margin-top:10px;opacity:0.6;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/" class="back-btn">← Chat</a>
+  <div class="logo">AXIOM Voice</div>
+  <div class="status-chip ready" id="statusChip">Ready</div>
+</div>
+
+<div class="msgs" id="msgs">
+  <div class="empty" id="emptyState">
+    <div class="empty-logo">AXIOM</div>
+    <div class="empty-sub">
+      Hold the button to speak<br>
+      or switch to continuous mode<br><br>
+      <span style="color:var(--green);font-size:10px">🔒 Audio processed securely on server</span>
+    </div>
+  </div>
+  <div id="msgList"></div>
+</div>
+
+<div class="controls">
+  <div class="mode-row">
+    <span class="mode-label">Mode:</span>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modePush" onclick="setMode('push')">Push to Talk</button>
+      <button class="mode-btn" id="modeCont" onclick="setMode('continuous')">Continuous</button>
+    </div>
+  </div>
+  <div class="mic-wrap">
+    <div class="viz" id="viz">
+      <div class="viz-bar" style="height:4px"></div>
+      <div class="viz-bar" style="height:8px"></div>
+      <div class="viz-bar" style="height:4px"></div>
+      <div class="viz-bar" style="height:12px"></div>
+      <div class="viz-bar" style="height:6px"></div>
+      <div class="viz-bar" style="height:4px"></div>
+      <div class="viz-bar" style="height:10px"></div>
+      <div class="viz-bar" style="height:4px"></div>
+    </div>
+    <button class="mic-btn disabled" id="micBtn"
+      ontouchstart="onMicDown(event)" ontouchend="onMicUp(event)"
+      onmousedown="onMicDown(event)" onmouseup="onMicUp(event)">
+      <span class="mic-icon">🎙</span>
+    </button>
+    <div class="mic-hint" id="micHint">Requesting microphone access...</div>
+  </div>
+  <div class="secure-badge">🔒 Your API keys never leave the server</div>
+</div>
+
+<script>
+// ── Config — points at YOUR server, not OpenAI directly ──────────────────────
+const AXIOM_API  = 'https://162.243.225.72.nip.io';
+const SESSION_ID = 'voice-' + Math.random().toString(36).slice(2,8);
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let mode='push', isRecording=false, isProcessing=false;
+let mediaRec=null, audioChunks=[], stream=null;
+let analyser=null, audioCtx=null, vadInterval=null, silenceCount=0;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio:{echoCancellation:true,noiseSuppression:true,sampleRate:16000}
+    });
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const src = audioCtx.createMediaStreamSource(stream);
+    analyser  = audioCtx.createAnalyser();
+    analyser.fftSize = 64;
+    src.connect(analyser);
+
+    const btn = document.getElementById('micBtn');
+    btn.classList.remove('disabled');
+    setHint('Hold to speak');
+    setStatus('ready','Ready');
+    startViz();
+  } catch(err) {
+    setStatus('error','Mic denied');
+    setHint('Microphone access denied — check browser settings');
+  }
+}
+
+// ── Mode ──────────────────────────────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.getElementById('modePush').classList.toggle('active', m==='push');
+  document.getElementById('modeCont').classList.toggle('active', m==='continuous');
+  const btn = document.getElementById('micBtn');
+  if (m==='continuous') {
+    btn.classList.add('continuous');
+    setHint('Listening continuously — tap to stop');
+    startContinuous();
+  } else {
+    stopContinuous();
+    btn.classList.remove('continuous','recording');
+    setHint('Hold to speak');
+  }
+}
+
+// ── Push to talk ──────────────────────────────────────────────────────────────
+function onMicDown(e) { e.preventDefault(); if(mode!=='push'||isProcessing) return; startRecording(); }
+async function onMicUp(e) { e.preventDefault(); if(mode!=='push'||!isRecording) return; await stopRecording(); }
+
+// ── Continuous ────────────────────────────────────────────────────────────────
+let contRecording=false;
+function startContinuous() {
+  if(!stream) return;
+  contRecording=true; startRecording();
+  vadInterval = setInterval(()=>{
+    if(!analyser||!contRecording||isProcessing) return;
+    const data=new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+    const avg=data.reduce((a,b)=>a+b,0)/data.length;
+    if(avg<8) { silenceCount++; if(silenceCount>15&&isRecording){ stopRecording().then(()=>{ if(contRecording&&!isProcessing) setTimeout(()=>{ if(contRecording) startRecording(); },500); }); } }
+    else { silenceCount=0; }
+  },100);
+}
+function stopContinuous() { contRecording=false; clearInterval(vadInterval); silenceCount=0; if(isRecording) stopRecording(); }
+
+// ── Recording ─────────────────────────────────────────────────────────────────
+async function startRecording() {
+  if(!stream||isRecording) return;
+  if(audioCtx&&audioCtx.state==='suspended') await audioCtx.resume();
+  isRecording=true; audioChunks=[]; silenceCount=0;
+  document.getElementById('micBtn').classList.add('recording');
+  setStatus('listening','Listening');
+  setHint(mode==='push'?'Release to send':'Listening...');
+  const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
+  mediaRec = new MediaRecorder(stream, {mimeType});
+  mediaRec.ondataavailable = e=>{ if(e.data.size>0) audioChunks.push(e.data); };
+  mediaRec.start(100);
+}
+
+async function stopRecording() {
+  if(!mediaRec||mediaRec.state==='inactive'||!isRecording) return;
+  isRecording=false;
+  document.getElementById('micBtn').classList.remove('recording');
+  return new Promise(resolve=>{
+    mediaRec.onstop = async ()=>{
+      const blob = new Blob(audioChunks,{type:mediaRec.mimeType||'audio/webm'});
+      if(blob.size<1000){ setHint(mode==='push'?'Hold to speak':'Listening...'); resolve(); return; }
+      isProcessing=true;
+      setStatus('thinking','Processing');
+      setHint('Transcribing...');
+      await processAudio(blob);
+      isProcessing=false;
+      resolve();
+    };
+    mediaRec.stop();
+  });
+}
+
+// ── Process ───────────────────────────────────────────────────────────────────
+async function processAudio(blob) {
+  try {
+    // 1. Send audio to OUR server — not OpenAI directly
+    const form = new FormData();
+    form.append('audio', blob, 'audio.webm');
+    const tRes = await fetch(`${AXIOM_API}/voice/transcribe`, {method:'POST', body:form});
+    if(!tRes.ok) throw new Error(`Transcribe error ${tRes.status}`);
+    const tData = await tRes.json();
+    const text = tData.text;
+    if(!text||text.trim().length<2){ setHint(mode==='push'?'Hold to speak':'Listening...'); setStatus('ready','Ready'); return; }
+
+    // Hide empty state
+    document.getElementById('emptyState').style.display='none';
+    addMsg('user', text);
+    setHint('Thinking...');
+
+    // 2. Send to Axiom chat
+    const cRes = await fetch(`${AXIOM_API}/chat`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:text, session_id:SESSION_ID})
+    });
+    if(!cRes.ok) throw new Error(`Chat error ${cRes.status}`);
+    const cData = await cRes.json();
+    const reply = cData.response||'No response';
+    addMsg('axiom', reply);
+
+    // 3. Request TTS from OUR server
+    setStatus('speaking','Speaking');
+    setHint('Speaking...');
+    const sRes = await fetch(`${AXIOM_API}/voice/speak`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text:reply, voice:'onyx', speed:1.1})
+    });
+    if(!sRes.ok) throw new Error(`TTS error ${sRes.status}`);
+    const audioBlob = await sRes.blob();
+    const url = URL.createObjectURL(audioBlob);
+    await new Promise(res=>{ const a=new Audio(url); a.onended=()=>{URL.revokeObjectURL(url);res();}; a.onerror=res; a.play(); });
+
+    setStatus('ready','Ready');
+    setHint(mode==='push'?'Hold to speak':'Listening...');
+  } catch(err) {
+    console.error(err);
+    setStatus('error','Error');
+    setHint('Error: '+err.message);
+    setTimeout(()=>{ setStatus('ready','Ready'); setHint(mode==='push'?'Hold to speak':'Listening...'); },3000);
+  }
+}
+
+// ── Messages ──────────────────────────────────────────────────────────────────
+function addMsg(role,text) {
+  const c=document.getElementById('msgList');
+  const d=document.createElement('div');
+  d.className='msg '+role;
+  const ts=new Date().toTimeString().slice(0,8);
+  d.innerHTML=`<div class="msg-av">${role==='user'?'U':'⬡'}</div><div class="msg-body"><div class="msg-meta">${role==='user'?'YOU':'AXIOM'} · ${ts}</div><div class="msg-text">${esc(text)}</div></div>`;
+  c.appendChild(d);
+  document.getElementById('msgs').scrollTop=999999;
+}
+
+// ── Visualizer ────────────────────────────────────────────────────────────────
+function startViz() {
+  const bars=document.querySelectorAll('.viz-bar');
+  setInterval(()=>{
+    if(!analyser) return;
+    const data=new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+    bars.forEach((bar,i)=>{ const h=Math.max(4,(data[i*2]||0)/255*28); bar.style.height=h+'px'; bar.style.background=isRecording?'var(--red)':'var(--amber-dim)'; });
+  },80);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function setStatus(type,label){ const c=document.getElementById('statusChip'); c.className='status-chip '+type; c.textContent=label; }
+function setHint(text){ document.getElementById('micHint').textContent=text; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&isRecording) stopRecording(); });
+
+init();
+</script>
+</body>
+</html>
