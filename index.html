@@ -919,6 +919,23 @@ textarea::placeholder { color:var(--text-dim); }
   100% { box-shadow: 0 0 0 8px rgba(224,48,48,0); }
 }
 
+
+/* ── Feedback buttons ──────────────────────────────── */
+.feedback-row {
+  display: flex; gap: 6px; margin-top: 8px;
+  align-items: center;
+}
+.fb-btn {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-dim); font-size: 11px; padding: 2px 8px;
+  cursor: pointer; transition: all 0.12s;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.08em;
+}
+.fb-btn:hover { border-color: var(--amber-dim); color: var(--amber); }
+.fb-btn.rated { border-color: var(--green); color: var(--green); }
+.fb-btn.rated-bad { border-color: var(--red); color: var(--red); }
+
 ::selection { background:var(--amber-muted); color:var(--amber-bright); }
 
 </style>
@@ -1558,6 +1575,7 @@ function addMsg(role,content,model='sonnet',tool=null) {
     :'<span class="mtag mt-s">Sonnet</span>';
   const tl=tool?`<div class="tl">▸ ${tool}</div>`:'';
 
+  const msgId = 'msg-' + Date.now();
   if(role==='u'){
     d.innerHTML=`
       <div class="av" style="border-color:var(--border2);color:var(--text-dim);background:var(--surface)">U</div>
@@ -1570,8 +1588,17 @@ function addMsg(role,content,model='sonnet',tool=null) {
       <div class="av">⬡</div>
       <div class="msg-body">
         <div class="msg-meta">AXIOM ${tag} <span style="margin-left:auto">${ts}</span></div>
-        <div class="bubble">${tl}<div class="bc">${content}</div></div>
+        <div class="bubble">${tl}<div class="bc">${content}</div>
+          <div class="feedback-row" id="${msgId}-fb">
+            <span style="font-size:9px;letter-spacing:0.1em;color:var(--text-dim)">Rate:</span>
+            <button class="fb-btn" onclick="rateMsgGood('${msgId}', this)">✓ Good</button>
+            <button class="fb-btn" onclick="rateMsgBad('${msgId}', this)">✕ Bad</button>
+          </div>
+        </div>
       </div>`;
+    // Store message content for feedback
+    window._lastAxiomMsg = content;
+    window._lastAxiomMsgId = msgId;
   }
   c.appendChild(d);
   const mw=document.getElementById('msgsWrap'); mw.scrollTop=mw.scrollHeight;
@@ -1951,6 +1978,43 @@ async function speakResponse(text) {
 function setMicStatus(t){ const el=document.getElementById('micStatus'); if(el) el.textContent=t; }
 
 initVoice();
+
+
+
+/* ── Feedback (Phase 6 — Learning Loop) ─────────────── */
+async function rateMsgGood(msgId, btn) {
+  btn.classList.add('rated');
+  btn.textContent = '✓ Saved';
+  document.getElementById(msgId+'-fb').querySelectorAll('.fb-btn').forEach(b => b.disabled=true);
+  try {
+    await fetch(`${API_URL}/feedback`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        session_id: typeof SESSION_ID !== 'undefined' ? SESSION_ID : 'default',
+        message: window._lastUserMsg || '',
+        response: window._lastAxiomMsg || '',
+        rating: 5, note: ''
+      })
+    });
+  } catch(e) { console.warn('Feedback failed:', e); }
+}
+
+async function rateMsgBad(msgId, btn) {
+  btn.classList.add('rated-bad');
+  const note = prompt('What was wrong? (optional)') || '';
+  document.getElementById(msgId+'-fb').querySelectorAll('.fb-btn').forEach(b => b.disabled=true);
+  try {
+    await fetch(`${API_URL}/feedback`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        session_id: typeof SESSION_ID !== 'undefined' ? SESSION_ID : 'default',
+        message: window._lastUserMsg || '',
+        response: window._lastAxiomMsg || '',
+        rating: 1, note
+      })
+    });
+  } catch(e) { console.warn('Feedback failed:', e); }
+}
 
 </script>
 
