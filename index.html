@@ -1340,7 +1340,48 @@ setTimeout(() => {
   const b = document.querySelector('.boot');
   b.style.cssText='opacity:0;transition:opacity 0.4s;pointer-events:none';
   setTimeout(()=>b.remove(),400);
+  // Load today's briefing after boot
+  loadBriefing();
 }, 2900);
+
+async function loadBriefing() {
+  try {
+    const res = await fetch(`${API_URL}/briefing`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.available || !data.content) return;
+
+    // Show briefing in the empty state
+    const emptyState = document.getElementById('empty');
+    if (!emptyState) return;
+
+    const briefingEl = document.createElement('div');
+    briefingEl.id = 'morningBriefing';
+    briefingEl.style.cssText = `
+      max-width:640px; width:100%;
+      background:var(--bg2); border:1px solid var(--amber-dim);
+      padding:20px 24px; margin-bottom:24px;
+      position:relative;
+    `;
+    briefingEl.innerHTML = `
+      <div style="font-size:9px;letter-spacing:0.2em;color:var(--amber);text-transform:uppercase;margin-bottom:12px">
+        ◈ Morning Briefing · ${new Date(data.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}
+      </div>
+      <div style="font-size:13px;line-height:1.85;color:var(--text-mid);white-space:pre-wrap">${esc(data.content)}</div>
+      <div style="margin-top:12px;font-size:9px;letter-spacing:0.1em;color:var(--text-dim)">
+        Generated at ${new Date(data.generated_at+'Z').toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}
+      </div>
+    `;
+
+    // Insert before suggestions
+    const sugs = emptyState.querySelector('.sugs');
+    if (sugs) emptyState.insertBefore(briefingEl, sugs);
+    else emptyState.appendChild(briefingEl);
+
+  } catch(e) {
+    console.log('No briefing available:', e.message);
+  }
+}
 
 /* ── Clock ─────────────────────────────────────────── */
 const tick = () => document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
