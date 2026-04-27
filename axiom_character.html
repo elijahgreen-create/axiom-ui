@@ -105,15 +105,19 @@ async function init() {
       const model = gltf.scene;
       scene.add(model);
 
-      // Character is upside down from export — flip on Z
-      model.rotation.z = Math.PI;
+      // Character is lying on back — Z is height, rotate -90 on X to stand up
+      model.rotation.x = -Math.PI / 2;
 
-      // Scale to human height
-      const rawBox0 = new THREE.Box3().setFromObject(model);
-      const rawSize0 = rawBox0.getSize(new THREE.Vector3());
-      const rawH = Math.max(rawSize0.x, rawSize0.y, rawSize0.z);
-      const scale = 1.8 / rawH;
+      // Scale using Z (the real height axis before rotation)
+      // raw Z = 0.017, target = 1.8 → scale = 105.88
+      const targetHeight = 1.8;
+      const rawHeight = 0.017000003420335644; // known from console
+      const scale = targetHeight / rawHeight;
       model.scale.setScalar(scale);
+      console.log('Scale:', scale);
+
+      // Force update world matrix before bounding box
+      model.updateMatrixWorld(true);
 
       const box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
