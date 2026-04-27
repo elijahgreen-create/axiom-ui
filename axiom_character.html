@@ -105,7 +105,16 @@ async function init() {
       const model = gltf.scene;
       scene.add(model);
 
-      // NO rotation, NO scaling — just add as-is first
+      // Character is upside down from export — flip on Z
+      model.rotation.z = Math.PI;
+
+      // Scale to human height
+      const rawBox0 = new THREE.Box3().setFromObject(model);
+      const rawSize0 = rawBox0.getSize(new THREE.Vector3());
+      const rawH = Math.max(rawSize0.x, rawSize0.y, rawSize0.z);
+      const scale = 1.8 / rawH;
+      model.scale.setScalar(scale);
+
       const box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
       const center = box.getCenter(new THREE.Vector3());
