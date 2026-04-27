@@ -355,7 +355,9 @@ async function init() {
     const targetScale = 1.8 / tempMax;
     console.log('Raw size:', tempMax, '→ scale:', targetScale);
     model.scale.setScalar(targetScale);
-    // Reset position to floor level
+    // Mixamo/Blender exports are often rotated — fix axis
+    model.rotation.x = -Math.PI / 2;
+    // Reset position
     model.position.set(0, 0, 0);
     model.position.set(0, 0, 0);
 
