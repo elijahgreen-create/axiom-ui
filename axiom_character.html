@@ -434,18 +434,24 @@ function fitCameraToModel() {
 
   console.log('Model height:', size.y.toFixed(3), 'center:', center.x.toFixed(3), center.y.toFixed(3), center.z.toFixed(3));
 
-  // Hardcoded camera for this character scale (height ~1.8 units)
-  // Position camera far back enough to see full body
-  const lookAtY = center.y * 0.85;
+  // Log everything to debug
+  console.log('box.min:', box.min);
+  console.log('box.max:', box.max);
+  console.log('size:', size);
+  console.log('center:', center);
+
+  // Camera: position above and back, look at center of character
+  const charMidY = (box.min.y + box.max.y) / 2;
+  const charMidZ = (box.min.z + box.max.z) / 2;
   
-  camera.position.set(0, lookAtY, 9);
-  camera.lookAt(0, lookAtY, 0);
+  camera.fov  = 45;
+  camera.position.set(0, charMidY, 12);
+  camera.lookAt(0, charMidY, charMidZ);
   camera.near = 0.01;
-  camera.far  = 100;
-  camera.fov  = 35; // narrower FOV = less distortion
+  camera.far  = 200;
   camera.updateProjectionMatrix();
 
-  console.log('Camera hardcoded — pos z:9, lookAt y:', lookAtY.toFixed(3));
+  console.log('Camera: pos(0,', charMidY.toFixed(2), ',12) lookAt(0,', charMidY.toFixed(2), ',', charMidZ.toFixed(2), ')');
 
   // Move ground plane to character feet
   const feet = box.min.y;
