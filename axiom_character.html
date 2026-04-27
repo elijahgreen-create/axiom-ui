@@ -3,320 +3,182 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AXIOM — Character</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>AXIOM — Character Test</title>
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
-
-#c{display:block;width:100vw;height:100vh;}
-
-.ui{
-  position:fixed;inset:0;z-index:10;pointer-events:none;
-  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
-  padding-bottom:20px;gap:8px;
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #04080f; overflow: hidden; }
+canvas { display: block; width: 100vw; height: 100vh; }
+#info {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  color: rgba(232,152,10,0.8); font-family: monospace; font-size: 11px;
+  letter-spacing: 0.1em; text-align: center; pointer-events: none;
 }
-
-.state{
-  font-family:'Share Tech Mono',monospace;
-  font-size:9px;letter-spacing:0.3em;
-  color:rgba(232,152,10,0.7);text-transform:uppercase;
+#btns {
+  position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px;
 }
-
-.btns{display:flex;gap:6px;pointer-events:all;}
-
-.btn{
-  background:rgba(7,13,22,0.88);
-  border:1px solid rgba(42,143,168,0.3);
-  color:rgba(192,216,224,0.8);
-  padding:5px 14px;
-  font-family:'Share Tech Mono',monospace;
-  font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
-  cursor:pointer;transition:all 0.12s;backdrop-filter:blur(8px);
+button {
+  background: rgba(7,13,22,0.9); border: 1px solid rgba(42,143,168,0.4);
+  color: rgba(192,216,224,0.9); padding: 6px 16px;
+  font-family: monospace; font-size: 10px; letter-spacing: 0.15em;
+  cursor: pointer; text-transform: uppercase;
 }
-.btn:hover{border-color:rgba(232,152,10,0.5);color:rgba(232,152,10,0.9);}
-.btn.on{border-color:rgba(232,152,10,0.8);color:#e8980a;background:rgba(232,152,10,0.08);}
-
-.cam-info{
-  font-family:'Share Tech Mono',monospace;
-  font-size:8px;letter-spacing:0.12em;
-  color:rgba(42,143,168,0.5);
-  pointer-events:none;
-}
-
-.loading{
-  position:fixed;inset:0;z-index:100;background:#04080f;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-  transition:opacity 0.5s;
-}
-.loading.out{opacity:0;pointer-events:none;}
-.l-logo{
-  font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:0.4em;
-  color:rgba(232,152,10,0.9);text-shadow:0 0 24px rgba(232,152,10,0.35);
-}
-.l-bar{width:180px;height:2px;background:rgba(42,143,168,0.12);overflow:hidden;}
-.l-fill{height:100%;background:linear-gradient(90deg,rgba(42,143,168,0.8),rgba(232,152,10,0.8));width:0%;transition:width 0.25s;}
-.l-txt{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:0.2em;color:rgba(90,122,138,0.7);text-transform:uppercase;}
-
-.vignette{
-  position:fixed;inset:0;z-index:5;pointer-events:none;
-  background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 35%,rgba(4,8,15,0.7) 100%);
-}
-.grain{
-  position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0.1;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
-  background-size:180px;mix-blend-mode:overlay;
-}
+button.on { border-color: rgba(232,152,10,0.8); color: #e8980a; }
 </style>
 </head>
 <body>
-
-<div class="loading" id="ld">
-  <div class="l-logo">AXIOM</div>
-  <div class="l-bar"><div class="l-fill" id="lf"></div></div>
-  <div class="l-txt" id="lt">Loading character...</div>
-</div>
-
 <canvas id="c"></canvas>
-<div class="vignette"></div>
-<div class="grain"></div>
-
-<div class="ui">
-  <div class="state" id="st">◈ IDLE</div>
-  <div class="btns">
-    <button class="btn on" id="b-idle"    onclick="play('idle')">Idle</button>
-    <button class="btn"    id="b-talking" onclick="play('talking')">Talking</button>
-    <button class="btn"    id="b-typing"  onclick="play('typing')">Typing</button>
-    <button class="btn"    id="b-walking" onclick="play('walking')">Walking</button>
-  </div>
-  <div class="cam-info" id="ci">Use mouse to orbit • scroll to zoom</div>
+<div id="info">Scroll to zoom · Drag to orbit · Right drag to pan</div>
+<div id="btns">
+  <button class="on" onclick="play('idle')">Idle</button>
+  <button onclick="play('talking')">Talking</button>
+  <button onclick="play('typing')">Typing</button>
+  <button onclick="play('walking')">Walking</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-
 const BASE = 'https://162.243.225.72.nip.io/static/';
-const FILES = {
-  idle:    BASE+'idle.glb',
-  talking: BASE+'talking.glb',
-  typing:  BASE+'typing.glb',
-  walking: BASE+'walking.glb',
-};
-const LABELS = {idle:'◈ IDLE',talking:'◈ TALKING',typing:'◈ PROCESSING',walking:'◈ ACTIVE'};
 
-let scene,cam,renderer,mixer,clock,controls;
-let anims={}, curAction=null, curName='idle';
-
-function prog(p,t){
-  document.getElementById('lf').style.width=p+'%';
-  if(t) document.getElementById('lt').textContent=t;
-}
-function hideLoader(){
-  const el=document.getElementById('ld');
-  el.classList.add('out');
-  setTimeout(()=>el.remove(),600);
-}
-
-async function loadScript(url){
-  return new Promise((res,rej)=>{
-    const s=document.createElement('script');
-    s.src=url;s.onload=res;s.onerror=rej;
+// Load external scripts
+function loadScript(url) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = url; s.onload = res; s.onerror = rej;
     document.head.appendChild(s);
   });
 }
 
-async function init(){
-  prog(10,'Loading dependencies...');
+let scene, cam, renderer, controls, mixer, clock;
+let anims = {}, curAction = null;
+
+async function init() {
   await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js');
   await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js');
-  prog(20,'Setting up scene...');
+
+  const canvas = document.getElementById('c');
 
   // Scene
   scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x04080f);
 
-  // Camera — will be adjusted after model loads
-  cam = new THREE.PerspectiveCamera(40, innerWidth/innerHeight, 0.001, 1000);
-  cam.position.set(0, 1, 5);
+  // Camera — start far back
+  cam = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.001, 10000);
+  cam.position.set(0, 100, 300);
 
   // Renderer
-  const canvas = document.getElementById('c');
-  renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.9;
+  renderer.toneMappingExposure = 1.0;
 
-  // Orbit controls — lets you manually position camera
+  // Controls
   controls = new THREE.OrbitControls(cam, canvas);
   controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.minDistance   = 0.5;
-  controls.maxDistance   = 50;
+  controls.dampingFactor = 0.05;
+
+  // Lights — bright enough to see everything
+  scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+  const dir = new THREE.DirectionalLight(0xffffff, 2.0);
+  dir.position.set(5, 10, 5);
+  dir.castShadow = true;
+  scene.add(dir);
+
+  // Grid helper — shows us where the ground is
+  const grid = new THREE.GridHelper(500, 20, 0x1a3a4a, 0x0d1f2d);
+  scene.add(grid);
+
+  // Axes helper — shows X(red) Y(green) Z(blue)
+  scene.add(new THREE.AxesHelper(50));
 
   clock = new THREE.Clock();
 
-  // Lights
-  scene.add(new THREE.AmbientLight(0x1a2a4a, 1.0));
-
-  const key = new THREE.DirectionalLight(0xffe0a0, 1.4);
-  key.position.set(2,4,3); key.castShadow=true;
-  key.shadow.mapSize.set(2048,2048);
-  scene.add(key);
-
-  const fill = new THREE.DirectionalLight(0x4488cc, 0.7);
-  fill.position.set(-3,2,1);
-  scene.add(fill);
-
-  const rim = new THREE.DirectionalLight(0xff8820, 0.35);
-  rim.position.set(0,2,-3);
-  scene.add(rim);
-
-  // Ground
-  const g = new THREE.Mesh(
-    new THREE.PlaneGeometry(10,10),
-    new THREE.ShadowMaterial({opacity:0.18})
-  );
-  g.rotation.x=-Math.PI/2; g.receiveShadow=true;
-  scene.add(g);
-
-  prog(35,'Loading character...');
-
+  // Load model
   const loader = new THREE.GLTFLoader();
+  document.getElementById('info').textContent = 'Loading character...';
 
-  // Load idle (has mesh + first animation)
-  const idleGLTF = await new Promise((res,rej)=>{
-    loader.load(FILES.idle, res,
-      e=>prog(35+Math.round(e.loaded/e.total*35),'Loading mesh...'),
-      rej);
-  });
+  loader.load(BASE + 'idle.glb',
+    (gltf) => {
+      const model = gltf.scene;
+      scene.add(model);
 
-  prog(72,'Setting up character...');
+      // NO rotation, NO scaling — just add as-is first
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
 
-  const model = idleGLTF.scene;
+      console.log('=== MODEL INFO ===');
+      console.log('Size:', size);
+      console.log('Center:', center);
+      console.log('Min:', box.min);
+      console.log('Max:', box.max);
 
-  // Enable shadows
-  model.traverse(c=>{
-    if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}
-  });
+      // Point camera at model center
+      controls.target.copy(center);
+      const maxDim = Math.max(size.x, size.y, size.z);
+      cam.position.set(center.x, center.y, center.z + maxDim * 3);
+      cam.lookAt(center);
+      controls.update();
 
-  // Get raw bounding box BEFORE scaling
-  const rawBox = new THREE.Box3().setFromObject(model);
-  const rawSize = rawBox.getSize(new THREE.Vector3());
-  console.log('Raw size (before scale):', rawSize);
+      document.getElementById('info').textContent =
+        `Size: ${size.x.toFixed(1)} x ${size.y.toFixed(1)} x ${size.z.toFixed(1)} | Center: ${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)}`;
 
-  // Rotate to fix Blender/Mixamo export axis
-  // Try +90 on X (opposite of before)
-  model.rotation.x = Math.PI / 2;
-
-  // Scale so character is about 1.8m tall
-  const rawH = Math.max(rawSize.x, rawSize.y, rawSize.z);
-  const scale = 1.8 / rawH;
-  model.scale.setScalar(scale);
-  console.log('Scale applied:', scale);
-
-  // Re-check after scale
-  const box = new THREE.Box3().setFromObject(model);
-  const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-  console.log('Scaled size:', size);
-  console.log('Scaled center:', center);
-  console.log('Scaled min:', box.min, 'max:', box.max);
-
-  // Move model so feet are at y=0
-  model.position.y -= box.min.y;
-
-  // Recalculate after repositioning
-  const box2 = new THREE.Box3().setFromObject(model);
-  const size2 = box2.getSize(new THREE.Vector3());
-  const center2 = box2.getCenter(new THREE.Vector3());
-  console.log('Final size:', size2, 'center:', center2);
-
-  scene.add(model);
-
-  // Set camera and orbit target based on character
-  const charHeight = size2.y;
-  const charWidth  = Math.max(size2.x, size2.z);
-  const fovRad     = cam.fov * Math.PI/180;
-  // Distance needed to see full height with padding
-  const dist = (charHeight / (2*Math.tan(fovRad/2))) * 1.8;
-
-  controls.target.set(center2.x, center2.y, center2.z);
-  cam.position.set(center2.x, center2.y, center2.z + dist);
-  cam.lookAt(center2.x, center2.y, center2.z);
-  controls.update();
-
-  console.log('Final camera dist:', dist, 'target:', center2);
-
-  // Move ground to feet
-  g.position.y = box2.min.y;
-
-  prog(80,'Loading animations...');
-
-  // Setup mixer
-  mixer = new THREE.AnimationMixer(model);
-  if(idleGLTF.animations.length>0){
-    anims.idle = mixer.clipAction(idleGLTF.animations[0]);
-    anims.idle.play();
-    curAction = anims.idle;
-  }
-
-  // Load other animations
-  const others = ['talking','typing','walking'];
-  for(let i=0;i<others.length;i++){
-    try{
-      const g2 = await new Promise((res,rej)=>loader.load(FILES[others[i]],res,null,rej));
-      if(g2.animations.length>0){
-        anims[others[i]] = mixer.clipAction(g2.animations[0]);
+      // Setup animations
+      mixer = new THREE.AnimationMixer(model);
+      if (gltf.animations.length > 0) {
+        anims.idle = mixer.clipAction(gltf.animations[0]);
+        anims.idle.play();
+        curAction = anims.idle;
       }
-      prog(80+(i+1)*6,'Loading '+others[i]+'...');
-    }catch(e){console.warn('Could not load',others[i],e);}
-  }
 
-  prog(100,'Ready.');
-  setTimeout(hideLoader,500);
+      // Load other anims
+      ['talking','typing','walking'].forEach(name => {
+        loader.load(BASE + name + '.glb', g => {
+          if (g.animations.length > 0) {
+            anims[name] = mixer.clipAction(g.animations[0]);
+          }
+        });
+      });
+    },
+    (p) => {
+      const pct = Math.round(p.loaded / p.total * 100);
+      document.getElementById('info').textContent = `Loading: ${pct}%`;
+    },
+    (err) => {
+      console.error(err);
+      document.getElementById('info').textContent = 'Error loading model';
+    }
+  );
 
-  // Update cam info
-  setInterval(()=>{
-    document.getElementById('ci').textContent =
-      `cam: (${cam.position.x.toFixed(2)}, ${cam.position.y.toFixed(2)}, ${cam.position.z.toFixed(2)})`;
-  },500);
-
-  window.addEventListener('resize',()=>{
-    cam.aspect=innerWidth/innerHeight;
+  window.addEventListener('resize', () => {
+    cam.aspect = innerWidth / innerHeight;
     cam.updateProjectionMatrix();
-    renderer.setSize(innerWidth,innerHeight);
+    renderer.setSize(innerWidth, innerHeight);
   });
 
   loop();
 }
 
-function play(name){
-  if(!mixer||!anims[name]) return;
-  const next = anims[name];
-  if(curAction&&curAction!==next) curAction.fadeOut(0.25);
-  next.reset().fadeIn(0.25).play();
-  curAction=next; curName=name;
-  document.getElementById('st').textContent = LABELS[name]||'◈ '+name.toUpperCase();
-  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('on'));
-  const b=document.getElementById('b-'+name);
-  if(b) b.classList.add('on');
+function play(name) {
+  if (!mixer || !anims[name]) return;
+  if (curAction) curAction.fadeOut(0.25);
+  anims[name].reset().fadeIn(0.25).play();
+  curAction = anims[name];
+  document.querySelectorAll('button').forEach(b => b.classList.remove('on'));
+  event.target.classList.add('on');
 }
 
-function loop(){
+function loop() {
   requestAnimationFrame(loop);
-  const d=clock.getDelta();
-  if(mixer) mixer.update(d);
+  if (mixer) mixer.update(clock.getDelta());
   controls.update();
-  renderer.render(scene,cam);
+  renderer.render(scene, cam);
 }
 
-init().catch(e=>{
-  console.error(e);
-  document.getElementById('lt').textContent='Error: '+e.message;
-});
-
+init();
 </script>
 </body>
 </html>
