@@ -437,18 +437,20 @@ function fitCameraToModel() {
   const height = size.y;
   const width  = Math.max(size.x, size.z);
 
-  // Camera sits in front, eye level at 60% of character height
-  const eyeLevel = box.min.y + height * 0.6;
-  const fov      = camera.fov * (Math.PI / 180);
-  const dist     = Math.max(width, height) / (2 * Math.tan(fov / 2)) * 1.6;
+  // Pull camera way back to see full character
+  const fov  = camera.fov * (Math.PI / 180);
+  const dist = (height / (2 * Math.tan(fov / 2))) * 2.8;
 
-  camera.position.set(center.x, eyeLevel, dist);
-  camera.lookAt(center.x, eyeLevel * 0.9, 0);
+  // Look at middle of character (not eye level — full body view)
+  const lookY = box.min.y + height * 0.5;
+
+  camera.position.set(center.x, lookY, dist);
+  camera.lookAt(center.x, lookY, center.z);
   camera.near = 0.01;
   camera.far  = dist * 10;
   camera.updateProjectionMatrix();
 
-  console.log('Camera set — dist:', dist, 'eyeLevel:', eyeLevel);
+  console.log('Camera set — dist:', dist.toFixed(2), 'lookY:', lookY.toFixed(2), 'height:', height.toFixed(2));
 
   // Move ground plane to character feet
   const feet = box.min.y;
