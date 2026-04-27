@@ -3,210 +3,165 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AXIOM — Character</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>AXIOM — Character Test</title>
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
-canvas{display:block;width:100vw;height:100vh;}
-
-.ui{
-  position:fixed;inset:0;z-index:10;pointer-events:none;
-  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
-  padding-bottom:20px;gap:8px;
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #04080f; overflow: hidden; }
+canvas { display: block; width: 100vw; height: 100vh; }
+#info {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  color: rgba(232,152,10,0.8); font-family: monospace; font-size: 11px;
+  letter-spacing: 0.1em; text-align: center; pointer-events: none;
 }
-.state{
-  font-family:'Share Tech Mono',monospace;font-size:9px;
-  letter-spacing:0.3em;color:rgba(232,152,10,0.7);text-transform:uppercase;
+#btns {
+  position: fixed; bottom: 44px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px;
 }
-.btns{display:flex;gap:6px;pointer-events:all;}
-.btn{
-  background:rgba(7,13,22,0.9);border:1px solid rgba(42,143,168,0.3);
-  color:rgba(192,216,224,0.8);padding:6px 16px;
-  font-family:'Share Tech Mono',monospace;font-size:9px;
-  letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;transition:all 0.12s;
+button {
+  background: rgba(7,13,22,0.9); border: 1px solid rgba(42,143,168,0.4);
+  color: rgba(192,216,224,0.9); padding: 6px 16px;
+  font-family: monospace; font-size: 10px; letter-spacing: 0.15em;
+  cursor: pointer; text-transform: uppercase;
 }
-.btn:hover{border-color:rgba(232,152,10,0.5);color:rgba(232,152,10,0.9);}
-.btn.on{border-color:rgba(232,152,10,0.8);color:#e8980a;background:rgba(232,152,10,0.08);}
-
-.loading{
-  position:fixed;inset:0;z-index:100;background:#04080f;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-  transition:opacity 0.5s;
-}
-.loading.out{opacity:0;pointer-events:none;}
-.l-logo{font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:0.4em;color:rgba(232,152,10,0.9);}
-.l-bar{width:180px;height:2px;background:rgba(42,143,168,0.12);overflow:hidden;}
-.l-fill{height:100%;background:linear-gradient(90deg,rgba(42,143,168,0.8),rgba(232,152,10,0.8));width:0%;transition:width 0.25s;}
-.l-txt{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:0.2em;color:rgba(90,122,138,0.7);text-transform:uppercase;}
-
-.vignette{position:fixed;inset:0;z-index:5;pointer-events:none;background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 35%,rgba(4,8,15,0.7) 100%);}
-.grain{position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0.1;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");background-size:180px;mix-blend-mode:overlay;}
-.floor-glow{position:fixed;bottom:8%;left:50%;transform:translateX(-50%);width:300px;height:60px;background:radial-gradient(ellipse,rgba(232,152,10,0.12),transparent 70%);filter:blur(12px);z-index:4;pointer-events:none;}
+button.on { border-color: rgba(232,152,10,0.8); color: #e8980a; }
 </style>
 </head>
 <body>
-
-<div class="loading" id="ld">
-  <div class="l-logo">AXIOM</div>
-  <div class="l-bar"><div class="l-fill" id="lf"></div></div>
-  <div class="l-txt" id="lt">Initializing character...</div>
-</div>
-
 <canvas id="c"></canvas>
-<div class="vignette"></div>
-<div class="grain"></div>
-<div class="floor-glow"></div>
-
-<div class="ui">
-  <div class="state" id="st">◈ IDLE</div>
-  <div class="btns">
-    <button class="btn on" id="b-idle"    onclick="play('idle',this)">Idle</button>
-    <button class="btn"    id="b-talking" onclick="play('talking',this)">Talking</button>
-    <button class="btn"    id="b-typing"  onclick="play('typing',this)">Typing</button>
-    <button class="btn"    id="b-walking" onclick="play('walking',this)">Walking</button>
-  </div>
+<div id="info">Scroll to zoom · Drag to orbit · Right drag to pan</div>
+<div id="btns">
+  <button class="on" onclick="play('idle',this)">Idle</button>
+  <button onclick="play('talking',this)">Talking</button>
+  <button onclick="play('typing',this)">Typing</button>
+  <button onclick="play('walking',this)">Walking</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+const BASE = 'https://162.243.225.72.nip.io/static/';
 
-const BASE   = 'https://162.243.225.72.nip.io/static/';
-const LABELS = {idle:'◈ IDLE',talking:'◈ TALKING',typing:'◈ PROCESSING',walking:'◈ ACTIVE'};
+function loadScript(url) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = url; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
 
-let scene, cam, renderer, mixer, clock;
+let scene, cam, renderer, controls, mixer, clock;
 let anims = {}, curAction = null;
 
-function prog(p,t){ document.getElementById('lf').style.width=p+'%'; if(t) document.getElementById('lt').textContent=t; }
-function hideLoader(){ const el=document.getElementById('ld'); el.classList.add('out'); setTimeout(()=>el.remove(),600); }
-function loadScript(url){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=url; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
-
-async function init(){
-  prog(10,'Loading dependencies...');
+async function init() {
   await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js');
-  prog(20,'Setting up scene...');
+  await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js');
 
-  scene    = new THREE.Scene();
-  clock    = new THREE.Clock();
   const canvas = document.getElementById('c');
 
-  // Camera — fixed position that showed the jacket nicely
-  cam = new THREE.PerspectiveCamera(28, innerWidth/innerHeight, 0.001, 1000);
-  cam.position.set(0, 0.9, 7.5);
-  cam.lookAt(0, 0.85, 0);
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x04080f);
 
-  renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  cam = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.001, 10000);
+  cam.position.set(0, 100, 300);
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.9;
+  renderer.toneMappingExposure = 1.0;
 
-  // Lights
-  scene.add(new THREE.AmbientLight(0x1a2a4a, 0.8));
-  const key = new THREE.DirectionalLight(0xffe0a0, 1.4);
-  key.position.set(2,4,3); key.castShadow=true;
-  key.shadow.mapSize.set(2048,2048);
-  scene.add(key);
-  const fill = new THREE.DirectionalLight(0x4488cc, 0.7);
-  fill.position.set(-3,2,1); scene.add(fill);
-  const rim = new THREE.DirectionalLight(0xff8820, 0.35);
-  rim.position.set(0,2,-3); scene.add(rim);
+  controls = new THREE.OrbitControls(cam, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
 
-  // Ground
-  const g = new THREE.Mesh(new THREE.PlaneGeometry(10,10), new THREE.ShadowMaterial({opacity:0.18}));
-  g.rotation.x=-Math.PI/2; g.receiveShadow=true;
-  scene.add(g);
+  scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+  const dir = new THREE.DirectionalLight(0xffffff, 2.0);
+  dir.position.set(5, 10, 5);
+  dir.castShadow = true;
+  scene.add(dir);
 
-  prog(35,'Loading character...');
+  // Grid and axes so we can see orientation
+  scene.add(new THREE.GridHelper(500, 20, 0x1a3a4a, 0x0d1f2d));
+  scene.add(new THREE.AxesHelper(50));
+
+  clock = new THREE.Clock();
 
   const loader = new THREE.GLTFLoader();
+  document.getElementById('info').textContent = 'Loading character...';
 
-  const idleGLTF = await new Promise((res,rej)=>{
-    loader.load(BASE+'idle.glb', res, e=>prog(35+Math.round(e.loaded/e.total*35),'Loading mesh...'), rej);
-  });
+  loader.load(BASE + 'idle.glb',
+    (gltf) => {
+      const model = gltf.scene;
+      scene.add(model);
 
-  prog(72,'Setting up character...');
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
 
-  const model = idleGLTF.scene;
+      console.log('Size:', JSON.stringify({x:size.x,y:size.y,z:size.z}));
+      console.log('Center:', JSON.stringify({x:center.x,y:center.y,z:center.z}));
+      console.log('Min:', JSON.stringify({x:box.min.x,y:box.min.y,z:box.min.z}));
+      console.log('Max:', JSON.stringify({x:box.max.x,y:box.max.y,z:box.max.z}));
 
-  // Rotate: character is lying on back, -90 on X stands it up
-  model.rotation.x = -Math.PI / 2;
+      // Point camera at model
+      controls.target.copy(center);
+      const maxDim = Math.max(size.x, size.y, size.z);
+      cam.position.set(center.x, center.y, center.z + maxDim * 3);
+      cam.lookAt(center);
+      controls.update();
 
-  // Scale to 1.8 units tall (raw Z = 0.017 = actual height before rotation)
-  const scale = 1.8 / 0.017000003420335644;
-  model.scale.setScalar(scale);
+      document.getElementById('info').textContent =
+        `Size: x=${size.x.toFixed(4)} y=${size.y.toFixed(4)} z=${size.z.toFixed(4)} | scroll to zoom`;
 
-  // Update matrices before repositioning
-  model.updateMatrixWorld(true);
+      mixer = new THREE.AnimationMixer(model);
+      if (gltf.animations.length > 0) {
+        anims.idle = mixer.clipAction(gltf.animations[0]);
+        anims.idle.play();
+        curAction = anims.idle;
+      }
 
-  // Move feet to y=0
-  const box = new THREE.Box3().setFromObject(model);
-  model.position.y -= box.min.y;
-  model.updateMatrixWorld(true);
+      ['talking','typing','walking'].forEach(name => {
+        loader.load(BASE + name + '.glb', g => {
+          if (g.animations.length > 0) anims[name] = mixer.clipAction(g.animations[0]);
+        });
+      });
+    },
+    (p) => {
+      if (p.total) document.getElementById('info').textContent = `Loading: ${Math.round(p.loaded/p.total*100)}%`;
+    },
+    (err) => {
+      console.error(err);
+      document.getElementById('info').textContent = 'Error: ' + err.message;
+    }
+  );
 
-  // Verify
-  const box2 = new THREE.Box3().setFromObject(model);
-  console.log('Final: feet=',box2.min.y.toFixed(3),'head=',box2.max.y.toFixed(3),'width=',box2.getSize(new THREE.Vector3()).x.toFixed(3));
-
-  model.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; } });
-  scene.add(model);
-
-  // Update camera to look at character center
-  const center = box2.getCenter(new THREE.Vector3());
-  cam.position.set(0, center.y, 7.5);
-  cam.lookAt(0, center.y * 0.85, 0);
-
-  prog(80,'Loading animations...');
-
-  mixer = new THREE.AnimationMixer(model);
-  if(idleGLTF.animations.length>0){
-    anims.idle = mixer.clipAction(idleGLTF.animations[0]);
-    anims.idle.play();
-    curAction = anims.idle;
-  }
-
-  for(const name of ['talking','typing','walking']){
-    try{
-      const g2 = await new Promise((res,rej)=>loader.load(BASE+name+'.glb',res,null,rej));
-      if(g2.animations.length>0) anims[name] = mixer.clipAction(g2.animations[0]);
-      prog(80+{talking:6,typing:12,walking:18}[name]);
-    }catch(e){ console.warn('Could not load',name); }
-  }
-
-  prog(100,'Ready.');
-  setTimeout(hideLoader, 500);
-
-  window.addEventListener('resize',()=>{
-    cam.aspect=innerWidth/innerHeight;
+  window.addEventListener('resize', () => {
+    cam.aspect = innerWidth / innerHeight;
     cam.updateProjectionMatrix();
-    renderer.setSize(innerWidth,innerHeight);
+    renderer.setSize(innerWidth, innerHeight);
   });
 
   loop();
 }
 
-function play(name, btn){
-  if(!mixer||!anims[name]) return;
-  if(curAction) curAction.fadeOut(0.25);
+function play(name, btn) {
+  if (!mixer || !anims[name]) return;
+  if (curAction) curAction.fadeOut(0.25);
   anims[name].reset().fadeIn(0.25).play();
   curAction = anims[name];
-  document.getElementById('st').textContent = LABELS[name]||'◈ '+name.toUpperCase();
-  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('on'));
-  if(btn) btn.classList.add('on');
+  document.querySelectorAll('button').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
 }
 
-function loop(){
+function loop() {
   requestAnimationFrame(loop);
-  if(mixer) mixer.update(clock.getDelta());
-  // Subtle idle camera float
-  const t = Date.now()*0.001;
-  cam.position.y += Math.sin(t*0.3)*0.0002;
-  renderer.render(scene,cam);
+  if (mixer) mixer.update(clock.getDelta());
+  controls.update();
+  renderer.render(scene, cam);
 }
 
-init().catch(e=>{ console.error(e); document.getElementById('lt').textContent='Error: '+e.message; });
+init();
 </script>
 </body>
 </html>
