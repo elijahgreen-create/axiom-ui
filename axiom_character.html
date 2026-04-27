@@ -266,9 +266,9 @@ async function init() {
   scene.background = null;
 
   // Camera — positioned to show full character
-  camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.01, 100);
-  camera.position.set(0, 0.9, 9);
-  camera.lookAt(0, 0.9, 0);
+  camera = new THREE.PerspectiveCamera(28, window.innerWidth / window.innerHeight, 0.01, 200);
+  camera.position.set(0, 0.9, 7.5);
+  camera.lookAt(0, 0.85, 0);
 
   // Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -444,14 +444,14 @@ function fitCameraToModel() {
   const charMidY = (box.min.y + box.max.y) / 2;
   const charMidZ = (box.min.z + box.max.z) / 2;
   
-  camera.fov  = 45;
-  camera.position.set(0, charMidY, 12);
-  camera.lookAt(0, charMidY, charMidZ);
+  // Character is 1.8 tall, 1.77 wide (T-pose arms)
+  // Need camera far enough to see full body comfortably
+  camera.fov  = 28; // narrow FOV = less distortion, more cinematic
+  camera.position.set(0, 0.9, 7.5);
+  camera.lookAt(0, 0.85, 0);
   camera.near = 0.01;
   camera.far  = 200;
   camera.updateProjectionMatrix();
-
-  console.log('Camera: pos(0,', charMidY.toFixed(2), ',12) lookAt(0,', charMidY.toFixed(2), ',', charMidZ.toFixed(2), ')');
 
   // Move ground plane to character feet
   const feet = box.min.y;
