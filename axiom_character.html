@@ -4,513 +4,319 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AXIOM — Character</title>
-<style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-  
-  html, body {
-    width: 100%; height: 100%;
-    overflow: hidden;
-    background: #04080f;
-    font-family: 'Share Tech Mono', monospace;
-  }
-
-  #canvas-container {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-  }
-
-  canvas { display: block; width: 100% !important; height: 100% !important; }
-
-  /* ── UI OVERLAY ── */
-  .ui-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 10;
-    pointer-events: none;
-  }
-
-  /* State badge */
-  .state-badge {
-    position: absolute;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    color: rgba(232, 152, 10, 0.7);
-    text-transform: uppercase;
-    text-align: center;
-    pointer-events: none;
-  }
-
-  /* Animation controls */
-  .controls {
-    position: absolute;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 8px;
-    pointer-events: all;
-  }
-
-  .ctrl-btn {
-    background: rgba(7, 13, 22, 0.85);
-    border: 1px solid rgba(42, 143, 168, 0.3);
-    color: rgba(192, 216, 224, 0.8);
-    padding: 6px 16px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s;
-    backdrop-filter: blur(8px);
-  }
-
-  .ctrl-btn:hover {
-    border-color: rgba(232, 152, 10, 0.6);
-    color: rgba(232, 152, 10, 0.9);
-  }
-
-  .ctrl-btn.active {
-    border-color: rgba(232, 152, 10, 0.8);
-    color: rgba(232, 152, 10, 1);
-    background: rgba(232, 152, 10, 0.08);
-  }
-
-  /* Loading screen */
-  .loading {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    background: #04080f;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    transition: opacity 0.5s;
-  }
-
-  .loading.hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .load-logo {
-    font-family: 'Bebas Neue', cursive;
-    font-size: 36px;
-    letter-spacing: 0.4em;
-    color: rgba(232, 152, 10, 0.9);
-    text-shadow: 0 0 30px rgba(232, 152, 10, 0.4);
-  }
-
-  .load-bar-wrap {
-    width: 200px;
-    height: 2px;
-    background: rgba(42, 143, 168, 0.15);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .load-bar {
-    height: 100%;
-    background: linear-gradient(90deg, rgba(42,143,168,0.8), rgba(232,152,10,0.8));
-    width: 0%;
-    transition: width 0.3s ease;
-  }
-
-  .load-text {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.25em;
-    color: rgba(90, 122, 138, 0.8);
-    text-transform: uppercase;
-  }
-
-  /* Vignette */
-  .vignette {
-    position: fixed;
-    inset: 0;
-    z-index: 5;
-    pointer-events: none;
-    background: radial-gradient(ellipse 90% 90% at 50% 50%, transparent 40%, rgba(4,8,15,0.65) 100%);
-  }
-
-  /* Grain */
-  .grain {
-    position: fixed;
-    inset: 0;
-    z-index: 6;
-    pointer-events: none;
-    opacity: 0.12;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
-    background-size: 180px;
-    mix-blend-mode: overlay;
-  }
-
-  /* Ambient glow under character */
-  .floor-glow {
-    position: fixed;
-    bottom: 8%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 300px;
-    height: 60px;
-    background: radial-gradient(ellipse, rgba(232,152,10,0.12), transparent 70%);
-    filter: blur(12px);
-    z-index: 4;
-    pointer-events: none;
-  }
-
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
-</style>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
+
+#c{display:block;width:100vw;height:100vh;}
+
+.ui{
+  position:fixed;inset:0;z-index:10;pointer-events:none;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  padding-bottom:20px;gap:8px;
+}
+
+.state{
+  font-family:'Share Tech Mono',monospace;
+  font-size:9px;letter-spacing:0.3em;
+  color:rgba(232,152,10,0.7);text-transform:uppercase;
+}
+
+.btns{display:flex;gap:6px;pointer-events:all;}
+
+.btn{
+  background:rgba(7,13,22,0.88);
+  border:1px solid rgba(42,143,168,0.3);
+  color:rgba(192,216,224,0.8);
+  padding:5px 14px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.12s;backdrop-filter:blur(8px);
+}
+.btn:hover{border-color:rgba(232,152,10,0.5);color:rgba(232,152,10,0.9);}
+.btn.on{border-color:rgba(232,152,10,0.8);color:#e8980a;background:rgba(232,152,10,0.08);}
+
+.cam-info{
+  font-family:'Share Tech Mono',monospace;
+  font-size:8px;letter-spacing:0.12em;
+  color:rgba(42,143,168,0.5);
+  pointer-events:none;
+}
+
+.loading{
+  position:fixed;inset:0;z-index:100;background:#04080f;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  transition:opacity 0.5s;
+}
+.loading.out{opacity:0;pointer-events:none;}
+.l-logo{
+  font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:0.4em;
+  color:rgba(232,152,10,0.9);text-shadow:0 0 24px rgba(232,152,10,0.35);
+}
+.l-bar{width:180px;height:2px;background:rgba(42,143,168,0.12);overflow:hidden;}
+.l-fill{height:100%;background:linear-gradient(90deg,rgba(42,143,168,0.8),rgba(232,152,10,0.8));width:0%;transition:width 0.25s;}
+.l-txt{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:0.2em;color:rgba(90,122,138,0.7);text-transform:uppercase;}
+
+.vignette{
+  position:fixed;inset:0;z-index:5;pointer-events:none;
+  background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 35%,rgba(4,8,15,0.7) 100%);
+}
+.grain{
+  position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0.1;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  background-size:180px;mix-blend-mode:overlay;
+}
+</style>
 </head>
 <body>
 
-<!-- Loading Screen -->
-<div class="loading" id="loading">
-  <div class="load-logo">AXIOM</div>
-  <div class="load-bar-wrap">
-    <div class="load-bar" id="loadBar"></div>
-  </div>
-  <div class="load-text" id="loadText">Initializing character...</div>
+<div class="loading" id="ld">
+  <div class="l-logo">AXIOM</div>
+  <div class="l-bar"><div class="l-fill" id="lf"></div></div>
+  <div class="l-txt" id="lt">Loading character...</div>
 </div>
 
-<!-- Three.js Canvas -->
-<div id="canvas-container"></div>
-
-<!-- Atmospheric layers -->
+<canvas id="c"></canvas>
 <div class="vignette"></div>
 <div class="grain"></div>
-<div class="floor-glow"></div>
 
-<!-- UI Overlay -->
-<div class="ui-overlay">
-  <div class="state-badge" id="stateBadge">◈ IDLE</div>
-  <div class="controls">
-    <button class="ctrl-btn active" id="btn-idle" onclick="switchAnim('idle')">Idle</button>
-    <button class="ctrl-btn" id="btn-talking" onclick="switchAnim('talking')">Talking</button>
-    <button class="ctrl-btn" id="btn-typing" onclick="switchAnim('typing')">Typing</button>
-    <button class="ctrl-btn" id="btn-walking" onclick="switchAnim('walking')">Walking</button>
+<div class="ui">
+  <div class="state" id="st">◈ IDLE</div>
+  <div class="btns">
+    <button class="btn on" id="b-idle"    onclick="play('idle')">Idle</button>
+    <button class="btn"    id="b-talking" onclick="play('talking')">Talking</button>
+    <button class="btn"    id="b-typing"  onclick="play('typing')">Typing</button>
+    <button class="btn"    id="b-walking" onclick="play('walking')">Walking</button>
   </div>
+  <div class="cam-info" id="ci">Use mouse to orbit • scroll to zoom</div>
 </div>
 
-<!-- Three.js r128 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
 <script>
-// ── Minimal GLTFLoader for r128 ──────────────────────────────────────────────
-// Inline a minimal GLTF loader since we can't import modules easily
-const GLTF_LOADER_URL = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
-const DRACO_URL       = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js';
 
-function loadScript(url) {
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = url;
-    s.onload = resolve;
-    s.onerror = reject;
+const BASE = 'https://162.243.225.72.nip.io/static/';
+const FILES = {
+  idle:    BASE+'idle.glb',
+  talking: BASE+'talking.glb',
+  typing:  BASE+'typing.glb',
+  walking: BASE+'walking.glb',
+};
+const LABELS = {idle:'◈ IDLE',talking:'◈ TALKING',typing:'◈ PROCESSING',walking:'◈ ACTIVE'};
+
+let scene,cam,renderer,mixer,clock,controls;
+let anims={}, curAction=null, curName='idle';
+
+function prog(p,t){
+  document.getElementById('lf').style.width=p+'%';
+  if(t) document.getElementById('lt').textContent=t;
+}
+function hideLoader(){
+  const el=document.getElementById('ld');
+  el.classList.add('out');
+  setTimeout(()=>el.remove(),600);
+}
+
+async function loadScript(url){
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src=url;s.onload=res;s.onerror=rej;
     document.head.appendChild(s);
   });
 }
 
-// ── State ────────────────────────────────────────────────────────────────────
-let scene, camera, renderer, mixer, clock;
-let animations = {};
-let currentAction = null;
-let currentAnim   = 'idle';
-let model         = null;
-
-// Animation file mapping
-const ANIM_FILES = {
-  idle:    'https://162.243.225.72.nip.io/static/idle.glb',
-  talking: 'https://162.243.225.72.nip.io/static/talking.glb',
-  typing:  'https://162.243.225.72.nip.io/static/typing.glb',
-  walking: 'https://162.243.225.72.nip.io/static/walking.glb',
-};
-
-const STATE_LABELS = {
-  idle:    '◈ IDLE',
-  talking: '◈ TALKING',
-  typing:  '◈ PROCESSING',
-  walking: '◈ ACTIVE',
-};
-
-// ── Loading progress ─────────────────────────────────────────────────────────
-function setProgress(pct, text) {
-  document.getElementById('loadBar').style.width = pct + '%';
-  if (text) document.getElementById('loadText').textContent = text;
-}
-
-function hideLoading() {
-  const el = document.getElementById('loading');
-  el.classList.add('hidden');
-  setTimeout(() => el.remove(), 600);
-}
-
-// ── Init ─────────────────────────────────────────────────────────────────────
-async function init() {
-  setProgress(10, 'Loading Three.js...');
-
-  // Load GLTFLoader
-  await loadScript(GLTF_LOADER_URL);
-  setProgress(20, 'Loading loaders...');
+async function init(){
+  prog(10,'Loading dependencies...');
+  await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js');
+  await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js');
+  prog(20,'Setting up scene...');
 
   // Scene
   scene = new THREE.Scene();
-  scene.background = null;
 
-  // Camera — positioned to show full character
-  camera = new THREE.PerspectiveCamera(28, window.innerWidth / window.innerHeight, 0.01, 200);
-  camera.position.set(0, 0.9, 7.5);
-  camera.lookAt(0, 0.85, 0);
+  // Camera — will be adjusted after model loads
+  cam = new THREE.PerspectiveCamera(40, innerWidth/innerHeight, 0.001, 1000);
+  cam.position.set(0, 1, 5);
 
   // Renderer
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const canvas = document.getElementById('c');
+  renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.85;
-  document.getElementById('canvas-container').appendChild(renderer.domElement);
+  renderer.toneMappingExposure = 0.9;
 
-  // Clock for animation
+  // Orbit controls — lets you manually position camera
+  controls = new THREE.OrbitControls(cam, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance   = 0.5;
+  controls.maxDistance   = 50;
+
   clock = new THREE.Clock();
 
-  // ── Lighting ────────────────────────────────────────────────────────────────
-  // Ambient — cool blue night
-  const ambient = new THREE.AmbientLight(0x1a2a4a, 0.8);
-  scene.add(ambient);
+  // Lights
+  scene.add(new THREE.AmbientLight(0x1a2a4a, 1.0));
 
-  // Key light — warm amber from front-right (desk lamp style)
-  const keyLight = new THREE.DirectionalLight(0xffe0a0, 1.2);
-  keyLight.position.set(2, 3, 2);
-  keyLight.castShadow = true;
-  keyLight.shadow.mapSize.width = 2048;
-  keyLight.shadow.mapSize.height = 2048;
-  scene.add(keyLight);
+  const key = new THREE.DirectionalLight(0xffe0a0, 1.4);
+  key.position.set(2,4,3); key.castShadow=true;
+  key.shadow.mapSize.set(2048,2048);
+  scene.add(key);
 
-  // Fill light — cool teal from left (window/screen)
-  const fillLight = new THREE.DirectionalLight(0x4080c0, 0.6);
-  fillLight.position.set(-3, 2, 1);
-  scene.add(fillLight);
+  const fill = new THREE.DirectionalLight(0x4488cc, 0.7);
+  fill.position.set(-3,2,1);
+  scene.add(fill);
 
-  // Rim light — subtle amber from behind
-  const rimLight = new THREE.DirectionalLight(0xff8800, 0.3);
-  rimLight.position.set(0, 1, -3);
-  scene.add(rimLight);
+  const rim = new THREE.DirectionalLight(0xff8820, 0.35);
+  rim.position.set(0,2,-3);
+  scene.add(rim);
 
-  // Ground plane (shadow catcher)
-  const groundGeo = new THREE.PlaneGeometry(10, 10);
-  const groundMat = new THREE.ShadowMaterial({ opacity: 0.2 });
-  const ground    = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = 0;
-  ground.receiveShadow = true;
-  scene.add(ground);
+  // Ground
+  const g = new THREE.Mesh(
+    new THREE.PlaneGeometry(10,10),
+    new THREE.ShadowMaterial({opacity:0.18})
+  );
+  g.rotation.x=-Math.PI/2; g.receiveShadow=true;
+  scene.add(g);
 
-  // Subtle floor glow plane
-  const glowGeo = new THREE.PlaneGeometry(2, 0.8);
-  const glowMat = new THREE.MeshBasicMaterial({
-    color: 0xe89610,
-    transparent: true,
-    opacity: 0.06,
-    side: THREE.DoubleSide,
-  });
-  const glowPlane = new THREE.Mesh(glowGeo, glowMat);
-  glowPlane.rotation.x = -Math.PI / 2;
-  glowPlane.position.y = 0.01;
-  scene.add(glowPlane);
+  prog(35,'Loading character...');
 
-  setProgress(40, 'Loading character...');
-
-  // ── Load model + animations ─────────────────────────────────────────────────
   const loader = new THREE.GLTFLoader();
 
-  try {
-    // Load main model (idle — has the mesh + skin)
-    const idleGLTF = await new Promise((resolve, reject) => {
-      loader.load(ANIM_FILES.idle, resolve, (e) => {
-        setProgress(40 + (e.loaded / e.total) * 30, 'Loading character mesh...');
-      }, reject);
-    });
-
-    setProgress(70, 'Setting up character...');
-
-    model = idleGLTF.scene;
-
-    // Scale and position
-    // Force scale — model is very small from Mixamo export
-    const tempBox = new THREE.Box3().setFromObject(model);
-    const tempSize = tempBox.getSize(new THREE.Vector3());
-    const tempMax = Math.max(tempSize.x, tempSize.y, tempSize.z);
-    // Target 1.8 units tall (human scale in Three.js)
-    const targetScale = 1.8 / tempMax;
-    console.log('Raw size:', tempMax, '→ scale:', targetScale);
-    model.scale.setScalar(targetScale);
-    // Mixamo/Blender exports are often rotated — fix axis
-    model.rotation.x = -Math.PI / 2;
-    // Reset position
-    model.position.set(0, 0, 0);
-    model.position.set(0, 0, 0);
-
-    // Enable shadows on all meshes
-    model.traverse(child => {
-      if (child.isMesh) {
-        child.castShadow    = true;
-        child.receiveShadow = true;
-        // Improve material quality
-        if (child.material) {
-          child.material.roughness = 0.7;
-          child.material.metalness = 0.1;
-        }
-      }
-    });
-
-    scene.add(model);
-
-    // ── Animation mixer ──────────────────────────────────────────────────────
-    mixer = new THREE.AnimationMixer(model);
-
-    // Store idle animation
-    if (idleGLTF.animations.length > 0) {
-      animations.idle = mixer.clipAction(idleGLTF.animations[0]);
-      animations.idle.play();
-      currentAction = animations.idle;
-    }
-
-    setProgress(80, 'Loading animations...');
-
-    // Load remaining animations
-    const animNames  = ['talking', 'typing', 'walking'];
-    const animFiles  = animNames.map(n => ANIM_FILES[n]);
-
-    for (let i = 0; i < animNames.length; i++) {
-      try {
-        const gltf = await new Promise((resolve, reject) => {
-          loader.load(animFiles[i], resolve, null, reject);
-        });
-        if (gltf.animations.length > 0) {
-          animations[animNames[i]] = mixer.clipAction(gltf.animations[0]);
-        }
-        setProgress(80 + (i + 1) * 6, `Loading ${animNames[i]}...`);
-      } catch(e) {
-        console.warn(`Could not load ${animFiles[i]}:`, e);
-      }
-    }
-
-    // Auto-fit camera to model
-    fitCameraToModel();
-
-    setProgress(100, 'Ready.');
-    setTimeout(hideLoading, 600);
-
-  } catch(err) {
-    console.error('Model load error:', err);
-    document.getElementById('loadText').textContent = 'Error loading character — check console';
-    setProgress(100, 'Load error — see console');
-  }
-
-  // Resize handler
-  window.addEventListener('resize', onResize);
-
-  // Start render loop
-  animate();
-}
-
-// ── Auto-fit camera ──────────────────────────────────────────────────────────
-function fitCameraToModel() {
-  if (!model) return;
-  const box    = new THREE.Box3().setFromObject(model);
-  const size   = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-
-  console.log('Model height:', size.y.toFixed(3), 'center:', center.x.toFixed(3), center.y.toFixed(3), center.z.toFixed(3));
-
-  // Log everything to debug
-  console.log('box.min:', box.min);
-  console.log('box.max:', box.max);
-  console.log('size:', size);
-  console.log('center:', center);
-
-  // Camera: position above and back, look at center of character
-  const charMidY = (box.min.y + box.max.y) / 2;
-  const charMidZ = (box.min.z + box.max.z) / 2;
-  
-  // Character is 1.8 tall, 1.77 wide (T-pose arms)
-  // Need camera far enough to see full body comfortably
-  camera.fov  = 28; // narrow FOV = less distortion, more cinematic
-  camera.position.set(0, 0.9, 7.5);
-  camera.lookAt(0, 0.85, 0);
-  camera.near = 0.01;
-  camera.far  = 200;
-  camera.updateProjectionMatrix();
-
-  // Move ground plane to character feet
-  const feet = box.min.y;
-  scene.traverse(child => {
-    if (child.isMesh && child.material && child.material.isShadowMaterial) {
-      child.position.y = feet;
-    }
+  // Load idle (has mesh + first animation)
+  const idleGLTF = await new Promise((res,rej)=>{
+    loader.load(FILES.idle, res,
+      e=>prog(35+Math.round(e.loaded/e.total*35),'Loading mesh...'),
+      rej);
   });
-}
 
-// ── Switch animation ─────────────────────────────────────────────────────────
-function switchAnim(name) {
-  if (!mixer || !animations[name]) return;
-  if (currentAnim === name && currentAction?.isRunning()) return;
+  prog(72,'Setting up character...');
 
-  const next = animations[name];
+  const model = idleGLTF.scene;
 
-  if (currentAction && currentAction !== next) {
-    currentAction.fadeOut(0.3);
+  // Enable shadows
+  model.traverse(c=>{
+    if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}
+  });
+
+  // Get raw bounding box BEFORE scaling
+  const rawBox = new THREE.Box3().setFromObject(model);
+  const rawSize = rawBox.getSize(new THREE.Vector3());
+  console.log('Raw size (before scale):', rawSize);
+
+  // Rotate to fix Blender/Mixamo export axis
+  // Try +90 on X (opposite of before)
+  model.rotation.x = Math.PI / 2;
+
+  // Scale so character is about 1.8m tall
+  const rawH = Math.max(rawSize.x, rawSize.y, rawSize.z);
+  const scale = 1.8 / rawH;
+  model.scale.setScalar(scale);
+  console.log('Scale applied:', scale);
+
+  // Re-check after scale
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  console.log('Scaled size:', size);
+  console.log('Scaled center:', center);
+  console.log('Scaled min:', box.min, 'max:', box.max);
+
+  // Move model so feet are at y=0
+  model.position.y -= box.min.y;
+
+  // Recalculate after repositioning
+  const box2 = new THREE.Box3().setFromObject(model);
+  const size2 = box2.getSize(new THREE.Vector3());
+  const center2 = box2.getCenter(new THREE.Vector3());
+  console.log('Final size:', size2, 'center:', center2);
+
+  scene.add(model);
+
+  // Set camera and orbit target based on character
+  const charHeight = size2.y;
+  const charWidth  = Math.max(size2.x, size2.z);
+  const fovRad     = cam.fov * Math.PI/180;
+  // Distance needed to see full height with padding
+  const dist = (charHeight / (2*Math.tan(fovRad/2))) * 1.8;
+
+  controls.target.set(center2.x, center2.y, center2.z);
+  cam.position.set(center2.x, center2.y, center2.z + dist);
+  cam.lookAt(center2.x, center2.y, center2.z);
+  controls.update();
+
+  console.log('Final camera dist:', dist, 'target:', center2);
+
+  // Move ground to feet
+  g.position.y = box2.min.y;
+
+  prog(80,'Loading animations...');
+
+  // Setup mixer
+  mixer = new THREE.AnimationMixer(model);
+  if(idleGLTF.animations.length>0){
+    anims.idle = mixer.clipAction(idleGLTF.animations[0]);
+    anims.idle.play();
+    curAction = anims.idle;
   }
 
-  next.reset();
-  next.fadeIn(0.3);
-  next.play();
-
-  currentAction = next;
-  currentAnim   = name;
-
-  // Update UI
-  document.getElementById('stateBadge').textContent = STATE_LABELS[name] || '◈ ' + name.toUpperCase();
-  document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('btn-' + name);
-  if (btn) btn.classList.add('active');
-}
-
-// ── Render loop ──────────────────────────────────────────────────────────────
-function animate() {
-  requestAnimationFrame(animate);
-  const delta = clock.getDelta();
-  if (mixer) mixer.update(delta);
-
-  // Subtle camera breathing — idle float
-  if (currentAnim === 'idle') {
-    const t = Date.now() * 0.001;
-    camera.position.y += Math.sin(t * 0.4) * 0.0003;
+  // Load other animations
+  const others = ['talking','typing','walking'];
+  for(let i=0;i<others.length;i++){
+    try{
+      const g2 = await new Promise((res,rej)=>loader.load(FILES[others[i]],res,null,rej));
+      if(g2.animations.length>0){
+        anims[others[i]] = mixer.clipAction(g2.animations[0]);
+      }
+      prog(80+(i+1)*6,'Loading '+others[i]+'...');
+    }catch(e){console.warn('Could not load',others[i],e);}
   }
 
-  renderer.render(scene, camera);
+  prog(100,'Ready.');
+  setTimeout(hideLoader,500);
+
+  // Update cam info
+  setInterval(()=>{
+    document.getElementById('ci').textContent =
+      `cam: (${cam.position.x.toFixed(2)}, ${cam.position.y.toFixed(2)}, ${cam.position.z.toFixed(2)})`;
+  },500);
+
+  window.addEventListener('resize',()=>{
+    cam.aspect=innerWidth/innerHeight;
+    cam.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+  });
+
+  loop();
 }
 
-// ── Resize ───────────────────────────────────────────────────────────────────
-function onResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+function play(name){
+  if(!mixer||!anims[name]) return;
+  const next = anims[name];
+  if(curAction&&curAction!==next) curAction.fadeOut(0.25);
+  next.reset().fadeIn(0.25).play();
+  curAction=next; curName=name;
+  document.getElementById('st').textContent = LABELS[name]||'◈ '+name.toUpperCase();
+  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('on'));
+  const b=document.getElementById('b-'+name);
+  if(b) b.classList.add('on');
 }
 
-// ── Start ────────────────────────────────────────────────────────────────────
-init();
+function loop(){
+  requestAnimationFrame(loop);
+  const d=clock.getDelta();
+  if(mixer) mixer.update(d);
+  controls.update();
+  renderer.render(scene,cam);
+}
+
+init().catch(e=>{
+  console.error(e);
+  document.getElementById('lt').textContent='Error: '+e.message;
+});
+
 </script>
 </body>
 </html>
