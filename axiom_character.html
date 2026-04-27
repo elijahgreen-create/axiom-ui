@@ -347,18 +347,16 @@ async function init() {
     model = idleGLTF.scene;
 
     // Scale and position
-    // Mixamo characters vary in scale — try to auto-detect
+    // Force scale — model is very small from Mixamo export
     const tempBox = new THREE.Box3().setFromObject(model);
     const tempSize = tempBox.getSize(new THREE.Vector3());
-    const maxDim = Math.max(tempSize.x, tempSize.y, tempSize.z);
-    console.log('Raw model size before scale:', tempSize, 'maxDim:', maxDim);
-    
-    // Target height of about 2 units
-    let targetScale = 2.0 / maxDim;
-    // Clamp to reasonable range
-    targetScale = Math.max(0.001, Math.min(10, targetScale));
-    console.log('Applying scale:', targetScale);
+    const tempMax = Math.max(tempSize.x, tempSize.y, tempSize.z);
+    // Target 1.8 units tall (human scale in Three.js)
+    const targetScale = 1.8 / tempMax;
+    console.log('Raw size:', tempMax, '→ scale:', targetScale);
     model.scale.setScalar(targetScale);
+    // Reset position to floor level
+    model.position.set(0, 0, 0);
     model.position.set(0, 0, 0);
 
     // Enable shadows on all meshes
@@ -432,24 +430,31 @@ function fitCameraToModel() {
   const size   = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
 
-  console.log('Model size:', size);
-  console.log('Model center:', center);
-  console.log('Model bounds min:', box.min, 'max:', box.max);
+  console.log('Scaled model size:', size);
 
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const fov    = camera.fov * (Math.PI / 180);
-  let   dist   = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-  dist *= 1.5;
+  const height = size.y;
+  const width  = Math.max(size.x, size.z);
 
-  // Position camera to see full character
-  camera.position.set(center.x, center.y, center.z + dist);
-  camera.lookAt(center.x, center.y, center.z);
-  camera.near = dist * 0.01;
+  // Camera sits in front, eye level at 60% of character height
+  const eyeLevel = box.min.y + height * 0.6;
+  const fov      = camera.fov * (Math.PI / 180);
+  const dist     = Math.max(width, height) / (2 * Math.tan(fov / 2)) * 1.6;
+
+  camera.position.set(center.x, eyeLevel, dist);
+  camera.lookAt(center.x, eyeLevel * 0.9, 0);
+  camera.near = 0.01;
   camera.far  = dist * 10;
   camera.updateProjectionMatrix();
 
-  console.log('Camera position:', camera.position);
-  console.log('Looking at:', center.x, center.y, center.z);
+  console.log('Camera set — dist:', dist, 'eyeLevel:', eyeLevel);
+
+  // Move ground plane to character feet
+  const feet = box.min.y;
+  scene.traverse(child => {
+    if (child.isMesh && child.material && child.material.isShadowMaterial) {
+      child.position.y = feet;
+    }
+  });
 }
 
 // ── Switch animation ─────────────────────────────────────────────────────────
