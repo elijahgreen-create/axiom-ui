@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXIOM — Character</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #04080f;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  #canvas-container {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+  }
+
+  canvas { display: block; width: 100% !important; height: 100% !important; }
+
+  /* ── UI OVERLAY ── */
+  .ui-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* State badge */
+  .state-badge {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: rgba(232, 152, 10, 0.7);
+    text-transform: uppercase;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  /* Animation controls */
+  .controls {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    pointer-events: all;
+  }
+
+  .ctrl-btn {
+    background: rgba(7, 13, 22, 0.85);
+    border: 1px solid rgba(42, 143, 168, 0.3);
+    color: rgba(192, 216, 224, 0.8);
+    padding: 6px 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    backdrop-filter: blur(8px);
+  }
+
+  .ctrl-btn:hover {
+    border-color: rgba(232, 152, 10, 0.6);
+    color: rgba(232, 152, 10, 0.9);
+  }
+
+  .ctrl-btn.active {
+    border-color: rgba(232, 152, 10, 0.8);
+    color: rgba(232, 152, 10, 1);
+    background: rgba(232, 152, 10, 0.08);
+  }
+
+  /* Loading screen */
+  .loading {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: #04080f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    transition: opacity 0.5s;
+  }
+
+  .loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .load-logo {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 36px;
+    letter-spacing: 0.4em;
+    color: rgba(232, 152, 10, 0.9);
+    text-shadow: 0 0 30px rgba(232, 152, 10, 0.4);
+  }
+
+  .load-bar-wrap {
+    width: 200px;
+    height: 2px;
+    background: rgba(42, 143, 168, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .load-bar {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(42,143,168,0.8), rgba(232,152,10,0.8));
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  .load-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: rgba(90, 122, 138, 0.8);
+    text-transform: uppercase;
+  }
+
+  /* Vignette */
+  .vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background: radial-gradient(ellipse 90% 90% at 50% 50%, transparent 40%, rgba(4,8,15,0.65) 100%);
+  }
+
+  /* Grain */
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    opacity: 0.12;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+    background-size: 180px;
+    mix-blend-mode: overlay;
+  }
+
+  /* Ambient glow under character */
+  .floor-glow {
+    position: fixed;
+    bottom: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 60px;
+    background: radial-gradient(ellipse, rgba(232,152,10,0.12), transparent 70%);
+    filter: blur(12px);
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div class="loading" id="loading">
+  <div class="load-logo">AXIOM</div>
+  <div class="load-bar-wrap">
+    <div class="load-bar" id="loadBar"></div>
+  </div>
+  <div class="load-text" id="loadText">Initializing character...</div>
+</div>
+
+<!-- Three.js Canvas -->
+<div id="canvas-container"></div>
+
+<!-- Atmospheric layers -->
+<div class="vignette"></div>
+<div class="grain"></div>
+<div class="floor-glow"></div>
+
+<!-- UI Overlay -->
+<div class="ui-overlay">
+  <div class="state-badge" id="stateBadge">◈ IDLE</div>
+  <div class="controls">
+    <button class="ctrl-btn active" id="btn-idle" onclick="switchAnim('idle')">Idle</button>
+    <button class="ctrl-btn" id="btn-talking" onclick="switchAnim('talking')">Talking</button>
+    <button class="ctrl-btn" id="btn-typing" onclick="switchAnim('typing')">Typing</button>
+    <button class="ctrl-btn" id="btn-walking" onclick="switchAnim('walking')">Walking</button>
+  </div>
+</div>
+
+<!-- Three.js r128 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ── Minimal GLTFLoader for r128 ──────────────────────────────────────────────
+// Inline a minimal GLTF loader since we can't import modules easily
+const GLTF_LOADER_URL = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+const DRACO_URL       = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js';
+
+function loadScript(url) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = url;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
+let scene, camera, renderer, mixer, clock;
+let animations = {};
+let currentAction = null;
+let currentAnim   = 'idle';
+let model         = null;
+
+// Animation file mapping
+const ANIM_FILES = {
+  idle:    'https://162.243.225.72.nip.io/static/idle.glb',
+  talking: 'https://162.243.225.72.nip.io/static/talking.glb',
+  typing:  'https://162.243.225.72.nip.io/static/typing.glb',
+  walking: 'https://162.243.225.72.nip.io/static/walking.glb',
+};
+
+const STATE_LABELS = {
+  idle:    '◈ IDLE',
+  talking: '◈ TALKING',
+  typing:  '◈ PROCESSING',
+  walking: '◈ ACTIVE',
+};
+
+// ── Loading progress ─────────────────────────────────────────────────────────
+function setProgress(pct, text) {
+  document.getElementById('loadBar').style.width = pct + '%';
+  if (text) document.getElementById('loadText').textContent = text;
+}
+
+function hideLoading() {
+  const el = document.getElementById('loading');
+  el.classList.add('hidden');
+  setTimeout(() => el.remove(), 600);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+async function init() {
+  setProgress(10, 'Loading Three.js...');
+
+  // Load GLTFLoader
+  await loadScript(GLTF_LOADER_URL);
+  setProgress(20, 'Loading loaders...');
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = null;
+
+  // Camera — positioned to show full character
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 1.2, 3.5);
+  camera.lookAt(0, 1.0, 0);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.85;
+  document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+  // Clock for animation
+  clock = new THREE.Clock();
+
+  // ── Lighting ────────────────────────────────────────────────────────────────
+  // Ambient — cool blue night
+  const ambient = new THREE.AmbientLight(0x1a2a4a, 0.8);
+  scene.add(ambient);
+
+  // Key light — warm amber from front-right (desk lamp style)
+  const keyLight = new THREE.DirectionalLight(0xffe0a0, 1.2);
+  keyLight.position.set(2, 3, 2);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.width = 2048;
+  keyLight.shadow.mapSize.height = 2048;
+  scene.add(keyLight);
+
+  // Fill light — cool teal from left (window/screen)
+  const fillLight = new THREE.DirectionalLight(0x4080c0, 0.6);
+  fillLight.position.set(-3, 2, 1);
+  scene.add(fillLight);
+
+  // Rim light — subtle amber from behind
+  const rimLight = new THREE.DirectionalLight(0xff8800, 0.3);
+  rimLight.position.set(0, 1, -3);
+  scene.add(rimLight);
+
+  // Ground plane (shadow catcher)
+  const groundGeo = new THREE.PlaneGeometry(10, 10);
+  const groundMat = new THREE.ShadowMaterial({ opacity: 0.2 });
+  const ground    = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = 0;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // Subtle floor glow plane
+  const glowGeo = new THREE.PlaneGeometry(2, 0.8);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: 0xe89610,
+    transparent: true,
+    opacity: 0.06,
+    side: THREE.DoubleSide,
+  });
+  const glowPlane = new THREE.Mesh(glowGeo, glowMat);
+  glowPlane.rotation.x = -Math.PI / 2;
+  glowPlane.position.y = 0.01;
+  scene.add(glowPlane);
+
+  setProgress(40, 'Loading character...');
+
+  // ── Load model + animations ─────────────────────────────────────────────────
+  const loader = new THREE.GLTFLoader();
+
+  try {
+    // Load main model (idle — has the mesh + skin)
+    const idleGLTF = await new Promise((resolve, reject) => {
+      loader.load(ANIM_FILES.idle, resolve, (e) => {
+        setProgress(40 + (e.loaded / e.total) * 30, 'Loading character mesh...');
+      }, reject);
+    });
+
+    setProgress(70, 'Setting up character...');
+
+    model = idleGLTF.scene;
+
+    // Scale and position
+    model.scale.setScalar(0.01); // Mixamo characters are usually huge
+    model.position.set(0, 0, 0);
+
+    // Enable shadows on all meshes
+    model.traverse(child => {
+      if (child.isMesh) {
+        child.castShadow    = true;
+        child.receiveShadow = true;
+        // Improve material quality
+        if (child.material) {
+          child.material.roughness = 0.7;
+          child.material.metalness = 0.1;
+        }
+      }
+    });
+
+    scene.add(model);
+
+    // ── Animation mixer ──────────────────────────────────────────────────────
+    mixer = new THREE.AnimationMixer(model);
+
+    // Store idle animation
+    if (idleGLTF.animations.length > 0) {
+      animations.idle = mixer.clipAction(idleGLTF.animations[0]);
+      animations.idle.play();
+      currentAction = animations.idle;
+    }
+
+    setProgress(80, 'Loading animations...');
+
+    // Load remaining animations
+    const animNames  = ['talking', 'typing', 'walking'];
+    const animFiles  = animNames.map(n => ANIM_FILES[n]);
+
+    for (let i = 0; i < animNames.length; i++) {
+      try {
+        const gltf = await new Promise((resolve, reject) => {
+          loader.load(animFiles[i], resolve, null, reject);
+        });
+        if (gltf.animations.length > 0) {
+          animations[animNames[i]] = mixer.clipAction(gltf.animations[0]);
+        }
+        setProgress(80 + (i + 1) * 6, `Loading ${animNames[i]}...`);
+      } catch(e) {
+        console.warn(`Could not load ${animFiles[i]}:`, e);
+      }
+    }
+
+    // Auto-fit camera to model
+    fitCameraToModel();
+
+    setProgress(100, 'Ready.');
+    setTimeout(hideLoading, 600);
+
+  } catch(err) {
+    console.error('Model load error:', err);
+    document.getElementById('loadText').textContent = 'Error loading character — check console';
+    setProgress(100, 'Load error — see console');
+  }
+
+  // Resize handler
+  window.addEventListener('resize', onResize);
+
+  // Start render loop
+  animate();
+}
+
+// ── Auto-fit camera ──────────────────────────────────────────────────────────
+function fitCameraToModel() {
+  if (!model) return;
+  const box    = new THREE.Box3().setFromObject(model);
+  const size   = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const fov    = camera.fov * (Math.PI / 180);
+  let   dist   = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+  dist *= 1.3; // padding
+
+  camera.position.set(center.x, center.y + size.y * 0.1, dist);
+  camera.lookAt(center.x, center.y * 0.85, 0);
+  camera.updateProjectionMatrix();
+}
+
+// ── Switch animation ─────────────────────────────────────────────────────────
+function switchAnim(name) {
+  if (!mixer || !animations[name]) return;
+  if (currentAnim === name && currentAction?.isRunning()) return;
+
+  const next = animations[name];
+
+  if (currentAction && currentAction !== next) {
+    currentAction.fadeOut(0.3);
+  }
+
+  next.reset();
+  next.fadeIn(0.3);
+  next.play();
+
+  currentAction = next;
+  currentAnim   = name;
+
+  // Update UI
+  document.getElementById('stateBadge').textContent = STATE_LABELS[name] || '◈ ' + name.toUpperCase();
+  document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('btn-' + name);
+  if (btn) btn.classList.add('active');
+}
+
+// ── Render loop ──────────────────────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  if (mixer) mixer.update(delta);
+
+  // Subtle camera breathing — idle float
+  if (currentAnim === 'idle') {
+    const t = Date.now() * 0.001;
+    camera.position.y += Math.sin(t * 0.4) * 0.0003;
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ── Resize ───────────────────────────────────────────────────────────────────
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// ── Start ────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
