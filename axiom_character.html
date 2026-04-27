@@ -4,242 +4,206 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AXIOM — Character</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #04080f; overflow: hidden; }
-canvas { display: block; width: 100vw; height: 100vh; }
-#info {
-  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-  color: rgba(232,152,10,0.8); font-family: monospace; font-size: 11px;
-  letter-spacing: 0.1em; text-align: center; pointer-events: none;
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
+canvas{display:block;width:100vw;height:100vh;}
+
+.ui{
+  position:fixed;inset:0;z-index:10;pointer-events:none;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  padding-bottom:24px;gap:8px;
 }
-#readout {
-  position: fixed; top: 16px; left: 16px;
-  color: rgba(42,200,168,0.9); font-family: monospace; font-size: 11px;
-  line-height: 1.8; letter-spacing: 0.08em;
-  background: rgba(4,8,15,0.8); padding: 10px 14px;
-  border: 1px solid rgba(42,143,168,0.3); pointer-events: none;
+.state{
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  letter-spacing:0.3em;color:rgba(232,152,10,0.7);text-transform:uppercase;
 }
-#copybox {
-  position: fixed; top: 16px; right: 16px;
-  color: rgba(232,152,10,0.9); font-family: monospace; font-size: 10px;
-  line-height: 2; letter-spacing: 0.08em;
-  background: rgba(4,8,15,0.8); padding: 10px 14px;
-  border: 1px solid rgba(232,152,10,0.3); pointer-events: none;
-  white-space: pre;
+.btns{display:flex;gap:6px;pointer-events:all;}
+.btn{
+  background:rgba(7,13,22,0.88);border:1px solid rgba(42,143,168,0.3);
+  color:rgba(192,216,224,0.8);padding:6px 18px;
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;
+  transition:all 0.12s;backdrop-filter:blur(8px);
 }
-#btns {
-  position: fixed; bottom: 44px; left: 50%; transform: translateX(-50%);
-  display: flex; gap: 8px;
+.btn:hover{border-color:rgba(232,152,10,0.5);color:rgba(232,152,10,0.9);}
+.btn.on{border-color:rgba(232,152,10,0.8);color:#e8980a;background:rgba(232,152,10,0.08);}
+
+.loading{
+  position:fixed;inset:0;z-index:100;background:#04080f;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  transition:opacity 0.6s;
 }
-button {
-  background: rgba(7,13,22,0.9); border: 1px solid rgba(42,143,168,0.4);
-  color: rgba(192,216,224,0.9); padding: 6px 16px;
-  font-family: monospace; font-size: 10px; letter-spacing: 0.15em;
-  cursor: pointer; text-transform: uppercase;
+.loading.out{opacity:0;pointer-events:none;}
+.l-logo{
+  font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:0.4em;
+  color:rgba(232,152,10,0.9);text-shadow:0 0 30px rgba(232,152,10,0.4);
 }
-button.on { border-color: rgba(232,152,10,0.8); color: #e8980a; }
+.l-bar{width:200px;height:2px;background:rgba(42,143,168,0.12);overflow:hidden;}
+.l-fill{height:100%;background:linear-gradient(90deg,rgba(42,143,168,0.8),rgba(232,152,10,0.8));width:0%;transition:width 0.3s;}
+.l-txt{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:0.2em;color:rgba(90,122,138,0.7);text-transform:uppercase;}
+
+.vignette{position:fixed;inset:0;z-index:5;pointer-events:none;background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 35%,rgba(4,8,15,0.7) 100%);}
+.grain{position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0.1;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");background-size:180px;mix-blend-mode:overlay;}
+.floor-glow{position:fixed;bottom:6%;left:50%;transform:translateX(-50%);width:400px;height:80px;background:radial-gradient(ellipse,rgba(232,152,10,0.1),transparent 70%);filter:blur(16px);z-index:4;pointer-events:none;}
 </style>
 </head>
 <body>
+
+<div class="loading" id="ld">
+  <div class="l-logo">AXIOM</div>
+  <div class="l-bar"><div class="l-fill" id="lf"></div></div>
+  <div class="l-txt" id="lt">Initializing...</div>
+</div>
+
 <canvas id="c"></canvas>
-<div id="info">Loading...</div>
-<div id="readout">Loading...</div>
-<div id="copybox">Paste these into tuning block:</div>
-<div id="btns">
-  <button class="on" onclick="play('idle',this)">Idle</button>
-  <button onclick="play('talking',this)">Talking</button>
-  <button onclick="play('typing',this)">Typing</button>
-  <button onclick="play('walking',this)">Walking</button>
+<div class="vignette"></div>
+<div class="grain"></div>
+<div class="floor-glow"></div>
+
+<div class="ui">
+  <div class="state" id="st">◈ IDLE</div>
+  <div class="btns">
+    <button class="btn on" onclick="play('idle',this)">Idle</button>
+    <button class="btn"    onclick="play('talking',this)">Talking</button>
+    <button class="btn"    onclick="play('typing',this)">Typing</button>
+    <button class="btn"    onclick="play('walking',this)">Walking</button>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 
-// ═══════════════════════════════════════════════════════════════
-// ██████  TUNE THESE VALUES  ████████████████████████████████████
-// ═══════════════════════════════════════════════════════════════
+// ── LOCKED VALUES ────────────────────────────────────────────────
+const ROTATION_X  = -1.3708;
+const ROTATION_Y  =  0.0000;
+const ROTATION_Z  =  0.0000;
+const MODEL_SCALE = 105.88;
+const CAM_X       = -4.2217;
+const CAM_Y       = 438.2658;
+const CAM_Z       = -38.9520;
+const CAM_FOV     = 32;
+const LOOK_X      = -4.4000;
+const LOOK_Y      = 292.9000;
+const LOOK_Z      = -56.9524;
+// ────────────────────────────────────────────────────────────────
 
-const ROTATION_X = -1.5708;  // Rotate model on X axis. Try: 0, 1.5708, -1.5708, 3.1416
-const ROTATION_Y = 0;         // Rotate model on Y axis. Try: 0, 1.5708, 3.1416
-const ROTATION_Z = 0;         // Rotate model on Z axis. Try: 0, 1.5708, 3.1416
+const BASE   = 'https://162.243.225.72.nip.io/static/';
+const LABELS = {idle:'◈ IDLE',talking:'◈ TALKING',typing:'◈ PROCESSING',walking:'◈ ACTIVE'};
 
-const MODEL_SCALE = 105.88;   // Scale of the model. Bigger = larger character.
+let scene, cam, renderer, mixer, clock;
+let anims={}, curAction=null;
 
-const CAM_X      = 0;         // Camera left/right. 0 = center
-const CAM_Y      = 0.9;       // Camera up/down. Higher = looking from above
-const CAM_Z      = 3.5;       // Camera distance. Larger = further away
-const CAM_FOV    = 45;        // Field of view. Smaller = more zoomed in
+function prog(p,t){ document.getElementById('lf').style.width=p+'%'; if(t) document.getElementById('lt').textContent=t; }
+function hideLoader(){ const el=document.getElementById('ld'); el.classList.add('out'); setTimeout(()=>el.remove(),700); }
+function loadScript(url){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=url; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
 
-const LOOK_X     = 0;         // Look target left/right
-const LOOK_Y     = 0.9;       // Look target up/down. Match CAM_Y for flat view
-const LOOK_Z     = 0;         // Look target depth
-
-const SHOW_GRID  = false;      // Show grid? true or false
-const SHOW_AXES  = false;      // Show X/Y/Z axes? true or false
-
-// ═══════════════════════════════════════════════════════════════
-// END OF TUNING — don't edit below unless you know what you're doing
-// ═══════════════════════════════════════════════════════════════
-
-const BASE = 'https://162.243.225.72.nip.io/static/';
-
-function loadScript(url) {
-  return new Promise((res, rej) => {
-    const s = document.createElement('script');
-    s.src = url; s.onload = res; s.onerror = rej;
-    document.head.appendChild(s);
-  });
-}
-
-let scene, cam, renderer, controls, mixer, clock;
-let anims = {}, curAction = null;
-
-async function init() {
+async function init(){
+  prog(10,'Loading dependencies...');
   await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js');
-  await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js');
+  prog(20,'Setting up scene...');
 
   const canvas = document.getElementById('c');
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x04080f);
   clock = new THREE.Clock();
 
-  // Lights
-  scene.add(new THREE.AmbientLight(0xffffff, 1.5));
-  const dir = new THREE.DirectionalLight(0xffffff, 2.0);
-  dir.position.set(5, 10, 5); dir.castShadow = true;
-  scene.add(dir);
-
-  if (SHOW_GRID) scene.add(new THREE.GridHelper(10, 10, 0x1a3a4a, 0x0d1f2d));
-  if (SHOW_AXES) scene.add(new THREE.AxesHelper(2));
-
   // Camera
-  cam = new THREE.PerspectiveCamera(CAM_FOV, innerWidth / innerHeight, 0.001, 1000);
+  cam = new THREE.PerspectiveCamera(CAM_FOV, innerWidth/innerHeight, 0.001, 100000);
   cam.position.set(CAM_X, CAM_Y, CAM_Z);
   cam.lookAt(LOOK_X, LOOK_Y, LOOK_Z);
 
   // Renderer
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
   renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.shadowMap.enabled = true;
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = 0.9;
 
-  // Orbit controls
-  controls = new THREE.OrbitControls(cam, canvas);
-  controls.target.set(LOOK_X, LOOK_Y, LOOK_Z);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.update();
+  // Lights
+  scene.add(new THREE.AmbientLight(0x1a2a4a, 0.9));
+  const key = new THREE.DirectionalLight(0xffe0a0, 1.6);
+  key.position.set(5,10,5); key.castShadow=true;
+  key.shadow.mapSize.set(2048,2048);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0x4488cc, 0.8);
+  fill.position.set(-5,3,-3); scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xff8820, 0.4);
+  rim.position.set(0,5,-8); scene.add(rim);
 
-  // Load model
+  prog(35,'Loading character...');
+
   const loader = new THREE.GLTFLoader();
-  document.getElementById('info').textContent = 'Loading character...';
 
-  loader.load(BASE + 'idle.glb',
-    (gltf) => {
-      const model = gltf.scene;
+  const idleGLTF = await new Promise((res,rej)=>{
+    loader.load(BASE+'idle.glb', res,
+      e=>{ if(e.total) prog(35+Math.round(e.loaded/e.total*40),'Loading mesh...'); },
+      rej);
+  });
 
-      // Apply rotation from tuning block
-      model.rotation.x = ROTATION_X;
-      model.rotation.y = ROTATION_Y;
-      model.rotation.z = ROTATION_Z;
+  prog(76,'Setting up character...');
 
-      // Apply scale from tuning block
-      model.scale.setScalar(MODEL_SCALE);
-      model.updateMatrixWorld(true);
+  const model = idleGLTF.scene;
+  model.rotation.x = ROTATION_X;
+  model.rotation.y = ROTATION_Y;
+  model.rotation.z = ROTATION_Z;
+  model.scale.setScalar(MODEL_SCALE);
+  model.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; } });
+  scene.add(model);
 
-      // Log final position for tuning
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      console.log('=== CHARACTER INFO ===');
-      console.log('Size:  ', size.x.toFixed(2), 'x', size.y.toFixed(2), 'x', size.z.toFixed(2));
-      console.log('Center:', center.x.toFixed(2), center.y.toFixed(2), center.z.toFixed(2));
-      console.log('Feet (min.y):', box.min.y.toFixed(2), '| Head (max.y):', box.max.y.toFixed(2));
-      console.log('Camera:', cam.position.x.toFixed(2), cam.position.y.toFixed(2), cam.position.z.toFixed(2));
+  prog(82,'Loading animations...');
 
-      model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
-      window._model = model;
-      scene.add(model);
+  mixer = new THREE.AnimationMixer(model);
+  if(idleGLTF.animations.length>0){
+    anims.idle = mixer.clipAction(idleGLTF.animations[0]);
+    anims.idle.play(); curAction=anims.idle;
+  }
 
-      document.getElementById('info').textContent =
-        `h:${size.y.toFixed(2)} w:${size.x.toFixed(2)} | cam z:${CAM_Z} y:${CAM_Y} | fov:${CAM_FOV}`;
+  const others = ['talking','typing','walking'];
+  for(let i=0;i<others.length;i++){
+    try{
+      const g = await new Promise((res,rej)=>loader.load(BASE+others[i]+'.glb',res,null,rej));
+      if(g.animations.length>0) anims[others[i]] = mixer.clipAction(g.animations[0]);
+      prog(82+(i+1)*5,'Loading '+others[i]+'...');
+    }catch(e){ console.warn('Could not load',others[i]); }
+  }
 
-      // Animations
-      mixer = new THREE.AnimationMixer(model);
-      if (gltf.animations.length > 0) {
-        anims.idle = mixer.clipAction(gltf.animations[0]);
-        anims.idle.play();
-        curAction = anims.idle;
-      }
+  prog(100,'Ready.');
+  setTimeout(hideLoader, 500);
 
-      for (const name of ['talking', 'typing', 'walking']) {
-        loader.load(BASE + name + '.glb', g => {
-          if (g.animations.length > 0) anims[name] = mixer.clipAction(g.animations[0]);
-        });
-      }
-    },
-    null,
-    (err) => { console.error(err); document.getElementById('info').textContent = 'Error: ' + err.message; }
-  );
-
-  window.addEventListener('resize', () => {
-    cam.aspect = innerWidth / innerHeight;
+  window.addEventListener('resize',()=>{
+    cam.aspect=innerWidth/innerHeight;
     cam.updateProjectionMatrix();
-    renderer.setSize(innerWidth, innerHeight);
+    renderer.setSize(innerWidth,innerHeight);
   });
 
   loop();
 }
 
-function play(name, btn) {
-  if (!mixer || !anims[name]) return;
-  if (curAction) curAction.fadeOut(0.25);
+function play(name,btn){
+  if(!mixer||!anims[name]) return;
+  if(curAction) curAction.fadeOut(0.25);
   anims[name].reset().fadeIn(0.25).play();
-  curAction = anims[name];
-  document.querySelectorAll('button').forEach(b => b.classList.remove('on'));
-  if (btn) btn.classList.add('on');
+  curAction=anims[name];
+  document.getElementById('st').textContent = LABELS[name]||'◈ '+name.toUpperCase();
+  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
 }
 
-function loop() {
+function loop(){
   requestAnimationFrame(loop);
-  if (mixer) mixer.update(clock.getDelta());
-  controls.update();
-  renderer.render(scene, cam);
-
-  // Live readout
-  const r = document.getElementById('readout');
-  const c = document.getElementById('copybox');
-  if (r) {
-    r.innerHTML =
-      `CAM_X: ${cam.position.x.toFixed(4)}<br>` +
-      `CAM_Y: ${cam.position.y.toFixed(4)}<br>` +
-      `CAM_Z: ${cam.position.z.toFixed(4)}<br>` +
-      `LOOK_X: ${controls.target.x.toFixed(4)}<br>` +
-      `LOOK_Y: ${controls.target.y.toFixed(4)}<br>` +
-      `LOOK_Z: ${controls.target.z.toFixed(4)}`;
-  }
-  if (c && window._model) {
-    c.textContent =
-      'Paste these into tuning block:\n' +
-      'const CAM_X  = ' + cam.position.x.toFixed(4) + ';\n' +
-      'const CAM_Y  = ' + cam.position.y.toFixed(4) + ';\n' +
-      'const CAM_Z  = ' + cam.position.z.toFixed(4) + ';\n' +
-      'const LOOK_X = ' + controls.target.x.toFixed(4) + ';\n' +
-      'const LOOK_Y = ' + controls.target.y.toFixed(4) + ';\n' +
-      'const LOOK_Z = ' + controls.target.z.toFixed(4) + ';\n' +
-      'const ROTATION_X = ' + window._model.rotation.x.toFixed(4) + ';\n' +
-      'const ROTATION_Y = ' + window._model.rotation.y.toFixed(4) + ';\n' +
-      'const ROTATION_Z = ' + window._model.rotation.z.toFixed(4) + ';';
-  }
+  if(mixer) mixer.update(clock.getDelta());
+  // Subtle idle camera breathe
+  const t = Date.now()*0.001;
+  cam.position.y += Math.sin(t*0.25)*0.08;
+  renderer.render(scene,cam);
 }
 
-init().catch(e => {
+init().catch(e=>{
   console.error(e);
-  document.getElementById('info').textContent = 'Error: ' + e.message;
+  document.getElementById('lt').textContent='Error: '+e.message;
 });
 </script>
 </body>
