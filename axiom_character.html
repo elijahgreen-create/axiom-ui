@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AXIOM — Character Test</title>
+<title>AXIOM — Character</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: #04080f; overflow: hidden; }
@@ -28,7 +28,7 @@ button.on { border-color: rgba(232,152,10,0.8); color: #e8980a; }
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="info">Scroll to zoom · Drag to orbit · Right drag to pan</div>
+<div id="info">Loading...</div>
 <div id="btns">
   <button class="on" onclick="play('idle',this)">Idle</button>
   <button onclick="play('talking',this)">Talking</button>
@@ -56,13 +56,78 @@ async function init() {
   await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js');
 
   const canvas = document.getElementById('c');
-
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x04080f);
+  clock = new THREE.Clock();
 
-  cam = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.001, 10000);
-  cam.position.set(0, 100, 300);
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+  const dir = new THREE.DirectionalLight(0xffffff, 2.0);
+  dir.position.set(5, 10, 5);
+  dir.castShadow = true;
+  scene.add(dir);
 
+  // Grid for reference
+  scene.add(new THREE.GridHelper(10, 10, 0x1a3a4a, 0x0d1f2d));
+  scene.add(new THREE.AxesHelper(2));
+
+  // Load model first to get dimensions
+  const loader = new THREE.GLTFLoader();
+  document.getElementById('info').textContent = 'Loading character...';
+
+  const gltf = await new Promise((res, rej) => loader.load(BASE + 'idle.glb', res, null, rej));
+  const model = gltf.scene;
+
+  // Step 1: get raw size
+  const rawBox = new THREE.Box3().setFromObject(model);
+  const rawSize = rawBox.getSize(new THREE.Vector3());
+  console.log('Raw size:', rawSize.x.toFixed(5), rawSize.y.toFixed(5), rawSize.z.toFixed(5));
+
+  // Step 2: scale so tallest dimension = 1.8 units
+  const tallest = Math.max(rawSize.x, rawSize.y, rawSize.z);
+  const scale = 1.8 / tallest;
+  model.scale.setScalar(scale);
+  model.updateMatrixWorld(true);
+
+  // Step 3: get scaled box
+  const scaledBox = new THREE.Box3().setFromObject(model);
+  const scaledSize = scaledBox.getSize(new THREE.Vector3());
+  const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
+  console.log('Scaled size:', scaledSize.x.toFixed(3), scaledSize.y.toFixed(3), scaledSize.z.toFixed(3));
+  console.log('Scaled center:', scaledCenter.x.toFixed(3), scaledCenter.y.toFixed(3), scaledCenter.z.toFixed(3));
+  console.log('Scaled min.y:', scaledBox.min.y.toFixed(3), 'max.y:', scaledBox.max.y.toFixed(3));
+
+  // Step 4: move feet to y=0
+  model.position.y = -scaledBox.min.y;
+  model.updateMatrixWorld(true);
+
+  // Step 5: recheck
+  const finalBox = new THREE.Box3().setFromObject(model);
+  const finalCenter = finalBox.getCenter(new THREE.Vector3());
+  console.log('Final center:', finalCenter.x.toFixed(3), finalCenter.y.toFixed(3), finalCenter.z.toFixed(3));
+  console.log('Final min.y:', finalBox.min.y.toFixed(3), 'max.y:', finalBox.max.y.toFixed(3));
+
+  scene.add(model);
+
+  // Step 6: NOW set up camera based on final scaled model
+  // Character is 1.8 units tall, centered at x=0, y=0.9, z=~0
+  const charHeight = finalBox.max.y - finalBox.min.y; // should be ~1.8
+  const charWidth  = Math.max(scaledSize.x, scaledSize.z);
+  const midY       = finalCenter.y; // ~0.9
+
+  // Camera: pull back far enough to see full height
+  // FOV 45 → tan(22.5°) = 0.414
+  // To fit height 1.8 with padding: dist = (1.8/2) / tan(22.5°) * 1.4 = ~3.0
+  const fovRad = 45 * Math.PI / 180;
+  const dist   = (charHeight / 2 / Math.tan(fovRad / 2)) * 1.5;
+  console.log('Camera dist:', dist.toFixed(3), 'midY:', midY.toFixed(3));
+
+  // Camera
+  cam = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.01, 1000);
+  cam.position.set(0, midY, dist);
+  cam.lookAt(0, midY, 0);
+
+  // Renderer
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -71,70 +136,29 @@ async function init() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
 
+  // Orbit controls — target at character center
   controls = new THREE.OrbitControls(cam, canvas);
+  controls.target.set(0, midY, 0);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
+  controls.update();
 
-  scene.add(new THREE.AmbientLight(0xffffff, 1.5));
-  const dir = new THREE.DirectionalLight(0xffffff, 2.0);
-  dir.position.set(5, 10, 5);
-  dir.castShadow = true;
-  scene.add(dir);
+  document.getElementById('info').textContent =
+    `Character loaded · ${charHeight.toFixed(2)}m tall · scroll to zoom`;
 
-  // Grid and axes so we can see orientation
-  scene.add(new THREE.GridHelper(500, 20, 0x1a3a4a, 0x0d1f2d));
-  scene.add(new THREE.AxesHelper(50));
+  // Animations
+  mixer = new THREE.AnimationMixer(model);
+  if (gltf.animations.length > 0) {
+    anims.idle = mixer.clipAction(gltf.animations[0]);
+    anims.idle.play();
+    curAction = anims.idle;
+  }
 
-  clock = new THREE.Clock();
-
-  const loader = new THREE.GLTFLoader();
-  document.getElementById('info').textContent = 'Loading character...';
-
-  loader.load(BASE + 'idle.glb',
-    (gltf) => {
-      const model = gltf.scene;
-      scene.add(model);
-
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-
-      console.log('Size:', JSON.stringify({x:size.x,y:size.y,z:size.z}));
-      console.log('Center:', JSON.stringify({x:center.x,y:center.y,z:center.z}));
-      console.log('Min:', JSON.stringify({x:box.min.x,y:box.min.y,z:box.min.z}));
-      console.log('Max:', JSON.stringify({x:box.max.x,y:box.max.y,z:box.max.z}));
-
-      // Point camera at model
-      controls.target.copy(center);
-      const maxDim = Math.max(size.x, size.y, size.z);
-      cam.position.set(center.x, center.y, center.z + maxDim * 3);
-      cam.lookAt(center);
-      controls.update();
-
-      document.getElementById('info').textContent =
-        `Size: x=${size.x.toFixed(4)} y=${size.y.toFixed(4)} z=${size.z.toFixed(4)} | scroll to zoom`;
-
-      mixer = new THREE.AnimationMixer(model);
-      if (gltf.animations.length > 0) {
-        anims.idle = mixer.clipAction(gltf.animations[0]);
-        anims.idle.play();
-        curAction = anims.idle;
-      }
-
-      ['talking','typing','walking'].forEach(name => {
-        loader.load(BASE + name + '.glb', g => {
-          if (g.animations.length > 0) anims[name] = mixer.clipAction(g.animations[0]);
-        });
-      });
-    },
-    (p) => {
-      if (p.total) document.getElementById('info').textContent = `Loading: ${Math.round(p.loaded/p.total*100)}%`;
-    },
-    (err) => {
-      console.error(err);
-      document.getElementById('info').textContent = 'Error: ' + err.message;
-    }
-  );
+  for (const name of ['talking', 'typing', 'walking']) {
+    loader.load(BASE + name + '.glb', g => {
+      if (g.animations.length > 0) anims[name] = mixer.clipAction(g.animations[0]);
+    });
+  }
 
   window.addEventListener('resize', () => {
     cam.aspect = innerWidth / innerHeight;
@@ -161,7 +185,10 @@ function loop() {
   renderer.render(scene, cam);
 }
 
-init();
+init().catch(e => {
+  console.error(e);
+  document.getElementById('info').textContent = 'Error: ' + e.message;
+});
 </script>
 </body>
 </html>
