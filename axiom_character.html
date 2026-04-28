@@ -17,22 +17,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
 .panel{
   position:fixed;top:48px;right:0;bottom:70px;
   width:420px;z-index:15;
-  background:rgba(10,18,30,0.97);
-  border-left:1px solid rgba(42,143,168,0.4);
-  backdrop-filter:blur(20px);
+  background:#0c1824;
+  border-left:2px solid rgba(42,143,168,0.5);
   display:none;flex-direction:column;
   overflow:hidden;
 }
 .panel.show{display:flex;}
 .panel-head{
-  padding:12px 16px;border-bottom:1px solid rgba(42,143,168,0.15);
+  padding:12px 16px;border-bottom:1px solid rgba(42,143,168,0.2);
+  background:#0c1824;
   display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
 }
-.panel-title{font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:0.25em;color:rgba(232,152,10,0.9);}
+.panel-title{font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:0.25em;color:rgba(232,152,10,0.95);}
 .panel,.panel *{pointer-events:all;}
-.panel-close{cursor:pointer;color:rgba(90,122,138,0.5);font-size:14px;transition:color 0.1s;}
-.panel-close:hover{color:rgba(232,152,10,0.8);}
-.panel-body{flex:1;overflow-y:auto;padding:12px;color:rgba(210,225,235,0.95);}
+.panel-close{cursor:pointer;color:#7aaabb;font-size:14px;transition:color 0.1s;}
+.panel-close:hover{color:rgba(232,152,10,0.9);}
+.panel-body{flex:1;overflow-y:auto;padding:12px;color:#c8e0ee;background:#0c1824;}
 .panel-body::-webkit-scrollbar{width:2px;}
 .panel-body::-webkit-scrollbar-thumb{background:rgba(42,143,168,0.3);}
 
@@ -410,12 +410,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
     </div>
 
     <!-- MAPS PANEL -->
-    <div class="panel" id="panel-maps">
-      <div class="panel-head">
+    <div class="panel" id="panel-maps" style="background:#0c1824 !important;">
+      <div class="panel-head" style="background:#0c1824;border-bottom:1px solid rgba(42,143,168,0.3);">
         <span class="panel-title">🗺 Maps</span>
         <span class="panel-close" onclick="closePanel('maps')">✕</span>
       </div>
-      <div class="panel-body">
+      <div class="panel-body" style="background:#0c1824;color:#d0e8f4;">
         <div class="maps-search-bar">
           <input id="maps-input" placeholder="Search places..." onkeydown="if(event.key==='Enter')searchMaps()">
           <button onclick="searchMaps()">FIND</button>
@@ -855,28 +855,31 @@ function setNav(el, view){
 // ── EMAIL PANEL ─────────────────────────────────────────────
 async function loadEmailPanel(){
   const body = document.getElementById('email-body');
-  body.innerHTML = '<div style="font-size:9px;color:rgba(90,122,138,0.6);letter-spacing:0.1em;padding:4px 0">Loading inbox...</div>';
+  body.innerHTML = '<div style="font-size:11px;color:#7aaabb;padding:8px">Loading inbox...</div>';
   try{
     const res = await fetch(`${API}/chat`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({message:'gmail_inbox count=15', session_id:SID})
+      body: JSON.stringify({message:'check my inbox', session_id:SID})
     });
     const data = await res.json();
-    const lines = (data.response||'').split('\n').filter(l=>l.trim());
+    const raw = data.response || '';
+    const lines = raw.split('\n').filter(l=>l.trim());
     let html = '';
     let cur = {};
     for(const line of lines){
-      if(line.startsWith('From:')){
+      const t = line.trim();
+      if(t.startsWith('From:')){
         if(cur.from) html += renderEmailItem(cur);
-        cur = {from: line.replace('From:','').trim()};
-      } else if(line.startsWith('Subject:')) cur.subj = line.replace('Subject:','').trim();
-      else if(line.startsWith('Preview:')) cur.prev = line.replace('Preview:','').trim();
-      else if(line.startsWith('ID:')) cur.id = line.replace('ID:','').trim();
+        cur = {from: t.replace('From:','').trim()};
+      } else if(t.startsWith('Subject:')) cur.subj = t.replace('Subject:','').trim();
+      else if(t.startsWith('Preview:')) cur.prev = t.replace('Preview:','').trim();
+      else if(t.startsWith('ID:')) cur.id = t.replace('ID:','').trim();
     }
     if(cur.from) html += renderEmailItem(cur);
-    body.innerHTML = html || '<div style="font-size:11px;color:rgba(90,122,138,0.6);padding:12px">No emails found.</div>';
+    body.innerHTML = html ||
+      `<div style="font-size:11px;color:#c0d8e8;padding:8px;line-height:1.85">${raw.replace(/\n/g,'<br>')}</div>`;
   }catch(e){
-    body.innerHTML = '<div style="font-size:11px;color:rgba(200,50,50,0.7);padding:12px">Could not load inbox — check connection.</div>';
+    body.innerHTML = `<div style="font-size:11px;color:#e06060;padding:8px">Error: ${e.message}</div>`;
   }
 }
 
