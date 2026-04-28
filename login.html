@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXIOM — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Noto+Serif+JP:wght@300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;}
+
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.08;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  background-size:180px;mix-blend-mode:overlay;}
+.vignette{position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(ellipse 100% 100% at 50% 50%,transparent 20%,rgba(4,8,15,0.7) 100%);}
+
+/* ── LAYOUT ── */
+.shell{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:flex-end;padding-right:8%;}
+
+/* ── LOGIN CARD ── */
+.card{
+  width:380px;
+  background:rgba(8,14,24,0.92);
+  border:1px solid rgba(42,143,168,0.25);
+  backdrop-filter:blur(24px);
+  padding:36px 32px;
+  position:relative;
+  overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(232,152,10,0.6) 40%,rgba(42,143,168,0.6) 70%,transparent);
+}
+
+.card-logo{
+  font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:0.5em;
+  color:rgba(232,152,10,0.95);text-shadow:0 0 20px rgba(232,152,10,0.3);
+  margin-bottom:4px;
+}
+.card-sub{font-size:9px;letter-spacing:0.2em;color:rgba(42,143,168,0.7);margin-bottom:6px;}
+.card-jp{font-family:'Noto Serif JP',serif;font-size:10px;
+  color:rgba(42,143,168,0.3);letter-spacing:0.3em;margin-bottom:28px;}
+
+/* Tabs */
+.tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid rgba(42,143,168,0.15);}
+.tab{flex:1;padding:8px;font-family:'Share Tech Mono',monospace;font-size:10px;
+  letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;
+  color:rgba(90,122,138,0.7);border-bottom:2px solid transparent;
+  transition:all 0.15s;text-align:center;background:transparent;border-top:none;border-left:none;border-right:none;}
+.tab:hover{color:rgba(192,216,224,0.8);}
+.tab.on{color:rgba(232,152,10,0.9);border-bottom-color:rgba(232,152,10,0.7);}
+
+/* Form */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:8px;letter-spacing:0.18em;
+  color:rgba(42,143,168,0.7);margin-bottom:5px;text-transform:uppercase;}
+.field input{width:100%;background:rgba(13,25,40,0.9);
+  border:1px solid rgba(42,143,168,0.2);color:rgba(210,225,235,0.95);
+  padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:12px;
+  outline:none;transition:border-color 0.15s;}
+.field input:focus{border-color:rgba(232,152,10,0.4);}
+.field input::placeholder{color:rgba(90,122,138,0.4);}
+
+/* Invite code */
+.invite-field{margin-bottom:14px;}
+.invite-field label{display:block;font-size:8px;letter-spacing:0.18em;
+  color:rgba(232,152,10,0.6);margin-bottom:5px;text-transform:uppercase;}
+.invite-field input{width:100%;background:rgba(30,18,8,0.6);
+  border:1px solid rgba(232,152,10,0.2);color:rgba(232,152,10,0.9);
+  padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:12px;
+  outline:none;letter-spacing:0.1em;}
+.invite-field input:focus{border-color:rgba(232,152,10,0.5);}
+.invite-field input::placeholder{color:rgba(130,80,20,0.4);}
+
+/* Buttons */
+.btn-primary{
+  width:100%;padding:12px;margin-top:4px;
+  background:linear-gradient(135deg,rgba(232,152,10,0.85),rgba(180,100,5,0.85));
+  border:none;color:rgba(4,8,15,0.95);
+  font-family:'Bebas Neue',cursive;font-size:16px;letter-spacing:0.25em;
+  cursor:pointer;transition:all 0.15s;
+  clip-path:polygon(8px 0%,100% 0%,100% 100%,0% 100%,0% 8px);
+}
+.btn-primary:hover{background:linear-gradient(135deg,rgba(255,176,32,0.9),rgba(232,152,10,0.9));}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+
+.btn-google{
+  width:100%;padding:11px;margin-top:10px;
+  background:rgba(13,25,40,0.8);
+  border:1px solid rgba(42,143,168,0.25);color:rgba(192,216,224,0.85);
+  font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:0.12em;
+  cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-google:hover{border-color:rgba(42,143,168,0.5);color:rgba(224,235,245,0.95);}
+
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;
+  font-size:8px;letter-spacing:0.15em;color:rgba(90,122,138,0.5);}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(42,143,168,0.12);}
+
+.error-msg{font-size:10px;color:rgba(200,80,80,0.9);margin-top:8px;
+  padding:6px 10px;background:rgba(200,80,80,0.08);border:1px solid rgba(200,80,80,0.2);display:none;}
+.error-msg.show{display:block;}
+
+.success-msg{font-size:10px;color:rgba(29,170,85,0.9);margin-top:8px;
+  padding:6px 10px;background:rgba(29,170,85,0.08);border:1px solid rgba(29,170,85,0.2);display:none;}
+.success-msg.show{display:block;}
+
+.forgot{font-size:9px;color:rgba(42,143,168,0.5);cursor:pointer;
+  letter-spacing:0.1em;margin-top:8px;display:inline-block;transition:color 0.1s;}
+.forgot:hover{color:rgba(42,143,168,0.8);}
+
+/* Tier badges */
+.tier-info{margin-top:20px;padding:10px 12px;
+  background:rgba(13,25,40,0.5);border:1px solid rgba(42,143,168,0.12);}
+.tier-row{display:flex;align-items:center;gap:8px;padding:3px 0;}
+.tier-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.tier-name{font-size:9px;letter-spacing:0.12em;color:rgba(192,216,224,0.7);}
+.tier-desc{font-size:8px;color:rgba(90,122,138,0.6);margin-left:auto;}
+
+/* Loading overlay */
+.loading-overlay{
+  position:absolute;inset:0;background:rgba(4,8,15,0.8);
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;
+  backdrop-filter:blur(4px);z-index:50;
+}
+.loading-overlay.show{display:flex;}
+.loading-spinner{
+  width:32px;height:32px;border:2px solid rgba(42,143,168,0.2);
+  border-top-color:rgba(232,152,10,0.8);border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'Share Tech Mono',monospace;font-size:9px;
+  letter-spacing:0.2em;color:rgba(232,152,10,0.7);}
+
+/* Left side branding */
+.brand-side{
+  position:fixed;left:8%;top:50%;transform:translateY(-50%);
+  z-index:10;pointer-events:none;
+}
+.brand-title{font-family:'Bebas Neue',cursive;font-size:56px;letter-spacing:0.3em;
+  color:rgba(232,152,10,0.15);line-height:1;margin-bottom:8px;}
+.brand-tagline{font-size:10px;letter-spacing:0.3em;color:rgba(42,143,168,0.3);}
+.brand-jp{font-family:'Noto Serif JP',serif;font-size:14px;
+  color:rgba(42,143,168,0.15);letter-spacing:0.4em;margin-top:6px;}
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<!-- Left branding -->
+<div class="brand-side">
+  <div class="brand-title">AXIOM</div>
+  <div class="brand-tagline">Personal AI Operating System</div>
+  <div class="brand-jp">公理 · 迷子の息子</div>
+</div>
+
+<!-- Login card -->
+<div class="shell">
+  <div class="card">
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner"></div>
+      <div class="loading-text" id="loadingText">Signing in...</div>
+    </div>
+
+    <div class="card-logo">AXIOM</div>
+    <div class="card-sub">Personal AI Operating System</div>
+    <div class="card-jp">公理</div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab on" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
+      <button class="tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- SIGN IN FORM -->
+    <div id="form-signin">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="signin-email" placeholder="your@email.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="signin-password" placeholder="••••••••" 
+          onkeydown="if(event.key==='Enter')signIn()">
+      </div>
+      <div class="error-msg" id="signin-error"></div>
+      <button class="btn-primary" onclick="signIn()">ENTER AXIOM</button>
+      <span class="forgot" onclick="forgotPassword()">Forgot password?</span>
+      <div class="divider">or</div>
+      <button class="btn-google" onclick="signInGoogle()">
+        <svg width="16" height="16" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continue with Google
+      </button>
+    </div>
+
+    <!-- SIGN UP FORM -->
+    <div id="form-signup" style="display:none">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="your@email.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="Min 8 characters">
+      </div>
+      <div class="field">
+        <label>Confirm Password</label>
+        <input type="password" id="signup-confirm" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')signUp()">
+      </div>
+      <div class="invite-field">
+        <label>◈ Invite Code (Dev/Beta access)</label>
+        <input type="text" id="signup-invite" placeholder="Leave blank for free tier" 
+          style="text-transform:uppercase" maxlength="20">
+      </div>
+      <div class="error-msg" id="signup-error"></div>
+      <div class="success-msg" id="signup-success"></div>
+      <button class="btn-primary" onclick="signUp()">CREATE ACCOUNT</button>
+      <div class="divider">or</div>
+      <button class="btn-google" onclick="signInGoogle()">
+        <svg width="16" height="16" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <!-- Tier info -->
+      <div class="tier-info">
+        <div class="tier-row">
+          <div class="tier-dot" style="background:#ffd700"></div>
+          <div class="tier-name">GOD MODE</div>
+          <div class="tier-desc">Creator only</div>
+        </div>
+        <div class="tier-row">
+          <div class="tier-dot" style="background:#4ac8d8"></div>
+          <div class="tier-name">DEV</div>
+          <div class="tier-desc">Invite code required</div>
+        </div>
+        <div class="tier-row">
+          <div class="tier-dot" style="background:#9955ff"></div>
+          <div class="tier-name">BETA</div>
+          <div class="tier-desc">Invite code required</div>
+        </div>
+        <div class="tier-row">
+          <div class="tier-dot" style="background:#4a8a5a"></div>
+          <div class="tier-name">FREE</div>
+          <div class="tier-desc">Open access · 50 msg/day</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Three.js for background -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+
+// ── SUPABASE CONFIG ──────────────────────────────────────────
+const SUPABASE_URL = 'https://ftbsxhyyseylebmualar.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ZiOsGN4AZAd8rDNlhP7dXg_570xxDcy';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── INVITE CODES ─────────────────────────────────────────────
+// Change these to whatever you want
+const INVITE_CODES = {
+  'AXIOM-DEV-2026':  'dev',
+  'AXIOM-BETA-2026': 'beta',
+  'LOSTBOY-DEV':     'dev',
+  'LOSTBOY-BETA':    'beta',
+};
+
+// God Mode emails
+const GOD_EMAILS = ['elijahgreen@lostboygraphics.com', 'elijahgreen163@gmail.com'];
+
+// ── THREE.JS BACKGROUND ───────────────────────────────────────
+async function loadScript(url){
+  return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=url; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+}
+
+async function initBg(){
+  await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js');
+  const BASE = 'https://162.243.225.72.nip.io/static/';
+  const canvas = document.getElementById('c');
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(32, innerWidth/innerHeight, 0.001, 100000);
+  cam.position.set(-4.2217, 438.2658, -38.9520);
+  cam.lookAt(-4.4, 292.9, -56.9524);
+
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  scene.add(new THREE.AmbientLight(0x1a2a4a, 0));
+  const key = new THREE.DirectionalLight(0xffe0a0, 1.4);
+  key.position.set(5,10,5); scene.add(key);
+  const fill = new THREE.DirectionalLight(0x4488cc, 0.8);
+  fill.position.set(-5,3,-3); scene.add(fill);
+
+  // Background
+  const h = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Chicago'})).getHours();
+  const bgTex = await new Promise((res,rej)=>new THREE.TextureLoader().load(BASE+(h>=7&&h<19?'day':'night')+'.png',res,null,rej));
+  bgTex.encoding = THREE.sRGBEncoding;
+  const bg = new THREE.Mesh(new THREE.PlaneGeometry(1,1), new THREE.MeshBasicMaterial({map:bgTex,depthWrite:false}));
+  bg.position.set(49,-460,-175); bg.scale.set(960,485,1); bg.rotation.x=-1.0; bg.rotation.y=0.03;
+  scene.add(bg);
+
+  // Character
+  const loader = new THREE.GLTFLoader();
+  loader.load(BASE+'idle.glb', gltf=>{
+    const model = gltf.scene;
+    model.rotation.x = -1.3708; model.scale.setScalar(105.88);
+    model.traverse(c=>{ if(c.isMesh){ c.castShadow=true; } });
+    scene.add(model);
+    let mixer = new THREE.AnimationMixer(model);
+    if(gltf.animations.length>0){ mixer.clipAction(gltf.animations[0]).play(); }
+    const clock = new THREE.Clock();
+    const animate = ()=>{
+      requestAnimationFrame(animate);
+      mixer.update(clock.getDelta());
+      cam.position.y += Math.sin(Date.now()*0.00025)*0.05;
+      renderer.render(scene,cam);
+    };
+    animate();
+  });
+
+  window.addEventListener('resize',()=>{
+    cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+  });
+
+  // Render loop even before character loads
+  const basicClock = new THREE.Clock();
+  const basicLoop = ()=>{
+    requestAnimationFrame(basicLoop);
+    renderer.render(scene,cam);
+  };
+  basicLoop();
+}
+
+initBg().catch(console.error);
+
+// ── CHECK IF ALREADY LOGGED IN ────────────────────────────────
+async function checkSession(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session) {
+    window.location.href = 'index.html';
+  }
+}
+checkSession();
+
+// ── UI HELPERS ───────────────────────────────────────────────
+function switchTab(tab){
+  document.getElementById('form-signin').style.display = tab==='signin' ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = tab==='signup' ? 'block' : 'none';
+  document.getElementById('tab-signin').className = 'tab' + (tab==='signin'?' on':'');
+  document.getElementById('tab-signup').className = 'tab' + (tab==='signup'?' on':'');
+}
+
+function showLoading(text='Signing in...'){
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading(){ document.getElementById('loadingOverlay').classList.remove('show'); }
+
+function showError(formId, msg){
+  const el = document.getElementById(formId+'-error');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 5000);
+}
+function showSuccess(formId, msg){
+  const el = document.getElementById(formId+'-success');
+  if(el){ el.textContent = msg; el.classList.add('show'); }
+}
+
+// ── DETERMINE TIER ───────────────────────────────────────────
+function getTier(email, inviteCode){
+  if(GOD_EMAILS.includes(email.toLowerCase())) return 'god';
+  if(inviteCode){
+    const code = inviteCode.toUpperCase().trim();
+    if(INVITE_CODES[code]) return INVITE_CODES[code];
+    return null; // invalid code
+  }
+  return 'free';
+}
+
+// ── SAVE USER PROFILE ────────────────────────────────────────
+async function saveUserProfile(userId, email, tier){
+  await sb.from('profiles').upsert({
+    id: userId,
+    email: email,
+    tier: tier,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+}
+
+// ── SIGN IN ──────────────────────────────────────────────────
+async function signIn(){
+  const email    = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+  if(!email || !password){ showError('signin','Enter your email and password.'); return; }
+
+  showLoading('Signing in...');
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  hideLoading();
+
+  if(error){ showError('signin', error.message); return; }
+  window.location.href = 'index.html';
+}
+
+// ── SIGN UP ──────────────────────────────────────────────────
+async function signUp(){
+  const email    = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const confirm  = document.getElementById('signup-confirm').value;
+  const invite   = document.getElementById('signup-invite').value.trim();
+
+  if(!email || !password){ showError('signup','Enter your email and password.'); return; }
+  if(password.length < 8){ showError('signup','Password must be at least 8 characters.'); return; }
+  if(password !== confirm){ showError('signup','Passwords do not match.'); return; }
+
+  // Validate invite code if provided
+  const tier = getTier(email, invite || null);
+  if(invite && tier === null){
+    showError('signup','Invalid invite code. Leave blank for free tier.');
+    return;
+  }
+
+  showLoading('Creating account...');
+  const { data, error } = await sb.auth.signUp({ email, password,
+    options:{ data:{ tier, invite_code: invite||null } }
+  });
+  hideLoading();
+
+  if(error){ showError('signup', error.message); return; }
+
+  // Save profile with tier
+  if(data.user){ await saveUserProfile(data.user.id, email, tier); }
+
+  showSuccess('signup', `Account created! ${data.session ? 'Redirecting...' : 'Check your email to confirm.'}`);
+  if(data.session) setTimeout(()=>window.location.href='index.html', 1500);
+}
+
+// ── GOOGLE SIGN IN ───────────────────────────────────────────
+async function signInGoogle(){
+  showLoading('Redirecting to Google...');
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options:{ redirectTo: window.location.origin + '/index.html' }
+  });
+  if(error){ hideLoading(); showError('signin', error.message); }
+}
+
+// ── FORGOT PASSWORD ──────────────────────────────────────────
+async function forgotPassword(){
+  const email = document.getElementById('signin-email').value.trim();
+  if(!email){ showError('signin','Enter your email address first.'); return; }
+  showLoading('Sending reset email...');
+  const { error } = await sb.auth.resetPasswordForEmail(email,
+    { redirectTo: window.location.origin + '/index.html' });
+  hideLoading();
+  if(error){ showError('signin', error.message); }
+  else { showError('signin', ''); document.getElementById('signin-error').style.display='none';
+    alert('Password reset email sent!'); }
+}
+
+</script>
+</body>
+</html>
