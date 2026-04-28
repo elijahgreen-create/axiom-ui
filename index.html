@@ -1176,22 +1176,46 @@ let currentUser = null;
 let currentTier = 'free';
 
 async function checkAuth(){
+  // Handle OAuth callback — Supabase puts token in URL hash
+  if(window.location.hash && window.location.hash.includes('access_token')){
+    // Let Supabase process the hash
+    const { data, error } = await sb.auth.getSession();
+    if(error) console.warn('Auth hash error:', error);
+    // Clean up URL
+    window.history.replaceState(null, '', window.location.pathname);
+  }
+
+  // Wait a moment for session to settle
+  await new Promise(r => setTimeout(r, 500));
+
   const { data:{ session } } = await sb.auth.getSession();
   if(!session){
-    window.location.href = 'login.html';
-    return false;
+    // Try one more time after delay
+    await new Promise(r => setTimeout(r, 1000));
+    const { data:{ session: session2 } } = await sb.auth.getSession();
+    if(!session2){
+      window.location.href = 'login.html';
+      return false;
+    }
+    currentUser = session2.user;
+  } else {
+    currentUser = session.user;
   }
-  currentUser = session.user;
+
   // Get tier
   if(GOD_EMAILS.includes(currentUser.email)) currentTier = 'god';
   else {
-    const { data } = await sb.from('profiles').select('tier').eq('id',currentUser.id).single();
-    currentTier = data?.tier || currentUser.user_metadata?.tier || 'free';
+    try {
+      const { data } = await sb.from('profiles').select('tier').eq('id',currentUser.id).single();
+      currentTier = data?.tier || currentUser.user_metadata?.tier || 'free';
+    } catch(e) { currentTier = 'free'; }
   }
+
   // Update header
   const badge = document.getElementById('modeBadge');
   const tiers = {god:'⬡ GOD MODE',dev:'◈ DEV',beta:'◈ BETA',free:'◈ FREE'};
   if(badge) badge.textContent = tiers[currentTier] || '◈ '+currentTier.toUpperCase();
+  console.log('Logged in as:', currentUser.email, '| Tier:', currentTier);
   return true;
 }
 
