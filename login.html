@@ -363,10 +363,21 @@ initBg().catch(console.error);
 
 // ── CHECK IF ALREADY LOGGED IN ────────────────────────────────
 async function checkSession(){
+  // Handle OAuth hash callback on login page
+  if(window.location.hash && window.location.hash.includes('access_token')){
+    await new Promise(r=>setTimeout(r,500));
+  }
   const { data:{ session } } = await sb.auth.getSession();
   if(session) {
     window.location.href = 'index.html';
+    return;
   }
+  // Listen for auth state changes (catches OAuth redirect)
+  sb.auth.onAuthStateChange((event, session)=>{
+    if(session && (event==='SIGNED_IN' || event==='TOKEN_REFRESHED')){
+      window.location.href = 'index.html';
+    }
+  });
 }
 checkSession();
 
