@@ -468,7 +468,7 @@ async function signInGoogle(){
   showLoading('Redirecting to Google...');
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
-    options:{ redirectTo: window.location.origin + '/index.html' }
+    options:{ redirectTo: 'https://axiom-ui-puce.vercel.app/index.html' }
   });
   if(error){ hideLoading(); showError('signin', error.message); }
 }
