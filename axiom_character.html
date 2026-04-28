@@ -13,6 +13,86 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
 #c{position:fixed;inset:0;width:100%;height:100%;z-index:0;}
 
 /* ── GRAIN + VIGNETTE ── */
+/* ── PANELS — slide over the scene ── */
+.panel{
+  position:fixed;top:48px;right:0;bottom:70px;
+  width:420px;z-index:15;
+  background:rgba(4,8,15,0.88);
+  border-left:1px solid rgba(42,143,168,0.2);
+  backdrop-filter:blur(20px);
+  display:none;flex-direction:column;
+  overflow:hidden;
+}
+.panel.show{display:flex;}
+.panel-head{
+  padding:12px 16px;border-bottom:1px solid rgba(42,143,168,0.15);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.panel-title{font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:0.25em;color:rgba(232,152,10,0.9);}
+.panel-close{cursor:pointer;color:rgba(90,122,138,0.5);font-size:14px;transition:color 0.1s;}
+.panel-close:hover{color:rgba(232,152,10,0.8);}
+.panel-body{flex:1;overflow-y:auto;padding:12px;}
+.panel-body::-webkit-scrollbar{width:2px;}
+.panel-body::-webkit-scrollbar-thumb{background:rgba(42,143,168,0.3);}
+
+/* Email items */
+.email-item{padding:10px 12px;border-bottom:1px solid rgba(42,143,168,0.08);
+  cursor:pointer;transition:background 0.1s;position:relative;padding-left:18px;}
+.email-item:hover{background:rgba(42,143,168,0.06);}
+.email-item.unread::before{content:'';position:absolute;left:6px;top:50%;
+  transform:translateY(-50%);width:4px;height:4px;border-radius:50%;
+  background:rgba(232,152,10,0.8);}
+.email-from{font-size:9px;color:rgba(90,122,138,0.7);margin-bottom:2px;}
+.email-subj{font-size:11px;color:rgba(192,216,224,0.85);margin-bottom:2px;line-height:1.3;}
+.email-item.unread .email-subj{color:rgba(224,216,200,0.95);}
+.email-prev{font-size:9px;color:rgba(90,122,138,0.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.email-time{position:absolute;top:10px;right:10px;font-size:8px;color:rgba(90,122,138,0.5);}
+
+/* Task items */
+.task-item{display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-bottom:1px solid rgba(42,143,168,0.08);}
+.task-check{width:14px;height:14px;border:1px solid rgba(42,143,168,0.3);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:8px;color:rgba(29,170,85,0.8);flex-shrink:0;}
+.task-text{font-size:11px;color:rgba(192,216,224,0.8);flex:1;line-height:1.4;}
+.task-due{font-size:8px;letter-spacing:0.1em;}
+
+/* YouTube */
+.yt-search-bar{display:flex;gap:8px;margin-bottom:12px;}
+.yt-search-bar input{flex:1;background:rgba(13,31,45,0.8);
+  border:1px solid rgba(42,143,168,0.2);color:rgba(192,216,224,0.9);
+  padding:7px 10px;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;}
+.yt-search-bar input:focus{border-color:rgba(232,152,10,0.4);}
+.yt-search-bar button{padding:7px 14px;background:rgba(232,152,10,0.15);
+  border:1px solid rgba(232,152,10,0.3);color:rgba(232,152,10,0.9);
+  font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;}
+.yt-result{display:flex;gap:10px;padding:8px;border-bottom:1px solid rgba(42,143,168,0.08);
+  cursor:pointer;transition:background 0.1s;}
+.yt-result:hover{background:rgba(42,143,168,0.06);}
+.yt-thumb{width:100px;height:56px;background:rgba(13,31,45,0.8);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:20px;border:1px solid rgba(42,143,168,0.1);}
+.yt-info{flex:1;}
+.yt-title{font-size:10px;color:rgba(192,216,224,0.85);line-height:1.4;margin-bottom:3px;}
+.yt-ch{font-size:8px;color:rgba(90,122,138,0.6);}
+.yt-player{width:100%;aspect-ratio:16/9;background:#000;margin-bottom:10px;border:1px solid rgba(42,143,168,0.15);}
+
+/* Maps */
+.maps-search-bar{display:flex;gap:8px;margin-bottom:10px;}
+.maps-search-bar input{flex:1;background:rgba(13,31,45,0.8);
+  border:1px solid rgba(42,143,168,0.2);color:rgba(192,216,224,0.9);
+  padding:7px 10px;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;}
+.maps-search-bar input:focus{border-color:rgba(232,152,10,0.4);}
+.maps-search-bar button{padding:7px 14px;background:rgba(42,143,168,0.15);
+  border:1px solid rgba(42,143,168,0.3);color:rgba(42,143,168,0.9);
+  font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;}
+.map-frame{width:100%;height:300px;border:1px solid rgba(42,143,168,0.15);margin-bottom:10px;}
+.place-item{padding:9px 12px;border-bottom:1px solid rgba(42,143,168,0.08);cursor:pointer;}
+.place-item:hover{background:rgba(42,143,168,0.06);}
+.place-name{font-size:11px;color:rgba(192,216,224,0.85);margin-bottom:2px;}
+.place-addr{font-size:9px;color:rgba(90,122,138,0.6);}
+.place-rating{font-size:9px;color:rgba(232,152,10,0.7);}
+
 .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.08;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
   background-size:180px;mix-blend-mode:overlay;}
@@ -283,7 +363,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
     <div class="nav-logo">⬡</div>
     <div class="ni on" onclick="setNav(this,'chat')" title="Chat">💬</div>
     <div class="ni" onclick="setNav(this,'brief')" title="Briefing">☀️</div>
-    <div class="ni" onclick="setNav(this,'email')" title="Gmail">✉️<span class="badge" id="emailBadge" style="display:none">0</span></div>
+    <div class="ni" onclick="setNav(this,'email')" title="Gmail">✉️</div>
     <div class="ni" onclick="setNav(this,'yt')" title="YouTube">▶️</div>
     <div class="ni" onclick="setNav(this,'maps')" title="Maps">🗺️</div>
     <div class="ni" onclick="setNav(this,'tasks')" title="Tasks">✅</div>
@@ -299,6 +379,71 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
       <div class="brief-date" id="briefDate">Loading briefing...</div>
       <div class="brief-title">Morning Briefing</div>
       <div class="brief-body" id="briefBody">Checking server...</div>
+    </div>
+
+    <!-- GMAIL PANEL -->
+    <div class="panel" id="panel-email">
+      <div class="panel-head">
+        <span class="panel-title">✉ Gmail</span>
+        <span class="panel-close" onclick="closePanel('email')">✕</span>
+      </div>
+      <div class="panel-body" id="email-body">
+        <div style="font-size:9px;color:rgba(90,122,138,0.6);letter-spacing:0.1em;padding:4px 0 10px">Loading inbox...</div>
+      </div>
+    </div>
+
+    <!-- YOUTUBE PANEL -->
+    <div class="panel" id="panel-yt">
+      <div class="panel-head">
+        <span class="panel-title">▶ YouTube</span>
+        <span class="panel-close" onclick="closePanel('yt')">✕</span>
+      </div>
+      <div class="panel-body">
+        <div class="yt-search-bar">
+          <input id="yt-input" placeholder="Search YouTube..." onkeydown="if(event.key==='Enter')searchYT()">
+          <button onclick="searchYT()">SEARCH</button>
+        </div>
+        <div id="yt-player-wrap" style="display:none">
+          <iframe id="yt-player" class="yt-player" frameborder="0" allowfullscreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+        </div>
+        <div id="yt-results"></div>
+      </div>
+    </div>
+
+    <!-- MAPS PANEL -->
+    <div class="panel" id="panel-maps">
+      <div class="panel-head">
+        <span class="panel-title">🗺 Maps</span>
+        <span class="panel-close" onclick="closePanel('maps')">✕</span>
+      </div>
+      <div class="panel-body">
+        <div class="maps-search-bar">
+          <input id="maps-input" placeholder="Search places..." onkeydown="if(event.key==='Enter')searchMaps()">
+          <button onclick="searchMaps()">FIND</button>
+        </div>
+        <iframe id="maps-frame" class="map-frame"
+          src="https://www.google.com/maps/embed/v1/search?key=AIzaSyCV_HJDCOVNqFrCn5zC3G2TD6WVU8PkQiU&q=Dallas+TX"
+          allowfullscreen></iframe>
+        <div id="maps-results"></div>
+      </div>
+    </div>
+
+    <!-- TASKS PANEL -->
+    <div class="panel" id="panel-tasks">
+      <div class="panel-head">
+        <span class="panel-title">✅ Tasks</span>
+        <span class="panel-close" onclick="closePanel('tasks')">✕</span>
+      </div>
+      <div class="panel-body" id="tasks-body">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input id="task-input" placeholder="Add a task..." style="flex:1;background:rgba(13,31,45,0.8);border:1px solid rgba(42,143,168,0.2);color:rgba(192,216,224,0.9);padding:7px 10px;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;" onkeydown="if(event.key==='Enter')addTask()">
+          <button onclick="addTask()" style="padding:7px 14px;background:rgba(232,152,10,0.15);border:1px solid rgba(232,152,10,0.3);color:rgba(232,152,10,0.9);font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;">ADD</button>
+        </div>
+        <div id="task-list">
+          <div style="font-size:9px;color:rgba(90,122,138,0.6);letter-spacing:0.1em">Loading tasks...</div>
+        </div>
+      </div>
     </div>
 
     <!-- Messages -->
@@ -666,12 +811,206 @@ async function toggleVoice(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// NAV
+// NAV + PANELS
 // ══════════════════════════════════════════════════════════════
+let activePanel = null;
+
+function closePanel(name){
+  const el = document.getElementById('panel-'+name);
+  if(el) el.classList.remove('show');
+  activePanel = null;
+}
+
+function openPanel(name){
+  // Close all panels first
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+  // Hide briefing
+  document.getElementById('briefing').classList.remove('show');
+  // Open requested panel
+  const el = document.getElementById('panel-'+name);
+  if(el){
+    el.classList.add('show');
+    activePanel = name;
+    // Load panel data
+    if(name==='email') loadEmailPanel();
+    if(name==='tasks') loadTasksPanel();
+  }
+}
+
 function setNav(el, view){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
   el.classList.add('on');
-  if(view==='brief') toggleBriefing();
+
+  if(view==='chat'){
+    // Close all panels, show chat
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+    document.getElementById('briefing').classList.remove('show');
+    activePanel = null;
+  } else if(view==='brief'){
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+    toggleBriefing();
+  } else {
+    openPanel(view);
+  }
+}
+
+// ── EMAIL PANEL ─────────────────────────────────────────────
+async function loadEmailPanel(){
+  const body = document.getElementById('email-body');
+  body.innerHTML = '<div style="font-size:9px;color:rgba(90,122,138,0.6);letter-spacing:0.1em;padding:4px 0">Loading inbox...</div>';
+  try{
+    const res = await fetch(`${API}/chat`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message:'gmail_inbox count=15', session_id:SID})
+    });
+    const data = await res.json();
+    const lines = (data.response||'').split('\n').filter(l=>l.trim());
+    let html = '';
+    let cur = {};
+    for(const line of lines){
+      if(line.startsWith('From:')){
+        if(cur.from) html += renderEmailItem(cur);
+        cur = {from: line.replace('From:','').trim()};
+      } else if(line.startsWith('Subject:')) cur.subj = line.replace('Subject:','').trim();
+      else if(line.startsWith('Preview:')) cur.prev = line.replace('Preview:','').trim();
+      else if(line.startsWith('ID:')) cur.id = line.replace('ID:','').trim();
+    }
+    if(cur.from) html += renderEmailItem(cur);
+    body.innerHTML = html || '<div style="font-size:11px;color:rgba(90,122,138,0.6);padding:12px">No emails found.</div>';
+  }catch(e){
+    body.innerHTML = '<div style="font-size:11px;color:rgba(200,50,50,0.7);padding:12px">Could not load inbox — check connection.</div>';
+  }
+}
+
+function renderEmailItem(e){
+  return `<div class="email-item unread" onclick="readEmail('${e.id||''}','${(e.subj||'').replace(/'/g,"\'")}')">
+    <div class="email-time">Now</div>
+    <div class="email-from">${e.from||''}</div>
+    <div class="email-subj">${e.subj||'(no subject)'}</div>
+    <div class="email-prev">${e.prev||''}</div>
+  </div>`;
+}
+
+function readEmail(id, subj){
+  if(!id) return;
+  // Send read request to Axiom
+  const inp = document.getElementById('inp');
+  inp.value = `read email id:${id}`;
+  // Close panel and go to chat
+  closePanel('email');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.querySelector('.ni').classList.add('on');
+  sendMsg(`Read email: ${subj}`);
+}
+
+// ── YOUTUBE PANEL ────────────────────────────────────────────
+async function searchYT(){
+  const q = document.getElementById('yt-input').value.trim();
+  if(!q) return;
+  const res_div = document.getElementById('yt-results');
+  res_div.innerHTML = '<div style="font-size:9px;color:rgba(90,122,138,0.6);padding:8px">Searching...</div>';
+  try{
+    const res = await fetch(`${API}/chat`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message:`youtube: ${q}`, session_id:SID})
+    });
+    const data = await res.json();
+    const lines = (data.response||'').split('\n');
+    let html = '';
+    let cur = {};
+    for(const line of lines){
+      if(line.startsWith('•')){
+        if(cur.title) html += renderYTResult(cur);
+        cur = {title: line.replace('•','').trim()};
+      } else if(line.trim().startsWith('Channel:')) cur.ch = line.replace('Channel:','').trim();
+      else if(line.trim().startsWith('URL:')) cur.url = line.replace('URL:','').trim();
+    }
+    if(cur.title) html += renderYTResult(cur);
+    res_div.innerHTML = html || '<div style="font-size:11px;color:rgba(90,122,138,0.6);padding:8px">No results found.</div>';
+  }catch(e){
+    res_div.innerHTML = '<div style="font-size:11px;color:rgba(200,50,50,0.7);padding:8px">Search failed.</div>';
+  }
+}
+
+function renderYTResult(v){
+  const vidId = v.url ? v.url.split('v=')[1] : '';
+  return `<div class="yt-result" onclick="playYT('${vidId}','${(v.title||'').replace(/'/g,"\'")}')">
+    <div class="yt-thumb" style="background-image:url(https://img.youtube.com/vi/${vidId}/mqdefault.jpg);background-size:cover;background-position:center">
+      ${vidId?'':'▶'}
+    </div>
+    <div class="yt-info">
+      <div class="yt-title">${v.title||''}</div>
+      <div class="yt-ch">${v.ch||''}</div>
+    </div>
+  </div>`;
+}
+
+function playYT(vidId, title){
+  if(!vidId) return;
+  const wrap = document.getElementById('yt-player-wrap');
+  const frame = document.getElementById('yt-player');
+  frame.src = `https://www.youtube.com/embed/${vidId}?autoplay=1`;
+  wrap.style.display = 'block';
+  document.getElementById('yt-results').scrollTop = 0;
+}
+
+// ── MAPS PANEL ───────────────────────────────────────────────
+async function searchMaps(){
+  const q = document.getElementById('maps-input').value.trim();
+  if(!q) return;
+  const frame = document.getElementById('maps-frame');
+  const key   = 'AIzaSyCV_HJDCOVNqFrCn5zC3G2TD6WVU8PkQiU';
+  frame.src = `https://www.google.com/maps/embed/v1/search?key=${key}&q=${encodeURIComponent(q+' near Dallas TX')}`;
+
+  const res_div = document.getElementById('maps-results');
+  res_div.innerHTML = '<div style="font-size:9px;color:rgba(90,122,138,0.6);padding:8px">Searching...</div>';
+  try{
+    const res = await fetch(`${API}/chat`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message:`maps: ${q} near Dallas TX`, session_id:SID})
+    });
+    const data = await res.json();
+    res_div.innerHTML = `<div style="font-size:11px;color:rgba(192,216,224,0.75);padding:8px;line-height:1.85">${(data.response||'').replace(/\n/g,'<br>')}</div>`;
+  }catch(e){}
+}
+
+// ── TASKS PANEL ──────────────────────────────────────────────
+async function loadTasksPanel(){
+  const list = document.getElementById('task-list');
+  list.innerHTML = '<div style="font-size:9px;color:rgba(90,122,138,0.6);letter-spacing:0.1em">Loading tasks...</div>';
+  try{
+    const res = await fetch(`${API}/chat`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message:'my tasks', session_id:SID})
+    });
+    const data = await res.json();
+    const lines = (data.response||'').split('\n').filter(l=>l.startsWith('•')||l.startsWith('-'));
+    if(lines.length){
+      list.innerHTML = lines.map(l=>`
+        <div class="task-item">
+          <div class="task-check">✓</div>
+          <div class="task-text">${l.replace(/^[•\-]\s*/,'')}</div>
+        </div>`).join('');
+    } else {
+      list.innerHTML = `<div style="font-size:11px;color:rgba(192,216,224,0.75);padding:8px;line-height:1.85">${(data.response||'No tasks found.').replace(/\n/g,'<br>')}</div>`;
+    }
+  }catch(e){
+    list.innerHTML = '<div style="font-size:11px;color:rgba(200,50,50,0.7);padding:8px">Could not load tasks.</div>';
+  }
+}
+
+async function addTask(){
+  const inp = document.getElementById('task-input');
+  const title = inp.value.trim();
+  if(!title) return;
+  inp.value = '';
+  try{
+    await fetch(`${API}/chat`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message:`add task: ${title}`, session_id:SID})
+    });
+    loadTasksPanel();
+  }catch(e){}
 }
 
 // ══════════════════════════════════════════════════════════════
