@@ -3,216 +3,693 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AXIOM — Character</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>AXIOM</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Noto+Serif+JP:wght@300&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
-canvas{display:block;width:100vw;height:100vh;}
 
-.ui{position:fixed;inset:0;z-index:10;pointer-events:none;
-  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:24px;gap:8px;}
-.state{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.3em;color:rgba(232,152,10,0.7);text-transform:uppercase;}
-.btns{display:flex;gap:6px;pointer-events:all;}
-.btn{background:rgba(7,13,22,0.88);border:1px solid rgba(42,143,168,0.3);color:rgba(192,216,224,0.8);
-  padding:6px 18px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.18em;
-  text-transform:uppercase;cursor:pointer;transition:all 0.12s;backdrop-filter:blur(8px);}
-.btn:hover{border-color:rgba(232,152,10,0.5);color:rgba(232,152,10,0.9);}
-.btn.on{border-color:rgba(232,152,10,0.8);color:#e8980a;background:rgba(232,152,10,0.08);}
+/* ── THREE.JS CANVAS — full background ── */
+#c{position:fixed;inset:0;width:100%;height:100%;z-index:0;}
 
+/* ── GRAIN + VIGNETTE ── */
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.08;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  background-size:180px;mix-blend-mode:overlay;}
+.vignette{position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(ellipse 100% 100% at 50% 50%,transparent 30%,rgba(4,8,15,0.55) 100%);}
+
+/* ── UI SHELL — sits above Three.js ── */
+.shell{position:fixed;inset:0;z-index:10;display:grid;
+  grid-template-columns:56px 1fr;
+  grid-template-rows:48px 1fr 70px;
+  grid-template-areas:"nav header""nav main""nav input";
+  pointer-events:none;}
+
+/* ── HEADER ── */
+.header{grid-area:header;pointer-events:all;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+  background:linear-gradient(180deg,rgba(4,8,15,0.85) 0%,transparent 100%);
+}
+.h-left{display:flex;align-items:center;gap:14px;}
+.logo{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:0.4em;
+  color:rgba(232,152,10,0.95);text-shadow:0 0 20px rgba(232,152,10,0.4);}
+.pills{display:flex;gap:5px;}
+.pill{font-size:7px;letter-spacing:0.15em;padding:2px 8px;border:1px solid;
+  display:flex;align-items:center;gap:4px;text-transform:uppercase;backdrop-filter:blur(4px);}
+.pill-dot{width:4px;height:4px;border-radius:50%;}
+.pill.on{border-color:rgba(29,170,85,0.3);color:rgba(29,170,85,0.9);background:rgba(29,170,85,0.05);}
+.pill.on .pill-dot{background:rgba(29,170,85,0.9);box-shadow:0 0 5px rgba(29,170,85,0.8);}
+.pill.mem{border-color:rgba(232,152,10,0.3);color:rgba(232,152,10,0.8);background:rgba(232,152,10,0.05);}
+.pill.mem .pill-dot{background:rgba(232,152,10,0.8);}
+.pill.ctx{border-color:rgba(42,143,168,0.3);color:rgba(42,143,168,0.8);background:rgba(42,143,168,0.05);}
+.h-right{display:flex;align-items:center;gap:8px;}
+.h-mode{font-size:7px;letter-spacing:0.2em;padding:3px 10px;
+  border:1px solid rgba(232,152,10,0.3);color:rgba(232,152,10,0.8);
+  background:rgba(232,152,10,0.06);backdrop-filter:blur(8px);}
+.h-btn{width:26px;height:26px;border:1px solid rgba(42,143,168,0.2);
+  background:rgba(4,8,15,0.5);color:rgba(192,216,224,0.6);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:11px;transition:all 0.12s;backdrop-filter:blur(8px);}
+.h-btn:hover{border-color:rgba(232,152,10,0.4);color:rgba(232,152,10,0.8);}
+
+/* ── NAV ── */
+.nav{grid-area:nav;pointer-events:all;
+  display:flex;flex-direction:column;align-items:center;
+  padding:6px 0;gap:2px;
+  background:linear-gradient(90deg,rgba(4,8,15,0.7) 0%,transparent 100%);
+}
+.nav-logo{width:36px;height:36px;margin-bottom:6px;
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(232,152,10,0.8);font-size:16px;
+  border-bottom:1px solid rgba(42,143,168,0.15);width:100%;padding-bottom:8px;}
+.ni{width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:rgba(192,216,224,0.4);font-size:15px;
+  transition:all 0.15s;border-left:2px solid transparent;position:relative;}
+.ni:hover{color:rgba(192,216,224,0.8);background:rgba(42,143,168,0.08);}
+.ni.on{color:rgba(232,152,10,0.9);border-left-color:rgba(232,152,10,0.8);background:rgba(232,152,10,0.06);}
+.ni .badge{position:absolute;top:5px;right:5px;width:13px;height:13px;border-radius:50%;
+  background:rgba(200,50,50,0.9);color:#fff;font-size:7px;
+  display:flex;align-items:center;justify-content:center;}
+.nav-space{flex:1;}
+.ni.voice-btn{width:36px;height:36px;border-radius:50%;margin:4px 0;
+  border:1px solid rgba(232,152,10,0.3);background:rgba(232,152,10,0.06);
+  color:rgba(232,152,10,0.8);}
+.ni.voice-btn:hover{box-shadow:0 0 12px rgba(232,152,10,0.2);}
+.ni.voice-btn.listening{border-color:rgba(200,50,50,0.8);color:rgba(200,50,50,0.9);
+  animation:vpulse 1s ease-out infinite;}
+@keyframes vpulse{0%{box-shadow:0 0 0 0 rgba(200,50,50,0.5);}100%{box-shadow:0 0 0 10px rgba(200,50,50,0);}}
+
+/* ── MAIN AREA ── */
+.main{grid-area:main;position:relative;overflow:hidden;pointer-events:none;}
+
+/* ── CHAT MESSAGES — floating glass cards ── */
+#msgWrap{
+  position:absolute;bottom:0;left:60px;right:20px;
+  max-height:65%;overflow-y:auto;
+  display:flex;flex-direction:column;gap:8px;
+  padding:12px 0;
+  pointer-events:all;
+  mask-image:linear-gradient(transparent,black 15%,black 100%);
+  -webkit-mask-image:linear-gradient(transparent,black 15%,black 100%);
+}
+#msgWrap::-webkit-scrollbar{width:2px;}
+#msgWrap::-webkit-scrollbar-thumb{background:rgba(42,143,168,0.3);}
+
+/* Empty state — shown when no messages */
+#empty{
+  position:absolute;bottom:80px;left:0;right:0;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  pointer-events:all;
+}
+#empty.gone{display:none;}
+.empty-name{font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:0.5em;
+  color:rgba(232,152,10,0.5);text-shadow:0 0 20px rgba(232,152,10,0.2);}
+.empty-jp{font-family:'Noto Serif JP',serif;font-size:10px;
+  color:rgba(42,143,168,0.3);letter-spacing:0.3em;}
+.sugs{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;justify-content:center;}
+.sug{background:rgba(4,8,15,0.6);border:1px solid rgba(42,143,168,0.2);
+  padding:6px 14px;cursor:pointer;font-family:'Share Tech Mono',monospace;
+  font-size:9px;letter-spacing:0.12em;color:rgba(192,216,224,0.6);
+  transition:all 0.12s;backdrop-filter:blur(8px);}
+.sug:hover{border-color:rgba(232,152,10,0.4);color:rgba(232,152,10,0.8);}
+
+/* Message bubbles */
+.msg{display:flex;gap:8px;animation:msgIn 0.2s ease;pointer-events:all;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.msg-av{width:24px;height:24px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;border:1px solid;margin-top:2px;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);}
+.msg.u .msg-av{border-color:rgba(42,143,168,0.3);color:rgba(192,216,224,0.6);background:rgba(13,31,45,0.6);}
+.msg.a .msg-av{border-color:rgba(232,152,10,0.4);color:rgba(232,152,10,0.9);background:rgba(30,18,8,0.6);}
+
+.msg-body{flex:1;max-width:600px;}
+.msg-meta{font-size:7px;letter-spacing:0.15em;color:rgba(90,122,138,0.7);
+  margin-bottom:3px;display:flex;align-items:center;gap:5px;text-transform:uppercase;}
+.msg-tag{font-size:6px;padding:1px 5px;border:1px solid rgba(42,143,168,0.2);color:rgba(42,143,168,0.6);}
+
+/* Glass bubble */
+.bubble{
+  padding:10px 14px;border:1px solid;
+  backdrop-filter:blur(16px);font-size:12px;line-height:1.85;
+  position:relative;
+}
+.msg.u .bubble{
+  border-color:rgba(42,143,168,0.15);
+  background:rgba(13,31,45,0.55);
+  color:rgba(192,216,224,0.85);
+}
+.msg.a .bubble{
+  border-color:rgba(232,152,10,0.15);
+  background:rgba(15,12,5,0.6);
+  color:rgba(224,216,200,0.9);
+}
+.msg.a .bubble::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,rgba(232,152,10,0.3),transparent);
+}
+
+/* Feedback buttons */
+.fb-row{display:flex;gap:5px;margin-top:5px;}
+.fb{font-size:7px;letter-spacing:0.1em;padding:2px 8px;
+  border:1px solid rgba(42,143,168,0.2);color:rgba(90,122,138,0.7);
+  cursor:pointer;background:transparent;font-family:'Share Tech Mono',monospace;
+  transition:all 0.1s;}
+.fb:hover{border-color:rgba(232,152,10,0.3);color:rgba(232,152,10,0.7);}
+.fb.good{color:rgba(29,170,85,0.7);border-color:rgba(29,170,85,0.2);}
+.fb.bad{color:rgba(200,50,50,0.7);border-color:rgba(200,50,50,0.2);}
+
+/* Typing indicator */
+.typing-wrap{display:flex;gap:8px;align-items:flex-start;}
+.typing-bubble{
+  padding:10px 16px;border:1px solid rgba(232,152,10,0.12);
+  background:rgba(15,12,5,0.55);backdrop-filter:blur(16px);
+  display:flex;gap:4px;align-items:center;
+}
+.td{width:4px;height:4px;border-radius:50%;background:rgba(232,152,10,0.5);
+  animation:tdot 1.2s infinite;}
+.td:nth-child(2){animation-delay:.2s;}
+.td:nth-child(3){animation-delay:.4s;}
+@keyframes tdot{0%,80%,100%{opacity:0.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ── INPUT BAR ── */
+.input-bar{grid-area:input;pointer-events:all;
+  display:flex;align-items:center;gap:8px;
+  padding:12px 16px 12px 70px;
+  background:linear-gradient(0deg,rgba(4,8,15,0.9) 0%,transparent 100%);
+}
+.inp-wrap{flex:1;display:flex;align-items:center;
+  background:rgba(7,13,22,0.7);border:1px solid rgba(42,143,168,0.2);
+  backdrop-filter:blur(16px);transition:border-color 0.15s;padding:0 12px;}
+.inp-wrap:focus-within{border-color:rgba(232,152,10,0.3);}
+.inp-prompt{color:rgba(42,143,168,0.5);font-size:11px;margin-right:7px;font-family:'Share Tech Mono',monospace;}
+.inp{flex:1;background:transparent;border:none;outline:none;
+  color:rgba(224,216,200,0.9);font-family:'Share Tech Mono',monospace;
+  font-size:12px;padding:10px 0;caret-color:rgba(232,152,10,0.8);}
+.inp::placeholder{color:rgba(90,122,138,0.5);}
+.mic-btn{width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  border:1px solid rgba(42,143,168,0.3);background:rgba(13,31,45,0.6);
+  color:rgba(42,143,168,0.7);cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;backdrop-filter:blur(8px);}
+.mic-btn:hover{border-color:rgba(232,152,10,0.5);color:rgba(232,152,10,0.8);}
+.send-btn{height:38px;padding:0 20px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(232,152,10,0.8),rgba(180,100,5,0.8));
+  border:none;color:rgba(4,8,15,0.95);
+  font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:0.2em;
+  cursor:pointer;transition:all 0.12s;
+  clip-path:polygon(8px 0%,100% 0%,100% 100%,0% 100%,0% 8px);}
+.send-btn:hover{background:linear-gradient(135deg,rgba(255,176,32,0.9),rgba(232,152,10,0.9));}
+
+/* ── LOADING ── */
 .loading{position:fixed;inset:0;z-index:100;background:#04080f;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity 0.6s;}
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  transition:opacity 0.6s;}
 .loading.out{opacity:0;pointer-events:none;}
-.l-logo{font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:0.4em;
+.l-logo{font-family:'Bebas Neue',cursive;font-size:40px;letter-spacing:0.4em;
   color:rgba(232,152,10,0.9);text-shadow:0 0 30px rgba(232,152,10,0.4);}
 .l-bar{width:200px;height:2px;background:rgba(42,143,168,0.12);overflow:hidden;}
 .l-fill{height:100%;background:linear-gradient(90deg,rgba(42,143,168,0.8),rgba(232,152,10,0.8));width:0%;transition:width 0.3s;}
-.l-txt{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:0.2em;color:rgba(90,122,138,0.7);text-transform:uppercase;}
+.l-txt{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:0.2em;
+  color:rgba(90,122,138,0.7);text-transform:uppercase;}
 
-.vignette{position:fixed;inset:0;z-index:5;pointer-events:none;
-  background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 35%,rgba(4,8,15,0.6) 100%);}
-.grain{position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0.1;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
-  background-size:180px;mix-blend-mode:overlay;}
+/* ── MORNING BRIEFING ── */
+#briefing{
+  position:absolute;top:12px;right:16px;
+  width:320px;max-height:70%;overflow-y:auto;
+  background:rgba(7,13,22,0.75);border:1px solid rgba(232,152,10,0.2);
+  backdrop-filter:blur(20px);padding:14px;
+  display:none;pointer-events:all;
+}
+#briefing::-webkit-scrollbar{width:1px;}
+#briefing::-webkit-scrollbar-thumb{background:rgba(232,152,10,0.3);}
+#briefing.show{display:block;}
+.brief-date{font-size:7px;letter-spacing:0.2em;color:rgba(232,152,10,0.6);margin-bottom:4px;}
+.brief-title{font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:0.25em;
+  color:rgba(224,216,200,0.9);margin-bottom:10px;border-bottom:1px solid rgba(232,152,10,0.15);padding-bottom:6px;}
+.brief-body{font-size:11px;line-height:1.85;color:rgba(192,216,224,0.75);white-space:pre-wrap;}
+.brief-close{position:absolute;top:8px;right:10px;cursor:pointer;
+  color:rgba(90,122,138,0.5);font-size:14px;}
+.brief-close:hover{color:rgba(232,152,10,0.8);}
+
+/* ── ANIM STATE BADGE ── */
+#animState{
+  position:absolute;bottom:20px;right:20px;
+  font-family:'Share Tech Mono',monospace;font-size:8px;
+  letter-spacing:0.25em;color:rgba(232,152,10,0.4);
+  pointer-events:none;
+}
 </style>
 </head>
 <body>
 
+<!-- Loading -->
 <div class="loading" id="ld">
   <div class="l-logo">AXIOM</div>
   <div class="l-bar"><div class="l-fill" id="lf"></div></div>
   <div class="l-txt" id="lt">Initializing...</div>
 </div>
 
+<!-- Three.js canvas — bedroom + character -->
 <canvas id="c"></canvas>
-<div class="vignette"></div>
 <div class="grain"></div>
+<div class="vignette"></div>
 
-<div class="ui">
-  <div class="state" id="st">◈ IDLE</div>
-  <div class="btns">
-    <button class="btn on" onclick="play('idle',this)">Idle</button>
-    <button class="btn"    onclick="play('talking',this)">Talking</button>
-    <button class="btn"    onclick="play('typing',this)">Typing</button>
-    <button class="btn"    onclick="play('walking',this)">Walking</button>
+<!-- Main UI shell -->
+<div class="shell">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="h-left">
+      <div class="logo">AXIOM</div>
+      <div class="pills">
+        <div class="pill on"><div class="pill-dot"></div>Online</div>
+        <div class="pill mem" id="memPill"><div class="pill-dot"></div>0 Memories</div>
+        <div class="pill ctx" id="ctxPill"><div class="pill-dot" style="background:rgba(42,143,168,0.8)"></div>Loading...</div>
+      </div>
+    </div>
+    <div class="h-right">
+      <div class="h-mode" id="modeBadge">◈ GOD MODE</div>
+      <div class="h-btn" onclick="toggleBriefing()" title="Morning Briefing">☀</div>
+      <div class="h-btn" title="Settings">⚙</div>
+    </div>
+  </header>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-logo">⬡</div>
+    <div class="ni on" onclick="setNav(this,'chat')" title="Chat">💬</div>
+    <div class="ni" onclick="setNav(this,'brief')" title="Briefing">☀️</div>
+    <div class="ni" onclick="setNav(this,'email')" title="Gmail">✉️<span class="badge" id="emailBadge" style="display:none">0</span></div>
+    <div class="ni" onclick="setNav(this,'yt')" title="YouTube">▶️</div>
+    <div class="ni" onclick="setNav(this,'maps')" title="Maps">🗺️</div>
+    <div class="ni" onclick="setNav(this,'tasks')" title="Tasks">✅</div>
+    <div class="nav-space"></div>
+    <div class="ni voice-btn" id="micNav" onclick="toggleVoice()" title="Voice">🎙</div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Morning briefing panel -->
+    <div id="briefing">
+      <div class="brief-close" onclick="toggleBriefing()">✕</div>
+      <div class="brief-date" id="briefDate">Loading briefing...</div>
+      <div class="brief-title">Morning Briefing</div>
+      <div class="brief-body" id="briefBody">Checking server...</div>
+    </div>
+
+    <!-- Messages -->
+    <div id="msgWrap"></div>
+
+    <!-- Empty state -->
+    <div id="empty">
+      <div class="empty-name">AXIOM</div>
+      <div class="empty-jp">公理 · 個人的なAI</div>
+      <div class="sugs">
+        <div class="sug" onclick="sendMsg('what can you do')">What can you do?</div>
+        <div class="sug" onclick="sendMsg('morning briefing')">☀ Briefing</div>
+        <div class="sug" onclick="sendMsg('check my inbox')">✉ Inbox</div>
+        <div class="sug" onclick="sendMsg('my projects')">⚡ Projects</div>
+      </div>
+    </div>
+
+    <!-- Anim state -->
+    <div id="animState">◈ IDLE</div>
+  </main>
+
+  <!-- Input bar -->
+  <div class="input-bar">
+    <div class="inp-wrap">
+      <span class="inp-prompt">&gt;_</span>
+      <input class="inp" id="inp" placeholder="Message Axiom..." 
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}">
+    </div>
+    <button class="mic-btn" id="micBtn" onclick="toggleVoice()">🎙</button>
+    <button class="send-btn" onclick="sendMsg()">SEND</button>
   </div>
+
 </div>
 
+<!-- Three.js + GLTF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 
-// ── CHARACTER (locked) ───────────────────────────────────────────
-const ROTATION_X  = -1.3708;
-const ROTATION_Y  =  0.0000;
-const ROTATION_Z  =  0.0000;
+// ══════════════════════════════════════════════════════════════
+// LOCKED SCENE VALUES
+// ══════════════════════════════════════════════════════════════
+const ROTATION_X  = -1.3708; const ROTATION_Y = 0; const ROTATION_Z = 0;
 const MODEL_SCALE = 105.88;
-const CAM_X       = -4.2217;
-const CAM_Y       = 438.2658;
-const CAM_Z       = -38.9520;
-const CAM_FOV     = 32;
-const LOOK_X      = -4.4000;
-const LOOK_Y      = 292.9000;
-const LOOK_Z      = -56.9524;
-
-// ── BACKGROUND (locked) ──────────────────────────────────────────
-const BG_X  =  49.0;
-const BG_Y  = -460.0;
-const BG_Z  = -175.0;
-const BG_W  =  960.0;
-const BG_H  =  485.0;
-const BG_RX = -1.000;
-const BG_RY =  0.030;
-
-// ── LIGHTING (locked) ────────────────────────────────────────────
-const L_AMB = 0.00;
-const L_KEY = 1.40;
-const L_EXP = 1.10;
-// ────────────────────────────────────────────────────────────────
+const CAM_X=-4.2217; const CAM_Y=438.2658; const CAM_Z=-38.9520;
+const CAM_FOV=32;
+const LOOK_X=-4.4; const LOOK_Y=292.9; const LOOK_Z=-56.9524;
+const BG_X=49; const BG_Y=-460; const BG_Z=-175;
+const BG_W=960; const BG_H=485; const BG_RX=-1.0; const BG_RY=0.03;
+const L_AMB=0; const L_KEY=1.4; const L_EXP=1.1;
 
 const BASE   = 'https://162.243.225.72.nip.io/static/';
+const API    = 'https://162.243.225.72.nip.io';
+const SID    = Math.random().toString(36).slice(2,10);
 const LABELS = {idle:'◈ IDLE',talking:'◈ TALKING',typing:'◈ PROCESSING',walking:'◈ ACTIVE'};
 
 function getDallasBg() {
-  const dallas = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Chicago'}));
-  return (dallas.getHours() >= 7 && dallas.getHours() < 19) ? BASE+'day.png' : BASE+'night.png';
+  const h = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Chicago'})).getHours();
+  return BASE + (h>=7&&h<19?'day':'night') + '.png';
 }
 
+// ══════════════════════════════════════════════════════════════
+// THREE.JS SCENE
+// ══════════════════════════════════════════════════════════════
 let scene, cam, renderer, mixer, clock;
-let anims={}, curAction=null;
+let anims={}, curAnim='idle', curAction=null;
 
-function prog(p,t){ document.getElementById('lf').style.width=p+'%'; if(t) document.getElementById('lt').textContent=t; }
-function hideLoader(){ const el=document.getElementById('ld'); el.classList.add('out'); setTimeout(()=>el.remove(),700); }
-function loadScript(url){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=url; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+function prog(p,t){
+  document.getElementById('lf').style.width=p+'%';
+  if(t) document.getElementById('lt').textContent=t;
+}
+function hideLoader(){
+  const el=document.getElementById('ld');
+  el.classList.add('out');
+  setTimeout(()=>el.remove(),700);
+}
+function loadScript(url){
+  return new Promise((res,rej)=>{const s=document.createElement('script');s.src=url;s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+}
 
-async function init() {
-  prog(10,'Loading...');
+async function initScene(){
   await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js');
+  prog(12,'Setting up scene...');
 
-  const canvas = document.getElementById('c');
-  scene = new THREE.Scene();
-  clock = new THREE.Clock();
+  scene=new THREE.Scene(); clock=new THREE.Clock();
+  cam=new THREE.PerspectiveCamera(CAM_FOV,innerWidth/innerHeight,0.001,100000);
+  cam.position.set(CAM_X,CAM_Y,CAM_Z); cam.lookAt(LOOK_X,LOOK_Y,LOOK_Z);
 
-  cam = new THREE.PerspectiveCamera(CAM_FOV, innerWidth/innerHeight, 0.001, 100000);
-  cam.position.set(CAM_X, CAM_Y, CAM_Z);
-  cam.lookAt(LOOK_X, LOOK_Y, LOOK_Z);
-
-  renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
-  renderer.setSize(innerWidth, innerHeight);
+  renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,alpha:true});
+  renderer.setSize(innerWidth,innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  renderer.shadowMap.enabled = true;
-  renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = L_EXP;
+  renderer.shadowMap.enabled=true;
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=L_EXP;
 
-  // Lights
-  scene.add(new THREE.AmbientLight(0x1a2a4a, L_AMB));
-  const key = new THREE.DirectionalLight(0xffe0a0, L_KEY);
-  key.position.set(5,10,5); key.castShadow=true;
-  key.shadow.mapSize.set(2048,2048);
-  scene.add(key);
-  const fill = new THREE.DirectionalLight(0x4488cc, 0.8);
-  fill.position.set(-5,3,-3); scene.add(fill);
-  const rim = new THREE.DirectionalLight(0xff8820, 0.4);
-  rim.position.set(0,5,-8); scene.add(rim);
+  scene.add(new THREE.AmbientLight(0x1a2a4a,L_AMB));
+  const key=new THREE.DirectionalLight(0xffe0a0,L_KEY);
+  key.position.set(5,10,5); key.castShadow=true; scene.add(key);
+  scene.add(Object.assign(new THREE.DirectionalLight(0x4488cc,0.8),{position:new THREE.Vector3(-5,3,-3)}));
+  scene.add(Object.assign(new THREE.DirectionalLight(0xff8820,0.4),{position:new THREE.Vector3(0,5,-8)}));
 
   // Background
-  prog(25,'Loading bedroom...');
-  const bgTex = await new Promise((res,rej)=>new THREE.TextureLoader().load(getDallasBg(),res,null,rej));
-  bgTex.encoding = THREE.sRGBEncoding;
-  const bgMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(1,1),
-    new THREE.MeshBasicMaterial({map:bgTex, depthWrite:false})
-  );
-  bgMesh.position.set(BG_X, BG_Y, BG_Z);
-  bgMesh.scale.set(BG_W, BG_H, 1);
-  bgMesh.rotation.x = BG_RX;
-  bgMesh.rotation.y = BG_RY;
-  scene.add(bgMesh);
+  prog(20,'Loading bedroom...');
+  const bgTex=await new Promise((res,rej)=>new THREE.TextureLoader().load(getDallasBg(),res,null,rej));
+  bgTex.encoding=THREE.sRGBEncoding;
+  const bg=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:bgTex,depthWrite:false}));
+  bg.position.set(BG_X,BG_Y,BG_Z); bg.scale.set(BG_W,BG_H,1);
+  bg.rotation.x=BG_RX; bg.rotation.y=BG_RY;
+  scene.add(bg);
 
   // Character
-  prog(40,'Loading character...');
-  const loader = new THREE.GLTFLoader();
-  const idleGLTF = await new Promise((res,rej)=>{
-    loader.load(BASE+'idle.glb',res,e=>{if(e.total)prog(40+Math.round(e.loaded/e.total*35),'Loading mesh...');},rej);
-  });
+  prog(35,'Loading character...');
+  const loader=new THREE.GLTFLoader();
+  const idleGLTF=await new Promise((res,rej)=>loader.load(BASE+'idle.glb',res,e=>{if(e.total)prog(35+Math.round(e.loaded/e.total*40),'Loading mesh...');},rej));
 
-  prog(78,'Setting up...');
-  const model = idleGLTF.scene;
-  model.rotation.x = ROTATION_X;
-  model.rotation.y = ROTATION_Y;
-  model.rotation.z = ROTATION_Z;
+  prog(76,'Setting up character...');
+  const model=idleGLTF.scene;
+  model.rotation.set(ROTATION_X,ROTATION_Y,ROTATION_Z);
   model.scale.setScalar(MODEL_SCALE);
-  model.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; } });
+  model.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
   scene.add(model);
 
-  mixer = new THREE.AnimationMixer(model);
+  mixer=new THREE.AnimationMixer(model);
   if(idleGLTF.animations.length>0){
-    anims.idle = mixer.clipAction(idleGLTF.animations[0]);
+    anims.idle=mixer.clipAction(idleGLTF.animations[0]);
     anims.idle.play(); curAction=anims.idle;
   }
 
   prog(85,'Loading animations...');
   for(const name of ['talking','typing','walking']){
     try{
-      const g = await new Promise((res,rej)=>loader.load(BASE+name+'.glb',res,null,rej));
+      const g=await new Promise((res,rej)=>loader.load(BASE+name+'.glb',res,null,rej));
       if(g.animations.length>0) anims[name]=mixer.clipAction(g.animations[0]);
     }catch(e){}
   }
 
-  prog(100,'Ready.');
-  setTimeout(hideLoader,500);
-
   window.addEventListener('resize',()=>{
-    cam.aspect=innerWidth/innerHeight;
-    cam.updateProjectionMatrix();
+    cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix();
     renderer.setSize(innerWidth,innerHeight);
   });
 
-  loop();
+  renderLoop();
 }
 
-function play(name,btn){
-  if(!mixer||!anims[name]) return;
+function setAnim(name){
+  if(!mixer||!anims[name]||curAnim===name) return;
   if(curAction) curAction.fadeOut(0.25);
   anims[name].reset().fadeIn(0.25).play();
-  curAction=anims[name];
-  document.getElementById('st').textContent=LABELS[name]||'◈ '+name.toUpperCase();
-  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('on'));
-  if(btn) btn.classList.add('on');
+  curAction=anims[name]; curAnim=name;
+  document.getElementById('animState').textContent=LABELS[name]||'◈ '+name.toUpperCase();
 }
 
-function loop(){
-  requestAnimationFrame(loop);
+function renderLoop(){
+  requestAnimationFrame(renderLoop);
   if(mixer) mixer.update(clock.getDelta());
-  const t=Date.now()*0.001;
-  cam.position.y+=Math.sin(t*0.25)*0.05;
+  cam.position.y+=Math.sin(Date.now()*0.00025)*0.05;
   renderer.render(scene,cam);
 }
 
-init().catch(e=>{
+// ══════════════════════════════════════════════════════════════
+// CHAT
+// ══════════════════════════════════════════════════════════════
+let lastUserMsg='', lastAxiomMsg='', started=false;
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function addMsg(role, content, model_tag=''){
+  if(!started){
+    started=true;
+    document.getElementById('empty').classList.add('gone');
+  }
+  const wrap=document.getElementById('msgWrap');
+  const ts=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+  const id='m'+Date.now();
+  const d=document.createElement('div');
+  d.className='msg '+(role==='u'?'u':'a');
+
+  const html = content.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+
+  if(role==='u'){
+    d.innerHTML=`
+      <div class="msg-av">U</div>
+      <div class="msg-body">
+        <div class="msg-meta">YOU <span style="margin-left:auto">${ts}</span></div>
+        <div class="bubble">${esc(content)}</div>
+      </div>`;
+  } else {
+    d.innerHTML=`
+      <div class="msg-av">⬡</div>
+      <div class="msg-body">
+        <div class="msg-meta">AXIOM ${model_tag?`<span class="msg-tag">${model_tag}</span>`:''}
+          <span style="margin-left:auto">${ts}</span></div>
+        <div class="bubble" id="bubble-${id}">${html}</div>
+        <div class="fb-row">
+          <button class="fb good" onclick="rate('${id}',5,this)">✓ Good</button>
+          <button class="fb bad"  onclick="rate('${id}',1,this)">✕ Bad</button>
+        </div>
+      </div>`;
+    lastAxiomMsg=content;
+  }
+  wrap.appendChild(d);
+  wrap.scrollTop=wrap.scrollHeight;
+  return id;
+}
+
+function showTyping(){
+  const wrap=document.getElementById('msgWrap');
+  const d=document.createElement('div');
+  d.id='typing'; d.className='msg a';
+  d.innerHTML=`
+    <div class="msg-av">⬡</div>
+    <div class="msg-body">
+      <div class="msg-meta">AXIOM</div>
+      <div class="typing-bubble"><div class="td"></div><div class="td"></div><div class="td"></div></div>
+    </div>`;
+  wrap.appendChild(d);
+  wrap.scrollTop=wrap.scrollHeight;
+}
+function hideTyping(){ document.getElementById('typing')?.remove(); }
+
+async function sendMsg(txt){
+  const inp=document.getElementById('inp');
+  const msg=(txt||inp.value).trim();
+  if(!msg) return;
+  inp.value='';
+  lastUserMsg=msg;
+  addMsg('u',msg);
+  showTyping();
+  setAnim('typing');
+
+  try {
+    const res=await fetch(`${API}/chat/stream`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:msg,session_id:SID})
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+
+    const reader=res.body.getReader();
+    const decoder=new TextDecoder();
+    let full=''; let msgId=null; let bubbleEl=null;
+
+    const read=async()=>{
+      const{done,value}=await reader.read();
+      if(done) return;
+      const chunk=decoder.decode(value,{stream:true});
+      for(const line of chunk.split('\n')){
+        if(!line.startsWith('data: ')) continue;
+        try{
+          const data=JSON.parse(line.slice(6));
+          if(data.text&&!data.done){
+            full+=data.text;
+            if(!msgId){
+              hideTyping();
+              msgId=addMsg('a',full,data.model||'');
+              bubbleEl=document.getElementById('bubble-'+msgId);
+            } else if(bubbleEl){
+              bubbleEl.innerHTML=full.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+              document.getElementById('msgWrap').scrollTop=99999;
+            }
+          }
+          if(data.done){
+            setAnim(data.agent?'talking':'idle');
+          }
+        }catch(e){}
+      }
+      await read();
+    };
+    await read();
+
+  } catch(err){
+    hideTyping();
+    addMsg('a','Could not reach server — check connection.');
+    setAnim('idle');
+  }
+}
+
+async function rate(id, rating, btn){
+  btn.disabled=true;
+  btn.style.opacity='0.4';
+  try{
+    await fetch(`${API}/feedback`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({session_id:SID,message:lastUserMsg,response:lastAxiomMsg,rating})
+    });
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════════
+// BRIEFING
+// ══════════════════════════════════════════════════════════════
+let briefingLoaded=false;
+
+async function loadBriefing(){
+  try{
+    const res=await fetch(`${API}/briefing`);
+    const data=await res.json();
+    if(data.available){
+      const d=new Date(data.date);
+      document.getElementById('briefDate').textContent=
+        d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}).toUpperCase()+' · '+
+        new Date(data.generated_at+'Z').toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      document.getElementById('briefBody').textContent=data.content;
+      briefingLoaded=true;
+    }
+  }catch(e){}
+}
+
+function toggleBriefing(){
+  const el=document.getElementById('briefing');
+  el.classList.toggle('show');
+  if(el.classList.contains('show')&&!briefingLoaded) loadBriefing();
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATUS
+// ══════════════════════════════════════════════════════════════
+async function loadStatus(){
+  try{
+    const res=await fetch(`${API}/status`);
+    const data=await res.json();
+    if(data.memory) document.getElementById('memPill').innerHTML=
+      `<div class="pill-dot" style="background:rgba(232,152,10,0.8)"></div>${data.memory.memories} Memories`;
+    if(data.context) document.getElementById('ctxPill').innerHTML=
+      `<div class="pill-dot" style="background:rgba(42,143,168,0.8)"></div>${data.context.mode.replace('_',' ')}`;
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════════
+// VOICE
+// ══════════════════════════════════════════════════════════════
+let mediaRec=null, audioChunks=[], voiceOn=false;
+
+async function toggleVoice(){
+  const btn=document.getElementById('micBtn');
+  const nav=document.getElementById('micNav');
+  if(!voiceOn){
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      mediaRec=new MediaRecorder(stream); audioChunks=[];
+      mediaRec.ondataavailable=e=>audioChunks.push(e.data);
+      mediaRec.onstop=async()=>{
+        const blob=new Blob(audioChunks,{type:'audio/webm'});
+        const form=new FormData(); form.append('audio',blob,'voice.webm');
+        try{
+          const res=await fetch(`${API}/voice/transcribe`,{method:'POST',body:form});
+          const data=await res.json();
+          if(data.text){ document.getElementById('inp').value=data.text; sendMsg(); }
+        }catch(e){}
+      };
+      mediaRec.start();
+      voiceOn=true;
+      btn.style.borderColor='rgba(200,50,50,0.8)';
+      btn.style.color='rgba(200,50,50,0.9)';
+      nav.classList.add('listening');
+      setAnim('talking');
+    }catch(e){ alert('Microphone access denied'); }
+  } else {
+    mediaRec?.stop(); voiceOn=false;
+    btn.style.borderColor=''; btn.style.color='';
+    nav.classList.remove('listening');
+    setAnim('idle');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════════════════
+function setNav(el, view){
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  el.classList.add('on');
+  if(view==='brief') toggleBriefing();
+}
+
+// ══════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════
+async function boot(){
+  prog(5,'Starting...');
+  await initScene();
+  prog(95,'Loading data...');
+  loadStatus();
+  loadBriefing();
+  prog(100,'Ready.');
+  setTimeout(hideLoader,600);
+}
+
+boot().catch(e=>{
   console.error(e);
   document.getElementById('lt').textContent='Error: '+e.message;
 });
+
 </script>
 </body>
 </html>
