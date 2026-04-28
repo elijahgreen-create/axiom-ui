@@ -84,7 +84,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
 .maps-search-bar button{padding:8px 14px;background:rgba(42,143,168,0.25);
   border:1px solid rgba(42,143,168,0.6);color:rgba(42,200,200,1);
   font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;pointer-events:all;}
-.map-frame{width:100%;height:300px;border:1px solid rgba(42,143,168,0.15);margin-bottom:10px;}
+.map-cat-btn{padding:4px 10px;background:rgba(13,31,45,0.9);border:1px solid rgba(42,143,168,0.3);
+  color:#7aaabb;font-family:'Share Tech Mono',monospace;font-size:8px;cursor:pointer;
+  letter-spacing:0.08em;transition:all 0.1s;}
+.map-cat-btn:hover{border-color:rgba(232,152,10,0.5);color:rgba(232,152,10,0.9);}
 .place-item{padding:9px 12px;border-bottom:1px solid rgba(42,143,168,0.08);cursor:pointer;}
 .place-item:hover{background:rgba(42,143,168,0.06);}
 .place-name{font-size:11px;color:rgba(192,216,224,0.85);margin-bottom:2px;}
@@ -415,15 +418,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
         <span class="panel-title">🗺 Maps</span>
         <span class="panel-close" onclick="closePanel('maps')">✕</span>
       </div>
-      <div class="panel-body" style="background:#0c1824;color:#d0e8f4;">
-        <div class="maps-search-bar">
-          <input id="maps-input" placeholder="Search places..." onkeydown="if(event.key==='Enter')searchMaps()">
-          <button onclick="searchMaps()">FIND</button>
+      <div class="panel-body" style="background:#0c1824;color:#d0e8f4;padding:0;display:flex;flex-direction:column;">
+        <!-- Search bar -->
+        <div style="padding:10px;background:#0c1824;display:flex;gap:6px;flex-shrink:0;">
+          <input id="maps-input" placeholder="Search nearby places..." 
+            style="flex:1;background:#0d1f30;border:1px solid rgba(42,143,168,0.5);color:#d0e8f4;
+            padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;"
+            onkeydown="if(event.key==='Enter')searchMapsPlaces()">
+          <button onclick="searchMapsPlaces()" 
+            style="padding:8px 14px;background:rgba(42,143,168,0.25);border:1px solid rgba(42,143,168,0.6);
+            color:#4ac8d8;font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;">FIND</button>
         </div>
-        <iframe id="maps-frame" class="map-frame"
-          src="https://www.google.com/maps/embed/v1/search?key=AIzaSyCV_HJDCOVNqFrCn5zC3G2TD6WVU8PkQiU&q=Dallas+TX"
-          allowfullscreen></iframe>
-        <div id="maps-results"></div>
+        <!-- Quick category buttons -->
+        <div style="padding:0 10px 8px;display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;">
+          <button onclick="searchMapsPlaces('restaurants near me')" class="map-cat-btn">🍔 Food</button>
+          <button onclick="searchMapsPlaces('coffee shops near me')" class="map-cat-btn">☕ Coffee</button>
+          <button onclick="searchMapsPlaces('gas stations near me')" class="map-cat-btn">⛽ Gas</button>
+          <button onclick="searchMapsPlaces('grocery stores near me')" class="map-cat-btn">🛒 Grocery</button>
+          <button onclick="searchMapsPlaces('pharmacies near me')" class="map-cat-btn">💊 Pharmacy</button>
+        </div>
+        <!-- Map -->
+        <div id="maps-map" style="width:100%;height:260px;flex-shrink:0;"></div>
+        <!-- Results -->
+        <div id="maps-results" style="flex:1;overflow-y:auto;padding:8px;"></div>
       </div>
     </div>
 
@@ -832,6 +849,7 @@ function openPanel(name){
     // Load panel data
     if(name==='email') loadEmailPanel();
     if(name==='tasks') loadTasksPanel();
+    if(name==='maps'){ loadGoogleMaps(); setTimeout(initMapsPanel,800); }
   }
 }
 
@@ -956,24 +974,153 @@ function playYT(vidId, title){
 }
 
 // ── MAPS PANEL ───────────────────────────────────────────────
-async function searchMaps(){
-  const q = document.getElementById('maps-input').value.trim();
-  if(!q) return;
-  const frame = document.getElementById('maps-frame');
-  const key   = 'AIzaSyCV_HJDCOVNqFrCn5zC3G2TD6WVU8PkQiU';
-  frame.src = `https://www.google.com/maps/embed/v1/search?key=${key}&q=${encodeURIComponent(q+' near Dallas TX')}`;
+let mapsMap = null;
+let mapsService = null;
+let mapsInfoWindow = null;
+const MAPS_KEY = 'AIzaSyCV_HJDCOVNqFrCn5zC3G2TD6WVU8PkQiU';
 
-  const res_div = document.getElementById('maps-results');
-  res_div.innerHTML = '<div style="font-size:9px;color:rgba(90,122,138,0.6);padding:8px">Searching...</div>';
-  try{
-    const res = await fetch(`${API}/chat`,{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({message:`maps: ${q} near Dallas TX`, session_id:SID})
+function initMapsPanel(){
+  if(mapsMap) return;
+  if(!window.google || !window.google.maps) return;
+
+  // Default to Dallas
+  const dallas = {lat:32.7767, lng:-96.7970};
+
+  mapsMap = new google.maps.Map(document.getElementById('maps-map'), {
+    center: dallas,
+    zoom: 14,
+    styles: [
+      {elementType:'geometry',stylers:[{color:'#0c1824'}]},
+      {elementType:'labels.text.stroke',stylers:[{color:'#0c1824'}]},
+      {elementType:'labels.text.fill',stylers:[{color:'#7aaabb'}]},
+      {featureType:'administrative',elementType:'geometry',stylers:[{color:'#1a3a4a'}]},
+      {featureType:'road',elementType:'geometry',stylers:[{color:'#1a3a4a'}]},
+      {featureType:'road',elementType:'labels.text.fill',stylers:[{color:'#9aaabb'}]},
+      {featureType:'water',elementType:'geometry',stylers:[{color:'#0a1828'}]},
+      {featureType:'poi',elementType:'geometry',stylers:[{color:'#0d2030'}]},
+      {featureType:'poi',elementType:'labels.text.fill',stylers:[{color:'#6aaabb'}]},
+      {featureType:'transit',elementType:'geometry',stylers:[{color:'#1a3a4a'}]},
+    ],
+    disableDefaultUI: false,
+    zoomControl: true,
+    mapTypeControl: false,
+    streetViewControl: true,
+    fullscreenControl: false,
+  });
+
+  mapsService = new google.maps.places.PlacesService(mapsMap);
+  mapsInfoWindow = new google.maps.InfoWindow();
+
+  // Try to get user location
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const loc = {lat:pos.coords.latitude, lng:pos.coords.longitude};
+      mapsMap.setCenter(loc);
+      new google.maps.Marker({position:loc, map:mapsMap,
+        icon:{path:google.maps.SymbolPath.CIRCLE,scale:8,
+          fillColor:'#e8980a',fillOpacity:1,strokeColor:'#fff',strokeWeight:2},
+        title:'You are here'});
     });
-    const data = await res.json();
-    res_div.innerHTML = `<div style="font-size:11px;color:rgba(192,216,224,0.75);padding:8px;line-height:1.85">${(data.response||'').replace(/\n/g,'<br>')}</div>`;
-  }catch(e){}
+  }
 }
+
+function searchMapsPlaces(query){
+  const q = query || document.getElementById('maps-input').value.trim();
+  if(!q) return;
+  if(!mapsMap) { initMapsPanel(); setTimeout(()=>searchMapsPlaces(q),500); return; }
+
+  const resultsDiv = document.getElementById('maps-results');
+  resultsDiv.innerHTML = '<div style="font-size:10px;color:#7aaabb;padding:8px">Searching...</div>';
+
+  const request = {
+    query: q,
+    location: mapsMap.getCenter(),
+    radius: 5000,
+    fields: ['name','geometry','rating','formatted_address','place_id','opening_hours','price_level','photos']
+  };
+
+  mapsService.textSearch(request, (results, status)=>{
+    if(status !== google.maps.places.PlacesServiceStatus.OK || !results){
+      resultsDiv.innerHTML = '<div style="font-size:10px;color:#e06060;padding:8px">No results found.</div>';
+      return;
+    }
+
+    // Clear old markers
+    if(window._mapMarkers) window._mapMarkers.forEach(m=>m.setMap(null));
+    window._mapMarkers = [];
+
+    // Fit map to results
+    const bounds = new google.maps.LatLngBounds();
+    let html = `<div style="font-size:9px;color:#7aaabb;padding:4px 0 8px;letter-spacing:0.1em">${results.length} RESULTS</div>`;
+
+    results.slice(0,10).forEach((place,i)=>{
+      bounds.extend(place.geometry.location);
+
+      // Add marker
+      const marker = new google.maps.Marker({
+        position: place.geometry.location,
+        map: mapsMap,
+        title: place.name,
+        label: {text:String(i+1), color:'#04080f', fontSize:'10px', fontWeight:'bold'},
+        icon:{
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 14,
+          fillColor: '#e8980a',
+          fillOpacity: 0.9,
+          strokeColor: '#fff',
+          strokeWeight: 1.5,
+        }
+      });
+
+      marker.addListener('click',()=>{
+        mapsInfoWindow.setContent(`
+          <div style="font-family:monospace;font-size:12px;padding:4px">
+            <strong>${place.name}</strong><br>
+            ${place.formatted_address||''}<br>
+            ${place.rating?'⭐ '+place.rating:''}
+          </div>`);
+        mapsInfoWindow.open(mapsMap, marker);
+      });
+      window._mapMarkers.push(marker);
+
+      // Result card
+      const stars = place.rating ? '⭐'.repeat(Math.round(place.rating)) + ` ${place.rating}` : '';
+      const open = place.opening_hours ? (place.opening_hours.isOpen() ? '<span style="color:#1daa55">● Open</span>' : '<span style="color:#c83232">● Closed</span>') : '';
+      const price = place.price_level ? '$'.repeat(place.price_level) : '';
+
+      html += `<div onclick="mapsMap.setCenter(new google.maps.LatLng(${place.geometry.location.lat()},${place.geometry.location.lng()}));mapsMap.setZoom(17);"
+        style="padding:10px;border-bottom:1px solid rgba(42,143,168,0.15);cursor:pointer;
+        display:flex;gap:10px;align-items:flex-start;transition:background 0.1s;"
+        onmouseover="this.style.background='rgba(42,143,168,0.08)'"
+        onmouseout="this.style.background=''">
+        <div style="width:22px;height:22px;border-radius:50%;background:#e8980a;
+          display:flex;align-items:center;justify-content:center;
+          font-size:10px;font-weight:bold;color:#04080f;flex-shrink:0;">${i+1}</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;color:#d8eaf4;margin-bottom:2px;">${place.name}</div>
+          <div style="font-size:9px;color:#7aaabb;margin-bottom:3px;">${place.formatted_address||''}</div>
+          <div style="font-size:9px;display:flex;gap:8px;">${stars} ${open} ${price?'<span style="color:#7aaabb">'+price+'</span>':''}</div>
+        </div>
+        <a href="https://www.google.com/maps/place/?q=place_id:${place.place_id}" 
+          target="_blank" style="font-size:9px;color:#4ac8d8;text-decoration:none;flex-shrink:0;"
+          onclick="event.stopPropagation()">Directions →</a>
+      </div>`;
+    });
+
+    resultsDiv.innerHTML = html;
+    mapsMap.fitBounds(bounds);
+  });
+}
+
+// Load Google Maps JS API
+function loadGoogleMaps(){
+  if(window.google && window.google.maps) { initMapsPanel(); return; }
+  const s = document.createElement('script');
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places&callback=onGoogleMapsLoaded`;
+  s.async = true; s.defer = true;
+  document.head.appendChild(s);
+}
+window.onGoogleMapsLoaded = function(){ initMapsPanel(); };
 
 // ── TASKS PANEL ──────────────────────────────────────────────
 async function loadTasksPanel(){
