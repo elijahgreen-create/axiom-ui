@@ -10,43 +10,30 @@
 html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
 canvas{display:block;width:100vw;height:100vh;}
 
-.ui{
-  position:fixed;inset:0;z-index:10;pointer-events:none;
-  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
-  padding-bottom:24px;gap:8px;
-}
-.state{
-  font-family:'Share Tech Mono',monospace;font-size:9px;
-  letter-spacing:0.3em;color:rgba(232,152,10,0.7);text-transform:uppercase;
-}
+.ui{position:fixed;inset:0;z-index:10;pointer-events:none;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:24px;gap:8px;}
+.state{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.3em;color:rgba(232,152,10,0.7);text-transform:uppercase;}
 .btns{display:flex;gap:6px;pointer-events:all;}
-.btn{
-  background:rgba(7,13,22,0.88);border:1px solid rgba(42,143,168,0.3);
-  color:rgba(192,216,224,0.8);padding:6px 18px;
-  font-family:'Share Tech Mono',monospace;font-size:9px;
-  letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;
-  transition:all 0.12s;backdrop-filter:blur(8px);
-}
+.btn{background:rgba(7,13,22,0.88);border:1px solid rgba(42,143,168,0.3);color:rgba(192,216,224,0.8);
+  padding:6px 18px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.18em;
+  text-transform:uppercase;cursor:pointer;transition:all 0.12s;backdrop-filter:blur(8px);}
 .btn:hover{border-color:rgba(232,152,10,0.5);color:rgba(232,152,10,0.9);}
 .btn.on{border-color:rgba(232,152,10,0.8);color:#e8980a;background:rgba(232,152,10,0.08);}
 
-.loading{
-  position:fixed;inset:0;z-index:100;background:#04080f;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-  transition:opacity 0.6s;
-}
+.loading{position:fixed;inset:0;z-index:100;background:#04080f;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity 0.6s;}
 .loading.out{opacity:0;pointer-events:none;}
-.l-logo{
-  font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:0.4em;
-  color:rgba(232,152,10,0.9);text-shadow:0 0 30px rgba(232,152,10,0.4);
-}
+.l-logo{font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:0.4em;
+  color:rgba(232,152,10,0.9);text-shadow:0 0 30px rgba(232,152,10,0.4);}
 .l-bar{width:200px;height:2px;background:rgba(42,143,168,0.12);overflow:hidden;}
 .l-fill{height:100%;background:linear-gradient(90deg,rgba(42,143,168,0.8),rgba(232,152,10,0.8));width:0%;transition:width 0.3s;}
 .l-txt{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:0.2em;color:rgba(90,122,138,0.7);text-transform:uppercase;}
 
-.vignette{position:fixed;inset:0;z-index:5;pointer-events:none;background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 35%,rgba(4,8,15,0.7) 100%);}
-.grain{position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0.1;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");background-size:180px;mix-blend-mode:overlay;}
-.floor-glow{position:fixed;bottom:6%;left:50%;transform:translateX(-50%);width:400px;height:80px;background:radial-gradient(ellipse,rgba(232,152,10,0.1),transparent 70%);filter:blur(16px);z-index:4;pointer-events:none;}
+.vignette{position:fixed;inset:0;z-index:5;pointer-events:none;
+  background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 35%,rgba(4,8,15,0.6) 100%);}
+.grain{position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0.1;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  background-size:180px;mix-blend-mode:overlay;}
 </style>
 </head>
 <body>
@@ -60,7 +47,6 @@ canvas{display:block;width:100vw;height:100vh;}
 <canvas id="c"></canvas>
 <div class="vignette"></div>
 <div class="grain"></div>
-<div class="floor-glow"></div>
 
 <div class="ui">
   <div class="state" id="st">◈ IDLE</div>
@@ -75,7 +61,7 @@ canvas{display:block;width:100vw;height:100vh;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 
-// ── LOCKED VALUES ────────────────────────────────────────────────
+// ── CHARACTER (locked) ───────────────────────────────────────────
 const ROTATION_X  = -1.3708;
 const ROTATION_Y  =  0.0000;
 const ROTATION_Z  =  0.0000;
@@ -87,10 +73,29 @@ const CAM_FOV     = 32;
 const LOOK_X      = -4.4000;
 const LOOK_Y      = 292.9000;
 const LOOK_Z      = -56.9524;
+
+// ── BACKGROUND (locked) ──────────────────────────────────────────
+const BG_X  =  49.0;
+const BG_Y  = -460.0;
+const BG_Z  = -175.0;
+const BG_W  =  960.0;
+const BG_H  =  485.0;
+const BG_RX = -1.000;
+const BG_RY =  0.030;
+
+// ── LIGHTING (locked) ────────────────────────────────────────────
+const L_AMB = 0.00;
+const L_KEY = 1.40;
+const L_EXP = 1.10;
 // ────────────────────────────────────────────────────────────────
 
 const BASE   = 'https://162.243.225.72.nip.io/static/';
 const LABELS = {idle:'◈ IDLE',talking:'◈ TALKING',typing:'◈ PROCESSING',walking:'◈ ACTIVE'};
+
+function getDallasBg() {
+  const dallas = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Chicago'}));
+  return (dallas.getHours() >= 7 && dallas.getHours() < 19) ? BASE+'day.png' : BASE+'night.png';
+}
 
 let scene, cam, renderer, mixer, clock;
 let anims={}, curAction=null;
@@ -99,32 +104,29 @@ function prog(p,t){ document.getElementById('lf').style.width=p+'%'; if(t) docum
 function hideLoader(){ const el=document.getElementById('ld'); el.classList.add('out'); setTimeout(()=>el.remove(),700); }
 function loadScript(url){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=url; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
 
-async function init(){
-  prog(10,'Loading dependencies...');
+async function init() {
+  prog(10,'Loading...');
   await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js');
-  prog(20,'Setting up scene...');
 
   const canvas = document.getElementById('c');
   scene = new THREE.Scene();
   clock = new THREE.Clock();
 
-  // Camera
   cam = new THREE.PerspectiveCamera(CAM_FOV, innerWidth/innerHeight, 0.001, 100000);
   cam.position.set(CAM_X, CAM_Y, CAM_Z);
   cam.lookAt(LOOK_X, LOOK_Y, LOOK_Z);
 
-  // Renderer
   renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
   renderer.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.shadowMap.enabled = true;
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.9;
+  renderer.toneMappingExposure = L_EXP;
 
   // Lights
-  scene.add(new THREE.AmbientLight(0x1a2a4a, 0.9));
-  const key = new THREE.DirectionalLight(0xffe0a0, 1.6);
+  scene.add(new THREE.AmbientLight(0x1a2a4a, L_AMB));
+  const key = new THREE.DirectionalLight(0xffe0a0, L_KEY);
   key.position.set(5,10,5); key.castShadow=true;
   key.shadow.mapSize.set(2048,2048);
   scene.add(key);
@@ -133,18 +135,28 @@ async function init(){
   const rim = new THREE.DirectionalLight(0xff8820, 0.4);
   rim.position.set(0,5,-8); scene.add(rim);
 
-  prog(35,'Loading character...');
+  // Background
+  prog(25,'Loading bedroom...');
+  const bgTex = await new Promise((res,rej)=>new THREE.TextureLoader().load(getDallasBg(),res,null,rej));
+  bgTex.encoding = THREE.sRGBEncoding;
+  const bgMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(1,1),
+    new THREE.MeshBasicMaterial({map:bgTex, depthWrite:false})
+  );
+  bgMesh.position.set(BG_X, BG_Y, BG_Z);
+  bgMesh.scale.set(BG_W, BG_H, 1);
+  bgMesh.rotation.x = BG_RX;
+  bgMesh.rotation.y = BG_RY;
+  scene.add(bgMesh);
 
+  // Character
+  prog(40,'Loading character...');
   const loader = new THREE.GLTFLoader();
-
   const idleGLTF = await new Promise((res,rej)=>{
-    loader.load(BASE+'idle.glb', res,
-      e=>{ if(e.total) prog(35+Math.round(e.loaded/e.total*40),'Loading mesh...'); },
-      rej);
+    loader.load(BASE+'idle.glb',res,e=>{if(e.total)prog(40+Math.round(e.loaded/e.total*35),'Loading mesh...');},rej);
   });
 
-  prog(76,'Setting up character...');
-
+  prog(78,'Setting up...');
   const model = idleGLTF.scene;
   model.rotation.x = ROTATION_X;
   model.rotation.y = ROTATION_Y;
@@ -153,25 +165,22 @@ async function init(){
   model.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; } });
   scene.add(model);
 
-  prog(82,'Loading animations...');
-
   mixer = new THREE.AnimationMixer(model);
   if(idleGLTF.animations.length>0){
     anims.idle = mixer.clipAction(idleGLTF.animations[0]);
     anims.idle.play(); curAction=anims.idle;
   }
 
-  const others = ['talking','typing','walking'];
-  for(let i=0;i<others.length;i++){
+  prog(85,'Loading animations...');
+  for(const name of ['talking','typing','walking']){
     try{
-      const g = await new Promise((res,rej)=>loader.load(BASE+others[i]+'.glb',res,null,rej));
-      if(g.animations.length>0) anims[others[i]] = mixer.clipAction(g.animations[0]);
-      prog(82+(i+1)*5,'Loading '+others[i]+'...');
-    }catch(e){ console.warn('Could not load',others[i]); }
+      const g = await new Promise((res,rej)=>loader.load(BASE+name+'.glb',res,null,rej));
+      if(g.animations.length>0) anims[name]=mixer.clipAction(g.animations[0]);
+    }catch(e){}
   }
 
   prog(100,'Ready.');
-  setTimeout(hideLoader, 500);
+  setTimeout(hideLoader,500);
 
   window.addEventListener('resize',()=>{
     cam.aspect=innerWidth/innerHeight;
@@ -187,7 +196,7 @@ function play(name,btn){
   if(curAction) curAction.fadeOut(0.25);
   anims[name].reset().fadeIn(0.25).play();
   curAction=anims[name];
-  document.getElementById('st').textContent = LABELS[name]||'◈ '+name.toUpperCase();
+  document.getElementById('st').textContent=LABELS[name]||'◈ '+name.toUpperCase();
   document.querySelectorAll('.btn').forEach(b=>b.classList.remove('on'));
   if(btn) btn.classList.add('on');
 }
@@ -195,9 +204,8 @@ function play(name,btn){
 function loop(){
   requestAnimationFrame(loop);
   if(mixer) mixer.update(clock.getDelta());
-  // Subtle idle camera breathe
-  const t = Date.now()*0.001;
-  cam.position.y += Math.sin(t*0.25)*0.08;
+  const t=Date.now()*0.001;
+  cam.position.y+=Math.sin(t*0.25)*0.05;
   renderer.render(scene,cam);
 }
 
