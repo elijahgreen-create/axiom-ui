@@ -285,6 +285,65 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
   clip-path:polygon(8px 0%,100% 0%,100% 100%,0% 100%,0% 8px);}
 .send-btn:hover{background:linear-gradient(135deg,rgba(255,176,32,0.9),rgba(232,152,10,0.9));}
 
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 768px) {
+  /* Nav becomes bottom bar on mobile */
+  .nav{
+    grid-area: unset;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 56px; z-index: 30;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0;
+    background: rgba(4,8,15,0.97);
+    border-top: 1px solid rgba(42,143,168,0.2);
+    border-right: none;
+  }
+  .nav-logo { display: none; }
+  .nav-space { display: none; }
+  .ni { width: 48px; height: 48px; border-left: none; border-top: 2px solid transparent; }
+  .ni.on { border-left: none; border-top-color: rgba(232,152,10,0.8); }
+  .ni.on::after { display: none; }
+
+  /* Shell grid — no left nav column on mobile */
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 44px 1fr 60px 56px;
+    grid-template-areas:
+      "header"
+      "main"
+      "input"
+      "nav";
+  }
+
+  /* Panels full width on mobile */
+  .panel {
+    width: 100%;
+    top: 44px;
+    left: 0;
+    right: 0;
+    bottom: 116px;
+  }
+
+  /* Input bar adjust */
+  .input-bar { padding: 8px 10px 8px 10px; }
+
+  /* Messages start from left on mobile */
+  #msgWrap { left: 10px; right: 10px; }
+  #empty { left: 10px; right: 10px; }
+
+  /* Header pills — hide some on small screens */
+  .pill.ctx { display: none; }
+
+  /* Briefing panel full width */
+  #briefing { width: calc(100% - 20px); left: 10px; right: 10px; top: 54px; }
+
+  /* Bubbles full width */
+  .msg-body { max-width: 100%; }
+}
+
 /* ── LOADING ── */
 .loading{position:fixed;inset:0;z-index:100;background:#04080f;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
@@ -489,7 +548,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}">
     </div>
     <button class="mic-btn" id="micBtn" onclick="toggleVoice()">🎙</button>
-    <button class="send-btn" onclick="sendMsg()">SEND</button>
+    <button class="send-btn" onclick="unlockAudio();sendMsg()">SEND</button>
   </div>
 
 </div>
@@ -725,6 +784,8 @@ async function sendMsg(txt){
           }
           if(data.done){
             setAnim(data.agent?'talking':'idle');
+            // Speak the response
+            if(full) speakResponse(full.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,400));
           }
         }catch(e){}
       }
@@ -795,9 +856,51 @@ async function loadStatus(){
 // ══════════════════════════════════════════════════════════════
 let mediaRec=null, audioChunks=[], voiceOn=false;
 
+// ── TTS — speak Axiom responses ─────────────────────────────
+let ttsEnabled = true;
+let audioCtx = null;
+
+// Must be called from a user gesture to unlock audio on Android
+function unlockAudio(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+async function speakResponse(text){
+  if(!ttsEnabled || !text) return;
+  try{
+    const res = await fetch(`${API}/voice/speak`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text: text.slice(0,500), voice:'onyx', speed:1.1})
+    });
+    if(!res.ok) return;
+    const arrayBuffer = await res.arrayBuffer();
+    
+    // Use AudioContext for Android WebView compatibility
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') await audioCtx.resume();
+    
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    const source = audioCtx.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
+    setAnim('talking');
+    source.onended = ()=>setAnim('idle');
+  }catch(e){
+    console.warn('TTS error:', e);
+  }
+}
+
 async function toggleVoice(){
   const btn=document.getElementById('micBtn');
   const nav=document.getElementById('micNav');
+  
+  // Unlock audio on first user interaction
+  unlockAudio();
+  
   if(!voiceOn){
     try{
       const stream=await navigator.mediaDevices.getUserMedia({audio:true});
