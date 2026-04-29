@@ -193,9 +193,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
 .empty-jp{font-family:'Noto Serif JP',serif;font-size:10px;
   color:rgba(42,143,168,0.3);letter-spacing:0.3em;}
 .sugs{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;justify-content:center;}
-.empty-greeting{font-family:'Share Tech Mono',monospace;font-size:15px;
-  color:rgba(224,216,200,0.9);letter-spacing:0.05em;margin-bottom:4px;
-  text-shadow:0 0 20px rgba(232,152,10,0.2);}
 .sug{background:rgba(8,14,24,0.8);border:1px solid rgba(42,143,168,0.25);
   border-radius:24px;padding:9px 18px;cursor:pointer;
   font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:0.1em;
@@ -434,15 +431,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
     </div>
     <div style="padding:8px 16px;border-bottom:1px solid rgba(42,143,168,0.1);display:flex;align-items:center;gap:8px;">
       <div style="width:6px;height:6px;border-radius:50%;background:rgba(232,152,10,0.8);"></div>
-      <span id="memPill" style="font-size:9px;letter-spacing:0.15em;color:rgba(232,152,10,0.8);">0 Memories</span>
+      <span id="memPill" style="font-size:9px;letter-spacing:0.15em;color:rgba(232,152,10,0.8);display:none;">0 Memories</span>
     </div>
     <div style="padding:8px 16px;border-bottom:1px solid rgba(42,143,168,0.1);display:flex;align-items:center;gap:8px;">
       <div style="width:6px;height:6px;border-radius:50%;background:rgba(232,152,10,0.9);"></div>
       <span id="modeBadge" style="font-size:9px;letter-spacing:0.15em;color:rgba(232,152,10,0.95);">◈ GOD MODE</span>
     </div>
-    <div onclick="toggleBriefing();toggleMenu();" style="padding:11px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid rgba(42,143,168,0.1);transition:background 0.1s;" onmouseover="this.style.background='rgba(42,143,168,0.08)'" onmouseout="this.style.background=''">
-      <span style="font-size:15px;">☀</span>
-      <span style="font-size:9px;letter-spacing:0.15em;color:rgba(192,216,224,0.85);">MORNING BRIEFING</span>
+    <div onclick="openPreferences();toggleMenu();" style="padding:11px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid rgba(42,143,168,0.1);transition:background 0.1s;" onmouseover="this.style.background='rgba(42,143,168,0.08)'" onmouseout="this.style.background=''">
+      <span style="font-size:15px;">👤</span>
+      <span style="font-size:9px;letter-spacing:0.15em;color:rgba(192,216,224,0.85);">PREFERENCES</span>
     </div>
     <div onclick="toggleMenu();" style="padding:11px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid rgba(42,143,168,0.1);transition:background 0.1s;" onmouseover="this.style.background='rgba(42,143,168,0.08)'" onmouseout="this.style.background=''">
       <span style="font-size:15px;">⚙</span>
@@ -539,20 +536,86 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
       </div>
     </div>
 
-    <!-- TASKS PANEL -->
+    <!-- TASKS + CALENDAR PANEL -->
     <div class="panel" id="panel-tasks">
       <div class="panel-head">
-        <span class="panel-title">✅ Tasks</span>
+        <span class="panel-title" id="tasks-panel-title">✅ Tasks</span>
         <span class="panel-close" onclick="closePanel('tasks')">✕</span>
       </div>
-      <div class="panel-body" id="tasks-body">
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <input id="task-input" placeholder="Add a task..." style="flex:1;background:rgba(13,31,45,0.8);border:1px solid rgba(42,143,168,0.2);color:rgba(192,216,224,0.9);padding:7px 10px;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;" onkeydown="if(event.key==='Enter')addTask()">
-          <button onclick="addTask()" style="padding:7px 14px;background:rgba(232,152,10,0.15);border:1px solid rgba(232,152,10,0.3);color:rgba(232,152,10,0.9);font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;">ADD</button>
+      <!-- Tab switcher -->
+      <div style="display:flex;border-bottom:1px solid rgba(42,143,168,0.15);flex-shrink:0;background:#0c1824;">
+        <div id="tab-tasks" onclick="switchTaskTab('tasks')" style="flex:1;padding:10px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.15em;cursor:pointer;color:rgba(232,152,10,0.9);border-bottom:2px solid rgba(232,152,10,0.7);text-transform:uppercase;">Tasks</div>
+        <div id="tab-cal" onclick="switchTaskTab('calendar')" style="flex:1;padding:10px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.15em;cursor:pointer;color:rgba(90,122,138,0.6);border-bottom:2px solid transparent;text-transform:uppercase;">Calendar</div>
+      </div>
+      <!-- TASKS VIEW -->
+      <div id="view-tasks" class="panel-body">
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <input id="task-input" placeholder="Add a task..." 
+            style="flex:1;background:rgba(13,31,45,0.9);border:1px solid rgba(42,143,168,0.3);
+            color:#d0e8f4;padding:8px 12px;font-family:'Share Tech Mono',monospace;
+            font-size:11px;outline:none;border-radius:4px;"
+            onkeydown="if(event.key==='Enter')addTask()">
+          <button onclick="addTask()" 
+            style="padding:8px 14px;background:rgba(232,152,10,0.15);
+            border:1px solid rgba(232,152,10,0.4);color:rgba(232,152,10,0.9);
+            font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;border-radius:4px;">ADD</button>
         </div>
         <div id="task-list">
-          <div style="font-size:9px;color:rgba(90,122,138,0.6);letter-spacing:0.1em">Loading tasks...</div>
+          <div style="font-size:10px;color:#7aaabb;padding:8px;">Loading tasks...</div>
         </div>
+      </div>
+      <!-- CALENDAR VIEW -->
+      <div id="view-calendar" class="panel-body" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <button onclick="changeCalMonth(-1)" style="background:transparent;border:1px solid rgba(42,143,168,0.3);color:#7aaabb;padding:4px 10px;cursor:pointer;font-size:14px;">‹</button>
+          <span id="cal-month-label" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#d0e8f4;letter-spacing:0.1em;"></span>
+          <button onclick="changeCalMonth(1)" style="background:transparent;border:1px solid rgba(42,143,168,0.3);color:#7aaabb;padding:4px 10px;cursor:pointer;font-size:14px;">›</button>
+        </div>
+        <!-- Day headers -->
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;">
+          ${['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=>`<div style="text-align:center;font-size:8px;color:#7aaabb;padding:3px;letter-spacing:0.05em;">${d}</div>`).join('')}
+        </div>
+        <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+        <div id="cal-events" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <!-- PREFERENCES PANEL -->
+    <div class="panel" id="panel-prefs" style="z-index:51;">
+      <div class="panel-head">
+        <span class="panel-title">👤 Preferences</span>
+        <span class="panel-close" onclick="document.getElementById('panel-prefs').classList.remove('show')">✕</span>
+      </div>
+      <div class="panel-body">
+        <div style="font-size:8px;letter-spacing:0.2em;color:#7aaabb;margin-bottom:10px;text-transform:uppercase;">Character</div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:8px;color:#7aaabb;display:block;margin-bottom:4px;">Name</label>
+          <input id="pref-name" value="Axiom" style="width:100%;background:rgba(13,31,45,0.9);border:1px solid rgba(42,143,168,0.3);color:#d0e8f4;padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:8px;color:#7aaabb;display:block;margin-bottom:4px;">Personality</label>
+          <select id="pref-personality" style="width:100%;background:rgba(13,31,45,0.9);border:1px solid rgba(42,143,168,0.3);color:#d0e8f4;padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;">
+            <option value="direct">Direct — straight to the point</option>
+            <option value="friendly">Friendly — warm and casual</option>
+            <option value="professional">Professional — formal</option>
+            <option value="savage">Savage — brutal honesty</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:8px;color:#7aaabb;display:block;margin-bottom:4px;">Voice</label>
+          <select id="pref-voice" style="width:100%;background:rgba(13,31,45,0.9);border:1px solid rgba(42,143,168,0.3);color:#d0e8f4;padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;">
+            <option value="onyx">Onyx — deep male</option>
+            <option value="echo">Echo — medium male</option>
+            <option value="nova">Nova — female</option>
+            <option value="shimmer">Shimmer — soft female</option>
+            <option value="alloy">Alloy — neutral</option>
+          </select>
+        </div>
+        <button onclick="savePreferences()" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(232,152,10,0.8),rgba(180,100,5,0.8));border:none;color:#04080f;font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:0.2em;cursor:pointer;border-radius:4px;">SAVE PREFERENCES</button>
+
+        <div style="font-size:8px;letter-spacing:0.2em;color:#7aaabb;margin:16px 0 10px;text-transform:uppercase;border-top:1px solid rgba(42,143,168,0.15);padding-top:14px;">Memories</div>
+        <div id="pref-memories" style="font-size:10px;color:#c0d8e8;line-height:1.8;">Loading...</div>
+        <button onclick="sendMsg('forget me')" style="margin-top:10px;width:100%;padding:8px;background:transparent;border:1px solid rgba(200,50,50,0.3);color:rgba(200,80,80,0.8);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.15em;cursor:pointer;text-transform:uppercase;">Clear All Memories</button>
       </div>
     </div>
 
@@ -561,7 +624,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
 
     <!-- Empty state -->
     <div id="empty">
-      <div class="empty-greeting" id="emptyGreeting">Good evening, Boss.</div>
       <div class="empty-name">AXIOM</div>
       <div class="empty-jp">公理 · 個人的なAI · Personal AI OS</div>
       <div class="sugs">
@@ -792,7 +854,11 @@ async function sendMsg(txt){
   try {
     const res=await fetch(`${API}/chat/stream`,{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:msg,session_id:SID})
+      body:JSON.stringify({message:msg,session_id:SID,
+        user_id:currentUser?.id||'god',
+        email:currentUser?.email||'',
+        name:currentUser?.user_metadata?.full_name||'',
+        tier:currentTier||'free'})
     });
     if(!res.ok) throw new Error('HTTP '+res.status);
 
@@ -862,7 +928,12 @@ async function loadBriefing(){
       document.getElementById('briefDate').textContent=
         d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}).toUpperCase()+' · '+
         new Date(data.generated_at+'Z').toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-      document.getElementById('briefBody').textContent=data.content;
+      const cleaned = data.content
+        .replace(/^##\s*/gm,'')
+        .replace(/\*\*(.*?)\*\*/g,'$1')
+        .replace(/\*(.*?)\*/g,'$1')
+        .trim();
+      document.getElementById('briefBody').textContent=cleaned;
       briefingLoaded=true;
     }
   }catch(e){}
@@ -1024,7 +1095,7 @@ function openPanel(name){
     activePanel = name;
     // Load panel data
     if(name==='email') loadEmailPanel();
-    if(name==='tasks') loadTasksPanel();
+    if(name==='tasks'){ loadTasksPanel(); switchTaskTab('tasks'); }
     if(name==='maps'){ loadGoogleMaps(); setTimeout(initMapsPanel,800); }
   }
 }
@@ -1053,7 +1124,7 @@ async function loadEmailPanel(){
   try{
     const res = await fetch(`${API}/chat`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({message:'check my inbox', session_id:SID})
+      body: JSON.stringify({message:'check my inbox', session_id:SID, user_id:currentUser?.id||'god', email:currentUser?.email||'', tier:currentTier||'free'})
     });
     const data = await res.json();
     const raw = data.response || '';
@@ -1298,6 +1369,137 @@ function loadGoogleMaps(){
 }
 window.onGoogleMapsLoaded = function(){ initMapsPanel(); };
 
+// ── TASKS + CALENDAR PANEL ───────────────────────────────────
+let currentCalDate = new Date();
+let calEvents = [];
+
+function switchTaskTab(tab){
+  const isTask = tab === 'tasks';
+  document.getElementById('view-tasks').style.display = isTask ? 'flex' : 'none';
+  document.getElementById('view-tasks').style.flexDirection = 'column';
+  document.getElementById('view-calendar').style.display = isTask ? 'none' : 'block';
+  document.getElementById('tab-tasks').style.color = isTask ? 'rgba(232,152,10,0.9)' : 'rgba(90,122,138,0.6)';
+  document.getElementById('tab-tasks').style.borderBottom = isTask ? '2px solid rgba(232,152,10,0.7)' : '2px solid transparent';
+  document.getElementById('tab-cal').style.color = isTask ? 'rgba(90,122,138,0.6)' : 'rgba(232,152,10,0.9)';
+  document.getElementById('tab-cal').style.borderBottom = isTask ? '2px solid transparent' : '2px solid rgba(232,152,10,0.7)';
+  document.getElementById('tasks-panel-title').textContent = isTask ? '✅ Tasks' : '📅 Calendar';
+  if(!isTask) { renderCalendar(); loadCalendarEvents(); }
+}
+
+function renderCalendar(){
+  const year = currentCalDate.getFullYear();
+  const month = currentCalDate.getMonth();
+  const today = new Date();
+  const label = currentCalDate.toLocaleDateString('en-US',{month:'long',year:'numeric'}).toUpperCase();
+  document.getElementById('cal-month-label').textContent = label;
+
+  const first = new Date(year, month, 1).getDay();
+  const days = new Date(year, month+1, 0).getDate();
+  const grid = document.getElementById('cal-grid');
+
+  // Day headers
+  const dayGrid = document.getElementById('cal-grid').parentElement;
+  const headerDiv = dayGrid.previousElementSibling;
+  if(headerDiv && !headerDiv.innerHTML.includes('Su')){
+    headerDiv.innerHTML = ['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=>
+      `<div style="text-align:center;font-size:8px;color:#7aaabb;padding:3px;">${d}</div>`).join('');
+  }
+
+  let html = '';
+  for(let i=0;i<first;i++) html += '<div></div>';
+  for(let d=1;d<=days;d++){
+    const isToday = d===today.getDate()&&month===today.getMonth()&&year===today.getFullYear();
+    const hasEvent = calEvents.some(e=>{
+      const ed = new Date(e.start?.dateTime||e.start?.date);
+      return ed.getDate()===d&&ed.getMonth()===month&&ed.getFullYear()===year;
+    });
+    html += `<div onclick="selectCalDay(${d},${month},${year})" style="
+      text-align:center;padding:6px 2px;font-size:11px;cursor:pointer;border-radius:4px;
+      background:${isToday?'rgba(232,152,10,0.2)':'transparent'};
+      color:${isToday?'#e8980a':hasEvent?'#4ac8d8':'#c0d8e8'};
+      border:${isToday?'1px solid rgba(232,152,10,0.4)':hasEvent?'1px solid rgba(42,143,168,0.3)':'1px solid transparent'};
+      position:relative;">
+      ${d}${hasEvent?'<div style="width:4px;height:4px;border-radius:50%;background:#4ac8d8;margin:2px auto 0;"></div>':''}
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function changeCalMonth(dir){
+  currentCalDate.setMonth(currentCalDate.getMonth()+dir);
+  renderCalendar();
+  loadCalendarEvents();
+}
+
+function selectCalDay(d, m, y){
+  const selected = new Date(y, m, d);
+  const dayEvents = calEvents.filter(e=>{
+    const ed = new Date(e.start?.dateTime||e.start?.date);
+    return ed.toDateString()===selected.toDateString();
+  });
+  const evDiv = document.getElementById('cal-events');
+  if(!dayEvents.length){
+    evDiv.innerHTML = `<div style="font-size:10px;color:#7aaabb;padding:8px;">No events on ${selected.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>`;
+    return;
+  }
+  evDiv.innerHTML = `<div style="font-size:8px;color:#7aaabb;margin-bottom:6px;letter-spacing:0.1em;">${selected.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}).toUpperCase()}</div>`+
+    dayEvents.map(e=>{
+      const time = e.start?.dateTime ? new Date(e.start.dateTime).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : 'All day';
+      return `<div style="padding:8px;background:rgba(42,143,168,0.08);border-left:2px solid rgba(42,143,168,0.5);margin-bottom:6px;">
+        <div style="font-size:11px;color:#d0e8f4;">${e.summary||'(No title)'}</div>
+        <div style="font-size:9px;color:#7aaabb;margin-top:2px;">${time}</div>
+      </div>`;
+    }).join('');
+}
+
+async function loadCalendarEvents(){
+  try{
+    const res = await fetch(`${API}/chat`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message:'calendar events this month',session_id:SID,
+        user_id:currentUser?.id||'god',tier:currentTier||'free'})
+    });
+    const data = await res.json();
+    // Parse events from response
+    const evDiv = document.getElementById('cal-events');
+    if(evDiv) evDiv.innerHTML = `<div style="font-size:10px;color:#c0d8e8;line-height:1.8;padding:8px;">${(data.response||'').replace(/\n/g,'<br>')}</div>`;
+  }catch(e){}
+}
+
+// ── PREFERENCES PANEL ────────────────────────────────────────
+function openPreferences(){
+  document.getElementById('panel-prefs').classList.add('show');
+  loadPrefsMemories();
+}
+
+async function loadPrefsMemories(){
+  const el = document.getElementById('pref-memories');
+  try{
+    const res = await fetch(`${API}/chat`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message:'what do you remember',session_id:SID,
+        user_id:currentUser?.id||'god',tier:currentTier||'free'})
+    });
+    const data = await res.json();
+    el.innerHTML = (data.response||'No memories yet.').replace(/\n/g,'<br>');
+  }catch(e){ el.textContent='Could not load memories.'; }
+}
+
+async function savePreferences(){
+  const name = document.getElementById('pref-name').value;
+  const personality = document.getElementById('pref-personality').value;
+  const voice = document.getElementById('pref-voice').value;
+  try{
+    await sb.from('profiles').update({
+      character_name: name,
+      character_personality: personality,
+      character_voice: voice,
+      updated_at: new Date().toISOString()
+    }).eq('id', currentUser?.id);
+    alert('Preferences saved!');
+  }catch(e){ alert('Could not save: '+e.message); }
+}
+
 // ── TASKS PANEL ──────────────────────────────────────────────
 async function loadTasksPanel(){
   const list = document.getElementById('task-list');
@@ -1305,7 +1507,7 @@ async function loadTasksPanel(){
   try{
     const res = await fetch(`${API}/chat`,{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({message:'my tasks', session_id:SID})
+      body: JSON.stringify({message:'my tasks', session_id:SID, user_id:currentUser?.id||'god', tier:currentTier||'free'})
     });
     const data = await res.json();
     const lines = (data.response||'').split('\n').filter(l=>l.startsWith('•')||l.startsWith('-'));
@@ -1331,7 +1533,7 @@ async function addTask(){
   try{
     await fetch(`${API}/chat`,{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({message:`add task: ${title}`, session_id:SID})
+      body: JSON.stringify({message:`add task: ${title}`, session_id:SID, user_id:currentUser?.id||'god', tier:currentTier||'free'})
     });
     loadTasksPanel();
   }catch(e){}
@@ -1398,18 +1600,6 @@ async function signOut(){
   window.location.href = 'login.html';
 }
 
-function setGreeting(){
-  const el = document.getElementById('emptyGreeting');
-  if(!el) return;
-  const dallas = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Chicago'}));
-  const h = dallas.getHours();
-  const name = currentUser?.user_metadata?.full_name?.split(' ')[0] || 'Boss';
-  if(h>=3&&h<12) el.textContent=`Good morning, ${name}.`;
-  else if(h>=12&&h<17) el.textContent=`Good afternoon, ${name}.`;
-  else if(h>=17&&h<21) el.textContent=`Good evening, ${name}.`;
-  else el.textContent=`Late night, ${name}.`;
-}
-
 async function boot(){
   prog(5,'Authenticating...');
   const authed = await checkAuth();
@@ -1419,7 +1609,6 @@ async function boot(){
   prog(95,'Loading data...');
   loadStatus();
   loadBriefing();
-  setGreeting();
   prog(100,'Ready.');
   setTimeout(hideLoader,600);
 }
