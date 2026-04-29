@@ -405,19 +405,45 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
   <header class="header">
     <div class="h-left">
       <div class="logo">AXIOM</div>
-      <div class="pills">
-        <div class="pill on"><div class="pill-dot"></div>Online</div>
-        <div class="pill mem" id="memPill"><div class="pill-dot"></div>0 Memories</div>
-        <div class="pill ctx" id="ctxPill"><div class="pill-dot" style="background:rgba(42,143,168,0.8)"></div>Loading...</div>
-      </div>
     </div>
     <div class="h-right">
-      <div class="h-mode" id="modeBadge">◈ GOD MODE</div>
-      <div class="h-btn" onclick="toggleBriefing()" title="Morning Briefing">☀</div>
-      <div class="h-btn" title="Settings">⚙</div>
-      <div class="h-btn" title="Sign Out" onclick="signOut()" style="font-size:9px;letter-spacing:0.05em">OUT</div>
+      <div class="h-btn" onclick="toggleMenu()" id="menuBtn" title="Menu" style="font-size:18px;width:34px;">≡</div>
     </div>
   </header>
+
+  <!-- Hamburger Menu Dropdown -->
+  <div id="hamMenu" style="
+    display:none;position:fixed;top:44px;right:0;
+    width:230px;z-index:50;
+    background:#0c1824;
+    border:1px solid rgba(42,143,168,0.3);
+    border-top:2px solid rgba(232,152,10,0.4);
+  ">
+    <div style="padding:8px 16px;border-bottom:1px solid rgba(42,143,168,0.1);display:flex;align-items:center;gap:8px;">
+      <div style="width:6px;height:6px;border-radius:50%;background:rgba(29,170,85,0.9);box-shadow:0 0 5px rgba(29,170,85,0.8);"></div>
+      <span style="font-size:9px;letter-spacing:0.15em;color:rgba(29,170,85,0.9);">ONLINE</span>
+    </div>
+    <div style="padding:8px 16px;border-bottom:1px solid rgba(42,143,168,0.1);display:flex;align-items:center;gap:8px;">
+      <div style="width:6px;height:6px;border-radius:50%;background:rgba(232,152,10,0.8);"></div>
+      <span id="memPill" style="font-size:9px;letter-spacing:0.15em;color:rgba(232,152,10,0.8);">0 Memories</span>
+    </div>
+    <div style="padding:8px 16px;border-bottom:1px solid rgba(42,143,168,0.1);display:flex;align-items:center;gap:8px;">
+      <div style="width:6px;height:6px;border-radius:50%;background:rgba(232,152,10,0.9);"></div>
+      <span id="modeBadge" style="font-size:9px;letter-spacing:0.15em;color:rgba(232,152,10,0.95);">◈ GOD MODE</span>
+    </div>
+    <div onclick="toggleBriefing();toggleMenu();" style="padding:11px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid rgba(42,143,168,0.1);transition:background 0.1s;" onmouseover="this.style.background='rgba(42,143,168,0.08)'" onmouseout="this.style.background=''">
+      <span style="font-size:15px;">☀</span>
+      <span style="font-size:9px;letter-spacing:0.15em;color:rgba(192,216,224,0.85);">MORNING BRIEFING</span>
+    </div>
+    <div onclick="toggleMenu();" style="padding:11px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid rgba(42,143,168,0.1);transition:background 0.1s;" onmouseover="this.style.background='rgba(42,143,168,0.08)'" onmouseout="this.style.background=''">
+      <span style="font-size:15px;">⚙</span>
+      <span style="font-size:9px;letter-spacing:0.15em;color:rgba(192,216,224,0.85);">SETTINGS</span>
+    </div>
+    <div onclick="signOut();" style="padding:11px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='rgba(200,50,50,0.08)'" onmouseout="this.style.background=''">
+      <span style="font-size:15px;">→</span>
+      <span style="font-size:9px;letter-spacing:0.15em;color:rgba(200,80,80,0.85);">SIGN OUT</span>
+    </div>
+  </div>
 
   <!-- Nav -->
   <nav class="nav">
@@ -429,7 +455,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
     <div class="ni" onclick="setNav(this,'maps')" title="Maps">🗺️</div>
     <div class="ni" onclick="setNav(this,'tasks')" title="Tasks">✅</div>
     <div class="nav-space"></div>
-    <div class="ni voice-btn" id="micNav" onclick="toggleVoice()" title="Voice">🎙</div>
+    <div class="ni" onclick="toggleMenu()" id="menuBtnNav" title="Menu" style="font-size:18px;">≡</div>
   </nav>
 
   <!-- Main -->
@@ -929,6 +955,40 @@ async function toggleVoice(){
     setAnim('idle');
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+// HAMBURGER MENU
+// ══════════════════════════════════════════════════════════════
+let menuOpen = false;
+function toggleMenu(){
+  menuOpen = !menuOpen;
+  const el = document.getElementById('hamMenu');
+  el.style.display = menuOpen ? 'block' : 'none';
+  const btn1 = document.getElementById('menuBtn');
+  const btn2 = document.getElementById('menuBtnNav');
+  if(btn1) btn1.textContent = menuOpen ? '✕' : '≡';
+  if(btn2) btn2.textContent = menuOpen ? '✕' : '≡';
+  // On mobile position menu above bottom nav
+  if(window.innerWidth <= 768){
+    el.style.top = 'auto';
+    el.style.bottom = '60px';
+    el.style.right = '0';
+  } else {
+    el.style.top = '44px';
+    el.style.bottom = 'auto';
+  }
+}
+document.addEventListener('click', e=>{
+  if(menuOpen && !e.target.closest('#hamMenu') && !e.target.closest('#menuBtn') && !e.target.closest('#menuBtnNav')){
+    menuOpen = false;
+    const el = document.getElementById('hamMenu');
+    if(el) el.style.display = 'none';
+    const btn1 = document.getElementById('menuBtn');
+    const btn2 = document.getElementById('menuBtnNav');
+    if(btn1) btn1.textContent = '≡';
+    if(btn2) btn2.textContent = '≡';
+  }
+});
 
 // ══════════════════════════════════════════════════════════════
 // NAV + PANELS
