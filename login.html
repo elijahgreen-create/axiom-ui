@@ -269,6 +269,16 @@ canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;}
 
 <!-- Supabase -->
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<!-- Capacitor -->
+<script>
+// Load Capacitor Browser plugin if available
+window.CapBrowser = null;
+try {
+  if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser){
+    window.CapBrowser = window.Capacitor.Plugins.Browser;
+  }
+} catch(e){}
+</script>
 <!-- Three.js for background -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
@@ -360,6 +370,16 @@ async function initBg(){
 }
 
 initBg().catch(console.error);
+
+// ── DETECT MOBILE/CAPACITOR ──────────────────────────────────
+const isMobile = window.Capacitor !== undefined || 
+  /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+if(isMobile){
+  // Hide Google OAuth buttons on mobile — use email/password only
+  document.querySelectorAll('.btn-google').forEach(b=>b.style.display='none');
+  document.querySelectorAll('.divider').forEach(d=>d.style.display='none');
+}
 
 // ── CHECK IF ALREADY LOGGED IN ────────────────────────────────
 async function checkSession(){
@@ -477,11 +497,36 @@ async function signUp(){
 // ── GOOGLE SIGN IN ───────────────────────────────────────────
 async function signInGoogle(){
   showLoading('Redirecting to Google...');
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options:{ redirectTo: 'https://axiom-ui-puce.vercel.app/index.html' }
-  });
-  if(error){ hideLoading(); showError('signin', error.message); }
+  const redirectTo = 'https://axiom-ui-puce.vercel.app/index.html';
+
+  if(isMobile && window.CapBrowser){
+    // Use Capacitor Browser for OAuth on mobile
+    const { data, error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options:{ 
+        redirectTo,
+        skipBrowserRedirect: true 
+      }
+    });
+    if(error){ hideLoading(); showError('signin', error.message); return; }
+    
+    // Open in Capacitor Browser (routes back to app)
+    await window.CapBrowser.open({ url: data.url });
+    
+    // Listen for app URL change when OAuth completes
+    window.CapBrowser.addListener('browserFinished', async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if(session) window.location.href = 'index.html';
+      else hideLoading();
+    });
+  } else {
+    // Web — normal OAuth flow
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options:{ redirectTo }
+    });
+    if(error){ hideLoading(); showError('signin', error.message); }
+  }
 }
 
 // ── FORGOT PASSWORD ──────────────────────────────────────────
