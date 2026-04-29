@@ -268,7 +268,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;}
 </div>
 
 <!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <!-- Three.js for background -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
@@ -297,7 +297,7 @@ async function loadScript(url){
 }
 
 async function initBg(){
-  await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js');
+  await loadScript('https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js');
   const BASE = 'https://162.243.225.72.nip.io/static/';
   const canvas = document.getElementById('c');
   const scene = new THREE.Scene();
