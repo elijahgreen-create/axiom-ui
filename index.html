@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#04080f">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>AXIOM</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Noto+Serif+JP:wght@300&display=swap" rel="stylesheet">
 <style>
@@ -22,7 +24,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
   display:none;flex-direction:column;
   overflow:hidden;
 }
-.panel.show{display:flex;}
+.panel.show{display:flex;animation:slideIn 0.22s ease;}
+@keyframes slideIn{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
 .panel-head{
   padding:12px 16px;border-bottom:1px solid rgba(42,143,168,0.2);
   background:#0c1824;
@@ -190,11 +193,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
 .empty-jp{font-family:'Noto Serif JP',serif;font-size:10px;
   color:rgba(42,143,168,0.3);letter-spacing:0.3em;}
 .sugs{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;justify-content:center;}
-.sug{background:rgba(4,8,15,0.6);border:1px solid rgba(42,143,168,0.2);
-  padding:6px 14px;cursor:pointer;font-family:'Share Tech Mono',monospace;
-  font-size:9px;letter-spacing:0.12em;color:rgba(192,216,224,0.6);
-  transition:all 0.12s;backdrop-filter:blur(8px);}
-.sug:hover{border-color:rgba(232,152,10,0.4);color:rgba(232,152,10,0.8);}
+.empty-greeting{font-family:'Share Tech Mono',monospace;font-size:15px;
+  color:rgba(224,216,200,0.9);letter-spacing:0.05em;margin-bottom:4px;
+  text-shadow:0 0 20px rgba(232,152,10,0.2);}
+.sug{background:rgba(8,14,24,0.8);border:1px solid rgba(42,143,168,0.25);
+  border-radius:24px;padding:9px 18px;cursor:pointer;
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:0.1em;
+  color:rgba(192,216,224,0.8);transition:all 0.15s;backdrop-filter:blur(12px);
+  display:flex;align-items:center;gap:7px;}
+.sug:hover,.sug:active{border-color:rgba(232,152,10,0.5);color:rgba(232,152,10,0.9);
+  background:rgba(232,152,10,0.06);box-shadow:0 0 12px rgba(232,152,10,0.1);}
+.sug-icon{font-size:12px;}
 
 /* Message bubbles */
 .msg{display:flex;gap:8px;animation:msgIn 0.2s ease;pointer-events:all;}
@@ -250,11 +259,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
   background:rgba(15,12,5,0.55);backdrop-filter:blur(16px);
   display:flex;gap:4px;align-items:center;
 }
-.td{width:4px;height:4px;border-radius:50%;background:rgba(232,152,10,0.5);
-  animation:tdot 1.2s infinite;}
+.td{width:6px;height:6px;border-radius:50%;background:rgba(232,152,10,0.7);
+  animation:tdot 1.0s infinite;box-shadow:0 0 6px rgba(232,152,10,0.4);}
 .td:nth-child(2){animation-delay:.2s;}
 .td:nth-child(3){animation-delay:.4s;}
-@keyframes tdot{0%,80%,100%{opacity:0.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+@keyframes tdot{0%,80%,100%{opacity:0.2;transform:scale(0.7)}40%{opacity:1;transform:scale(1.2)}}
 
 /* ── INPUT BAR ── */
 .input-bar{grid-area:input;pointer-events:all;
@@ -263,9 +272,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
   background:linear-gradient(0deg,rgba(4,8,15,0.9) 0%,transparent 100%);
 }
 .inp-wrap{flex:1;display:flex;align-items:center;
-  background:rgba(7,13,22,0.7);border:1px solid rgba(42,143,168,0.2);
-  backdrop-filter:blur(16px);transition:border-color 0.15s;padding:0 12px;}
-.inp-wrap:focus-within{border-color:rgba(232,152,10,0.3);}
+  background:rgba(7,13,22,0.85);border:1px solid rgba(42,143,168,0.25);
+  border-radius:24px;backdrop-filter:blur(16px);transition:all 0.15s;padding:0 16px;}
+.inp-wrap:focus-within{border-color:rgba(232,152,10,0.4);box-shadow:0 0 12px rgba(232,152,10,0.08);}
 .inp-prompt{color:rgba(42,143,168,0.5);font-size:11px;margin-right:7px;font-family:'Share Tech Mono',monospace;}
 .inp{flex:1;background:transparent;border:none;outline:none;
   color:rgba(224,216,200,0.9);font-family:'Share Tech Mono',monospace;
@@ -276,14 +285,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
   color:rgba(42,143,168,0.7);cursor:pointer;font-size:14px;
   display:flex;align-items:center;justify-content:center;
   transition:all 0.15s;backdrop-filter:blur(8px);}
-.mic-btn:hover{border-color:rgba(232,152,10,0.5);color:rgba(232,152,10,0.8);}
+.mic-btn:hover,.mic-btn:active{border-color:rgba(232,152,10,0.6);color:rgba(232,152,10,0.9);background:rgba(232,152,10,0.08);}
 .send-btn{height:38px;padding:0 20px;flex-shrink:0;
   background:linear-gradient(135deg,rgba(232,152,10,0.8),rgba(180,100,5,0.8));
   border:none;color:rgba(4,8,15,0.95);
   font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:0.2em;
   cursor:pointer;transition:all 0.12s;
-  clip-path:polygon(8px 0%,100% 0%,100% 100%,0% 100%,0% 8px);}
-.send-btn:hover{background:linear-gradient(135deg,rgba(255,176,32,0.9),rgba(232,152,10,0.9));}
+  border-radius:24px;}
+.send-btn:hover,.send-btn:active{background:linear-gradient(135deg,#ffb020,#e8980a);transform:scale(1.02);}
 
 /* ── MOBILE RESPONSIVE ── */
 @media (max-width: 768px) {
@@ -448,12 +457,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
   <!-- Nav -->
   <nav class="nav">
     <div class="nav-logo">⬡</div>
-    <div class="ni on" onclick="setNav(this,'chat')" title="Chat">💬</div>
-    <div class="ni" onclick="setNav(this,'brief')" title="Briefing">☀️</div>
-    <div class="ni" onclick="setNav(this,'email')" title="Gmail">✉️</div>
-    <div class="ni" onclick="setNav(this,'yt')" title="YouTube">▶️</div>
-    <div class="ni" onclick="setNav(this,'maps')" title="Maps">🗺️</div>
-    <div class="ni" onclick="setNav(this,'tasks')" title="Tasks">✅</div>
+    <div class="ni on" onclick="setNav(this,'chat')" title="Chat"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+    <div class="ni" onclick="setNav(this,'brief')" title="Briefing"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg></div>
+    <div class="ni" onclick="setNav(this,'email')" title="Gmail"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+    <div class="ni" onclick="setNav(this,'yt')" title="YouTube"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+    <div class="ni" onclick="setNav(this,'maps')" title="Maps"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+    <div class="ni" onclick="setNav(this,'tasks')" title="Tasks"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
     <div class="nav-space"></div>
     <div class="ni" onclick="toggleMenu()" id="menuBtnNav" title="Menu" style="font-size:18px;">≡</div>
   </nav>
@@ -552,13 +561,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
 
     <!-- Empty state -->
     <div id="empty">
+      <div class="empty-greeting" id="emptyGreeting">Good evening, Boss.</div>
       <div class="empty-name">AXIOM</div>
-      <div class="empty-jp">公理 · 個人的なAI</div>
+      <div class="empty-jp">公理 · 個人的なAI · Personal AI OS</div>
       <div class="sugs">
-        <div class="sug" onclick="sendMsg('what can you do')">What can you do?</div>
-        <div class="sug" onclick="sendMsg('morning briefing')">☀ Briefing</div>
-        <div class="sug" onclick="sendMsg('check my inbox')">✉ Inbox</div>
-        <div class="sug" onclick="sendMsg('my projects')">⚡ Projects</div>
+        <div class="sug" onclick="sendMsg('what can you do')"><span class="sug-icon">⬡</span>What can you do?</div>
+        <div class="sug" onclick="sendMsg('morning briefing')"><span class="sug-icon">☀</span>Morning Briefing</div>
+        <div class="sug" onclick="sendMsg('check my inbox')"><span class="sug-icon">✉</span>Check Inbox</div>
+        <div class="sug" onclick="sendMsg('my projects')"><span class="sug-icon">⚡</span>My Projects</div>
       </div>
     </div>
 
@@ -769,6 +779,7 @@ function showTyping(){
 function hideTyping(){ document.getElementById('typing')?.remove(); }
 
 async function sendMsg(txt){
+  if(navigator.vibrate) navigator.vibrate(10);
   const inp=document.getElementById('inp');
   const msg=(txt||inp.value).trim();
   if(!msg) return;
@@ -1387,6 +1398,18 @@ async function signOut(){
   window.location.href = 'login.html';
 }
 
+function setGreeting(){
+  const el = document.getElementById('emptyGreeting');
+  if(!el) return;
+  const dallas = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Chicago'}));
+  const h = dallas.getHours();
+  const name = currentUser?.user_metadata?.full_name?.split(' ')[0] || 'Boss';
+  if(h>=3&&h<12) el.textContent=`Good morning, ${name}.`;
+  else if(h>=12&&h<17) el.textContent=`Good afternoon, ${name}.`;
+  else if(h>=17&&h<21) el.textContent=`Good evening, ${name}.`;
+  else el.textContent=`Late night, ${name}.`;
+}
+
 async function boot(){
   prog(5,'Authenticating...');
   const authed = await checkAuth();
@@ -1396,6 +1419,7 @@ async function boot(){
   prog(95,'Loading data...');
   loadStatus();
   loadBriefing();
+  setGreeting();
   prog(100,'Ready.');
   setTimeout(hideLoader,600);
 }
