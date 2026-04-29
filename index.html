@@ -729,37 +729,58 @@ async function initScene(){
 
   // Background
   prog(20,'Loading bedroom...');
-  const bgTex=await new Promise((res,rej)=>new THREE.TextureLoader().load(getDallasBg(),res,null,rej));
-  bgTex.encoding=THREE.sRGBEncoding;
-  const bg=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:bgTex,depthWrite:false}));
-  bg.position.set(BG_X,BG_Y,BG_Z); bg.scale.set(BG_W,BG_H,1);
-  bg.rotation.x=BG_RX; bg.rotation.y=BG_RY;
-  scene.add(bg);
+  let bgTex = null;
+  try{
+    bgTex = await new Promise((res,rej)=>{
+      new THREE.TextureLoader().load(getDallasBg(), res, null, (e)=>{
+        console.warn('Bedroom image failed to load:', e);
+        res(null); // non-fatal
+      });
+    });
+  }catch(e){ console.warn('Bedroom texture error:', e); }
+
+  if(bgTex){
+    bgTex.encoding=THREE.sRGBEncoding;
+    const bg=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:bgTex,depthWrite:false}));
+    bg.position.set(BG_X,BG_Y,BG_Z); bg.scale.set(BG_W,BG_H,1);
+    bg.rotation.x=BG_RX; bg.rotation.y=BG_RY;
+    scene.add(bg);
+  }
 
   // Character
   prog(35,'Loading character...');
   const loader=new THREE.GLTFLoader();
-  const idleGLTF=await new Promise((res,rej)=>loader.load(BASE+'idle.glb',res,e=>{if(e.total)prog(35+Math.round(e.loaded/e.total*40),'Loading mesh...');},rej));
+  let idleGLTF = null;
+  try{
+    idleGLTF=await new Promise((res,rej)=>loader.load(BASE+'idle.glb',res,
+      e=>{if(e.total)prog(35+Math.round(e.loaded/e.total*40),'Loading mesh...');},
+      (e)=>{ console.warn('Character load failed:',e); res(null); }
+    ));
+  }catch(e){ console.warn('GLB error:',e); }
 
   prog(76,'Setting up character...');
-  const model=idleGLTF.scene;
-  model.rotation.set(ROTATION_X,ROTATION_Y,ROTATION_Z);
-  model.scale.setScalar(MODEL_SCALE);
-  model.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
-  scene.add(model);
+  if(idleGLTF){
+    const model=idleGLTF.scene;
+    model.rotation.set(ROTATION_X,ROTATION_Y,ROTATION_Z);
+    model.scale.setScalar(MODEL_SCALE);
+    model.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
+    scene.add(model);
 
-  mixer=new THREE.AnimationMixer(model);
-  if(idleGLTF.animations.length>0){
-    anims.idle=mixer.clipAction(idleGLTF.animations[0]);
-    anims.idle.play(); curAction=anims.idle;
-  }
+    mixer=new THREE.AnimationMixer(model);
+    if(idleGLTF.animations.length>0){
+      anims.idle=mixer.clipAction(idleGLTF.animations[0]);
+      anims.idle.play(); curAction=anims.idle;
+    }
 
-  prog(85,'Loading animations...');
-  for(const name of ['talking','typing','walking']){
-    try{
-      const g=await new Promise((res,rej)=>loader.load(BASE+name+'.glb',res,null,rej));
-      if(g.animations.length>0) anims[name]=mixer.clipAction(g.animations[0]);
-    }catch(e){}
+    prog(85,'Loading animations...');
+    for(const name of ['talking','typing','walking']){
+      try{
+        const g=await new Promise((res)=>loader.load(BASE+name+'.glb',res,null,()=>res(null)));
+        if(g&&g.animations.length>0) anims[name]=mixer.clipAction(g.animations[0]);
+      }catch(e){}
+    }
+  } else {
+    console.warn('Character not loaded — running without 3D');
   }
 
   window.addEventListener('resize',()=>{
