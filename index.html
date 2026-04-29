@@ -1602,7 +1602,14 @@ async function signOut(){
 
 async function boot(){
   prog(5,'Authenticating...');
-  const authed = await checkAuth();
+  let authed = false;
+  try{
+    authed = await checkAuth();
+  }catch(authErr){
+    console.error('Auth error:', authErr);
+    document.getElementById('lt').textContent='Auth error: '+(authErr?.message||authErr);
+    return;
+  }
   if(!authed) return;
   prog(8,'Starting...');
   await initScene();
@@ -1615,7 +1622,9 @@ async function boot(){
 
 boot().catch(e=>{
   console.error(e);
-  document.getElementById('lt').textContent='Error: '+e.message;
+  const msg = e?.message || e?.toString() || 'Unknown error';
+  const stack = e?.stack ? e.stack.split('\n')[1] : '';
+  document.getElementById('lt').textContent='Error: '+msg+' | '+stack;
 });
 
 </script>
