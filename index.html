@@ -659,14 +659,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
 // ══════════════════════════════════════════════════════════════
 // LOCKED SCENE VALUES
 // ══════════════════════════════════════════════════════════════
-const ROTATION_X  = -1.3708; const ROTATION_Y = 0; const ROTATION_Z = 0;
-const MODEL_SCALE = 105.88;
-const CAM_X=-4.2217; const CAM_Y=438.2658; const CAM_Z=-38.9520;
-const CAM_FOV=32;
-const LOOK_X=-4.4; const LOOK_Y=292.9; const LOOK_Z=-56.9524;
-const BG_X=49; const BG_Y=-460; const BG_Z=-175;
-const BG_W=960; const BG_H=485; const BG_RX=-1.0; const BG_RY=0.03;
-const L_AMB=0; const L_KEY=1.4; const L_EXP=1.1;
+let ROTATION_X=-1.3708,ROTATION_Y=0,ROTATION_Z=0;
+let MODEL_SCALE=105.88;
+let CAM_X=-4.2217,CAM_Y=438.2658,CAM_Z=-38.9520;
+let CAM_FOV=32;
+let LOOK_X=-4.4,LOOK_Y=292.9,LOOK_Z=-56.9524;
+let BG_X=49,BG_Y=-460,BG_Z=-175;
+let BG_W=960,BG_H=485,BG_RX=-1.0,BG_RY=0.03;
+let L_AMB=0,L_KEY=1.4,L_EXP=1.1;
 
 const BASE   = 'https://162.243.225.72.nip.io/static/';
 const API    = 'https://162.243.225.72.nip.io';
@@ -682,6 +682,7 @@ function getDallasBg() {
 // THREE.JS SCENE
 // ══════════════════════════════════════════════════════════════
 let scene, cam, renderer, mixer, clock;
+let sceneModel=null, sceneBg=null, sceneAmb=null, sceneKey=null;
 let anims={}, curAnim='idle', curAction=null;
 
 function prog(p,t){
@@ -719,9 +720,9 @@ async function initScene(){
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=L_EXP;
 
-  scene.add(new THREE.AmbientLight(0x1a2a4a,L_AMB));
-  const key=new THREE.DirectionalLight(0xffe0a0,L_KEY);
-  key.position.set(5,10,5); key.castShadow=true; scene.add(key);
+  sceneAmb=new THREE.AmbientLight(0x1a2a4a,L_AMB); scene.add(sceneAmb);
+  sceneKey=new THREE.DirectionalLight(0xffe0a0,L_KEY);
+  sceneKey.position.set(5,10,5); sceneKey.castShadow=true; scene.add(sceneKey);
   const fill=new THREE.DirectionalLight(0x4488cc,0.8);
   fill.position.set(-5,3,-3); scene.add(fill);
   const rim=new THREE.DirectionalLight(0xff8820,0.4);
@@ -741,10 +742,10 @@ async function initScene(){
 
   if(bgTex){
     bgTex.encoding=THREE.sRGBEncoding;
-    const bg=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:bgTex,depthWrite:false}));
-    bg.position.set(BG_X,BG_Y,BG_Z); bg.scale.set(BG_W,BG_H,1);
-    bg.rotation.x=BG_RX; bg.rotation.y=BG_RY;
-    scene.add(bg);
+    sceneBg=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:bgTex,depthWrite:false}));
+    sceneBg.position.set(BG_X,BG_Y,BG_Z); sceneBg.scale.set(BG_W,BG_H,1);
+    sceneBg.rotation.x=BG_RX; sceneBg.rotation.y=BG_RY;
+    scene.add(sceneBg);
   }
 
   // Character
@@ -760,13 +761,13 @@ async function initScene(){
 
   prog(76,'Setting up character...');
   if(idleGLTF){
-    const model=idleGLTF.scene;
-    model.rotation.set(ROTATION_X,ROTATION_Y,ROTATION_Z);
-    model.scale.setScalar(MODEL_SCALE);
-    model.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
-    scene.add(model);
+    sceneModel=idleGLTF.scene;
+    sceneModel.rotation.set(ROTATION_X,ROTATION_Y,ROTATION_Z);
+    sceneModel.scale.setScalar(MODEL_SCALE);
+    sceneModel.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
+    scene.add(sceneModel);
 
-    mixer=new THREE.AnimationMixer(model);
+    mixer=new THREE.AnimationMixer(sceneModel);
     if(idleGLTF.animations.length>0){
       anims.idle=mixer.clipAction(idleGLTF.animations[0]);
       anims.idle.play(); curAction=anims.idle;
@@ -1627,6 +1628,53 @@ async function signOut(){
   window.location.href = 'login.html';
 }
 
+
+async function loadLayout(){
+  try{
+    const r=await fetch(API+'/layout');
+    if(!r.ok) return;
+    const d=await r.json();
+    const keys=['ROTATION_X','ROTATION_Y','ROTATION_Z','MODEL_SCALE','CAM_X','CAM_Y','CAM_Z','CAM_FOV','LOOK_X','LOOK_Y','LOOK_Z','BG_X','BG_Y','BG_Z','BG_W','BG_H','BG_RX','BG_RY','L_AMB','L_KEY','L_EXP'];
+    for(const k of keys){ if(d[k]!==undefined) window[k]=d[k]; }
+  }catch(e){}
+}
+
+function applyLayout(){
+  if(sceneModel){ sceneModel.rotation.set(ROTATION_X,ROTATION_Y,ROTATION_Z); sceneModel.scale.setScalar(MODEL_SCALE); }
+  if(cam){ cam.position.set(CAM_X,CAM_Y,CAM_Z); cam.lookAt(LOOK_X,LOOK_Y,LOOK_Z); cam.fov=CAM_FOV; cam.updateProjectionMatrix(); }
+  if(sceneBg){ sceneBg.position.set(BG_X,BG_Y,BG_Z); sceneBg.scale.set(BG_W,BG_H,1); sceneBg.rotation.x=BG_RX; sceneBg.rotation.y=BG_RY; }
+  if(sceneAmb) sceneAmb.intensity=L_AMB;
+  if(sceneKey) sceneKey.intensity=L_KEY;
+  if(renderer) renderer.toneMappingExposure=L_EXP;
+}
+
+function updateLayout(k,v){
+  window[k]=v;
+  const sl=document.getElementById('sl_'+k);
+  const nm=document.getElementById('num_'+k);
+  if(sl&&document.activeElement!==sl) sl.value=v;
+  if(nm&&document.activeElement!==nm) nm.value=v;
+  applyLayout();
+}
+
+async function saveLayout(){
+  const btn=document.getElementById('layoutSaveBtn');
+  const data={email:currentUser&&currentUser.email?currentUser.email:'',ROTATION_X,ROTATION_Y,ROTATION_Z,MODEL_SCALE,CAM_X,CAM_Y,CAM_Z,CAM_FOV,LOOK_X,LOOK_Y,LOOK_Z,BG_X,BG_Y,BG_Z,BG_W,BG_H,BG_RX,BG_RY,L_AMB,L_KEY,L_EXP};
+  try{
+    const r=await fetch(API+'/layout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const j=await r.json();
+    if(j.saved){btn.textContent='LOCKED';setTimeout(()=>btn.textContent='SAVE & LOCK',2000);}
+    else btn.textContent='ERR: '+(j.error||'failed');
+  }catch(e){btn.textContent='ERROR';}
+}
+
+function initLayoutPanel(){
+  if(currentTier!=='god') return;
+  const keys=['ROTATION_X','ROTATION_Y','ROTATION_Z','MODEL_SCALE','CAM_X','CAM_Y','CAM_Z','CAM_FOV','LOOK_X','LOOK_Y','LOOK_Z','BG_X','BG_Y','BG_Z','BG_W','BG_H','BG_RX','BG_RY','L_AMB','L_KEY','L_EXP'];
+  for(const k of keys){ const sl=document.getElementById('sl_'+k); const nm=document.getElementById('num_'+k); if(sl) sl.value=window[k]; if(nm) nm.value=window[k]; }
+  document.addEventListener('keydown',function(e){ if(e.key==='`'){ var p=document.getElementById('layoutPanel'); p.style.display=p.style.display==='none'?'block':'none'; } });
+}
+
 async function boot(){
   prog(5,'Authenticating...');
   let authed = false;
@@ -1639,7 +1687,9 @@ async function boot(){
   }
   if(!authed) return;
   prog(8,'Starting...');
+  await loadLayout();
   await initScene();
+  initLayoutPanel();
   prog(95,'Loading data...');
   loadStatus();
   loadBriefing();
@@ -1655,5 +1705,14 @@ boot().catch(e=>{
 });
 
 </script>
+
+<div id="layoutPanel" style="display:none;position:fixed;top:20px;right:20px;width:300px;max-height:85vh;overflow-y:auto;background:rgba(8,12,22,0.97);border:1px solid rgba(232,152,26,0.35);border-radius:8px;padding:14px;z-index:9999;font-family:monospace;font-size:11px;color:#e8d87a;backdrop-filter:blur(8px)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <span style="font-size:12px;letter-spacing:0.12em;color:#e8981a">&#x2B21; LAYOUT EDITOR</span>
+    <button onclick="document.getElementById('layoutPanel').style.display='none'" style="background:none;border:none;color:#888;cursor:pointer;font-size:14px">&#x2715;</button>
+  </div>
+  <div style="color:#555;font-size:9px;margin-bottom:8px">Press ` to toggle | God mode only</div>
+<div style="color:#e8981a;font-size:10px;letter-spacing:0.12em;margin:10px 0 4px;border-bottom:1px solid rgba(232,152,26,0.2);padding-bottom:3px">CHARACTER</div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">ROTATION_X</span><input type="number" id="num_ROTATION_X" step="0.001" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('ROTATION_X',+this.value)"></div><input type="range" id="sl_ROTATION_X" min="-3.15" max="3.15" step="0.001" style="width:100%;accent-color:#e8981a" oninput="updateLayout('ROTATION_X',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">ROTATION_Y</span><input type="number" id="num_ROTATION_Y" step="0.001" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('ROTATION_Y',+this.value)"></div><input type="range" id="sl_ROTATION_Y" min="-3.15" max="3.15" step="0.001" style="width:100%;accent-color:#e8981a" oninput="updateLayout('ROTATION_Y',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">ROTATION_Z</span><input type="number" id="num_ROTATION_Z" step="0.001" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('ROTATION_Z',+this.value)"></div><input type="range" id="sl_ROTATION_Z" min="-3.15" max="3.15" step="0.001" style="width:100%;accent-color:#e8981a" oninput="updateLayout('ROTATION_Z',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">MODEL_SCALE</span><input type="number" id="num_MODEL_SCALE" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('MODEL_SCALE',+this.value)"></div><input type="range" id="sl_MODEL_SCALE" min="1" max="500" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('MODEL_SCALE',+this.value)"></div><div style="color:#e8981a;font-size:10px;letter-spacing:0.12em;margin:10px 0 4px;border-bottom:1px solid rgba(232,152,26,0.2);padding-bottom:3px">CAMERA</div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">CAM_X</span><input type="number" id="num_CAM_X" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('CAM_X',+this.value)"></div><input type="range" id="sl_CAM_X" min="-500" max="500" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('CAM_X',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">CAM_Y</span><input type="number" id="num_CAM_Y" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('CAM_Y',+this.value)"></div><input type="range" id="sl_CAM_Y" min="-500" max="1000" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('CAM_Y',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">CAM_Z</span><input type="number" id="num_CAM_Z" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('CAM_Z',+this.value)"></div><input type="range" id="sl_CAM_Z" min="-500" max="500" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('CAM_Z',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">CAM_FOV</span><input type="number" id="num_CAM_FOV" step="0.1" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('CAM_FOV',+this.value)"></div><input type="range" id="sl_CAM_FOV" min="5" max="120" step="0.1" style="width:100%;accent-color:#e8981a" oninput="updateLayout('CAM_FOV',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">LOOK_X</span><input type="number" id="num_LOOK_X" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('LOOK_X',+this.value)"></div><input type="range" id="sl_LOOK_X" min="-500" max="500" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('LOOK_X',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">LOOK_Y</span><input type="number" id="num_LOOK_Y" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('LOOK_Y',+this.value)"></div><input type="range" id="sl_LOOK_Y" min="-500" max="1000" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('LOOK_Y',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">LOOK_Z</span><input type="number" id="num_LOOK_Z" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('LOOK_Z',+this.value)"></div><input type="range" id="sl_LOOK_Z" min="-500" max="500" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('LOOK_Z',+this.value)"></div><div style="color:#e8981a;font-size:10px;letter-spacing:0.12em;margin:10px 0 4px;border-bottom:1px solid rgba(232,152,26,0.2);padding-bottom:3px">BACKGROUND</div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_X</span><input type="number" id="num_BG_X" step="0.5" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_X',+this.value)"></div><input type="range" id="sl_BG_X" min="-500" max="500" step="0.5" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_X',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_Y</span><input type="number" id="num_BG_Y" step="0.5" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_Y',+this.value)"></div><input type="range" id="sl_BG_Y" min="-1000" max="500" step="0.5" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_Y',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_Z</span><input type="number" id="num_BG_Z" step="0.5" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_Z',+this.value)"></div><input type="range" id="sl_BG_Z" min="-500" max="500" step="0.5" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_Z',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_W</span><input type="number" id="num_BG_W" step="0.5" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_W',+this.value)"></div><input type="range" id="sl_BG_W" min="100" max="2000" step="0.5" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_W',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_H</span><input type="number" id="num_BG_H" step="0.5" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_H',+this.value)"></div><input type="range" id="sl_BG_H" min="100" max="2000" step="0.5" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_H',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_RX</span><input type="number" id="num_BG_RX" step="0.001" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_RX',+this.value)"></div><input type="range" id="sl_BG_RX" min="-3.15" max="3.15" step="0.001" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_RX',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_RY</span><input type="number" id="num_BG_RY" step="0.001" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_RY',+this.value)"></div><input type="range" id="sl_BG_RY" min="-3.15" max="3.15" step="0.001" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_RY',+this.value)"></div><div style="color:#e8981a;font-size:10px;letter-spacing:0.12em;margin:10px 0 4px;border-bottom:1px solid rgba(232,152,26,0.2);padding-bottom:3px">LIGHTING</div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">L_AMB</span><input type="number" id="num_L_AMB" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('L_AMB',+this.value)"></div><input type="range" id="sl_L_AMB" min="0" max="5" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('L_AMB',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">L_KEY</span><input type="number" id="num_L_KEY" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('L_KEY',+this.value)"></div><input type="range" id="sl_L_KEY" min="0" max="5" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('L_KEY',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">L_EXP</span><input type="number" id="num_L_EXP" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('L_EXP',+this.value)"></div><input type="range" id="sl_L_EXP" min="0" max="5" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('L_EXP',+this.value)"></div>  <button id="layoutSaveBtn" onclick="saveLayout()" style="width:100%;padding:7px;background:rgba(232,152,26,0.15);border:1px solid rgba(232,152,26,0.4);color:#e8981a;cursor:pointer;border-radius:4px;margin-top:10px;font-family:monospace;font-size:11px;letter-spacing:0.1em">SAVE &amp; LOCK</button>
+</div>
 </body>
 </html>
