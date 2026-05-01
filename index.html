@@ -347,6 +347,38 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
   .msg-body { max-width: 100%; }
 }
 
+/* ── IMAGE ATTACHMENT ── */
+.img-preview-wrap{
+  position:relative;display:inline-flex;align-items:center;
+  margin:0 8px 6px 70px;
+}
+.img-preview{
+  height:52px;width:52px;object-fit:cover;
+  border:1px solid rgba(42,143,168,0.4);
+  border-radius:4px;cursor:pointer;
+}
+.img-preview-rm{
+  position:absolute;top:-6px;right:-6px;
+  width:16px;height:16px;border-radius:50%;
+  background:rgba(200,50,50,0.85);color:#fff;
+  font-size:10px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;line-height:1;
+}
+.attach-btn{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  border:1px solid rgba(42,143,168,0.3);background:rgba(13,31,45,0.6);
+  color:rgba(42,143,168,0.7);cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;backdrop-filter:blur(8px);
+}
+.attach-btn:hover,.attach-btn.has-img{
+  border-color:rgba(232,152,10,0.6);color:rgba(232,152,10,0.9);
+  background:rgba(232,152,10,0.08);
+}
+.msg-img{max-width:220px;max-height:160px;object-fit:cover;
+  border:1px solid rgba(42,143,168,0.2);border-radius:4px;
+  display:block;margin-bottom:6px;cursor:pointer;}
+
 /* ── LOADING ── */
 .loading{position:fixed;inset:0;z-index:100;background:#04080f;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
@@ -658,6 +690,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
     <div id="animState">◈ IDLE</div>
   </main>
 
+  <!-- Image preview strip (shown when image selected) -->
+  <div id="imgPreviewWrap" class="img-preview-wrap" style="display:none;">
+    <img id="imgPreview" class="img-preview" src="" alt="attachment" onclick="document.getElementById('fileInput').click()">
+    <div class="img-preview-rm" onclick="clearImage()">✕</div>
+  </div>
+
+  <!-- Hidden file input -->
+  <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleImageSelect(event)">
+
   <!-- Input bar -->
   <div class="input-bar">
     <div class="inp-wrap">
@@ -665,6 +706,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
       <input class="inp" id="inp" placeholder="Message Axiom..." 
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}">
     </div>
+    <button class="attach-btn" id="attachBtn" onclick="document.getElementById('fileInput').click()" title="Attach image">📎</button>
     <button class="mic-btn" id="micBtn" onclick="toggleVoice()">🎙</button>
     <button class="send-btn" onclick="unlockAudio();sendMsg()">SEND</button>
   </div>
@@ -830,10 +872,33 @@ function renderLoop(){
 // CHAT
 // ══════════════════════════════════════════════════════════════
 let lastUserMsg='', lastAxiomMsg='', started=false;
+let _pendingImageData='', _pendingImageType='';
+
+function handleImageSelect(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  _pendingImageType=file.type||'image/jpeg';
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    _pendingImageData=ev.target.result.split(',')[1]; // strip data:...;base64,
+    document.getElementById('imgPreview').src=ev.target.result;
+    document.getElementById('imgPreviewWrap').style.display='inline-flex';
+    document.getElementById('attachBtn').classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+  e.target.value=''; // allow re-selecting same file
+}
+
+function clearImage(){
+  _pendingImageData=''; _pendingImageType='';
+  document.getElementById('imgPreview').src='';
+  document.getElementById('imgPreviewWrap').style.display='none';
+  document.getElementById('attachBtn').classList.remove('has-img');
+}
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function addMsg(role, content, model_tag=''){
+function addMsg(role, content, model_tag='', imgSrc=''){
   if(!started){
     started=true;
     document.getElementById('empty').classList.add('gone');
@@ -851,7 +916,10 @@ function addMsg(role, content, model_tag=''){
       <div class="msg-av">U</div>
       <div class="msg-body">
         <div class="msg-meta">YOU <span style="margin-left:auto">${ts}</span></div>
-        <div class="bubble">${esc(content)}</div>
+        <div class="bubble">
+          ${imgSrc?`<img class="msg-img" src="${imgSrc}" alt="attachment" onclick="this.style.maxWidth=this.style.maxWidth==='100%'?'220px':'100%'">`:''
+          }${content?esc(content):''}
+        </div>
       </div>`;
   } else {
     d.innerHTML=`
@@ -894,7 +962,9 @@ async function sendMsg(txt){
   if(!msg) return;
   inp.value='';
   lastUserMsg=msg;
-  addMsg('u',msg);
+  const _imgSrc=_pendingImageData?`data:${_pendingImageType};base64,${_pendingImageData}`:'';
+  addMsg('u',msg,'',$_imgSrc);
+  clearImage();
   showTyping();
   setAnim('typing');
 
@@ -905,7 +975,9 @@ async function sendMsg(txt){
         user_id:currentUser?.id||'god',
         email:currentUser?.email||'',
         name:currentUser?.user_metadata?.full_name||'',
-        tier:currentTier||'free'})
+        tier:currentTier||'free',
+        image_data:_pendingImageData,
+        image_type:_pendingImageType})
     });
     if(!res.ok) throw new Error('HTTP '+res.status);
 
