@@ -1051,41 +1051,55 @@ async function speakResponse(text){
   }
 }
 
-// Split response into sentences and TTS them sequentially so nothing gets cut off
-let _ttsQueue=[], _ttsBusy=false;
+// TTS queue — prefetches next chunk while current plays for gapless playback
+let _ttsQueue=[], _ttsBusy=false, _nextBlobPromise=null;
+
+async function _fetchTTSBlob(text){
+  try{
+    const res=await fetch(`${API}/voice/speak`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text,voice:'onyx',speed:1.1})
+    });
+    if(!res.ok) return null;
+    return await res.blob();
+  }catch(e){ return null; }
+}
+
 function speakQueue(text){
   if(!ttsEnabled||!text) return;
-  // Split on sentence boundaries, keep punctuation
+  // Reset any current playback
+  _ttsQueue=[]; _nextBlobPromise=null; _ttsBusy=false;
+  // Split into chunks ≤4000 chars (OpenAI TTS max per request)
+  // Most responses fit in one chunk = zero gaps
   const sentences=text.match(/[^.!?\n]+[.!?\n]+/g)||[text];
-  // Group into chunks ≤1000 chars so each TTS request is fast
   const chunks=[];
   let cur='';
   for(const s of sentences){
-    if((cur+s).length>1000&&cur){ chunks.push(cur.trim()); cur=s; }
+    if((cur+s).length>4000&&cur){ chunks.push(cur.trim()); cur=s; }
     else cur+=s;
   }
   if(cur.trim()) chunks.push(cur.trim());
   _ttsQueue.push(...chunks);
   if(!_ttsBusy) _drainTTS();
 }
+
 async function _drainTTS(){
   if(!_ttsQueue.length){ _ttsBusy=false; setAnim('idle'); return; }
   _ttsBusy=true;
-  const chunk=_ttsQueue.shift();
   try{
-    const res=await fetch(`${API}/voice/speak`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({text:chunk,voice:'onyx',speed:1.1})
-    });
-    if(!res.ok){ _drainTTS(); return; }
-    const blob=await res.blob();
+    // Use prefetched blob if ready, otherwise fetch now
+    const blob=_nextBlobPromise ? await _nextBlobPromise : await _fetchTTSBlob(_ttsQueue[0]);
+    _ttsQueue.shift();
+    // Immediately start fetching the NEXT chunk while this one plays
+    _nextBlobPromise=_ttsQueue.length ? _fetchTTSBlob(_ttsQueue[0]) : null;
+    if(!blob){ _drainTTS(); return; }
     const url=URL.createObjectURL(blob);
     const audio=new Audio(url);
     setAnim('talking');
     audio.onended=()=>{ URL.revokeObjectURL(url); _drainTTS(); };
     audio.onerror=()=>{ URL.revokeObjectURL(url); _drainTTS(); };
-    audio.play().catch(()=>_drainTTS());
-  }catch(e){ _drainTTS(); }
+    audio.play().catch(()=>{ URL.revokeObjectURL(url); _drainTTS(); });
+  }catch(e){ _ttsBusy=false; setAnim('idle'); }
 }
 
 async function toggleVoice(){
