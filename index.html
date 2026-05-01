@@ -913,11 +913,14 @@ async function sendMsg(txt){
     const decoder=new TextDecoder();
     let full=''; let msgId=null; let bubbleEl=null;
 
-    const read=async()=>{
+    let buf='';
+    while(true){
       const{done,value}=await reader.read();
-      if(done) return;
-      const chunk=decoder.decode(value,{stream:true});
-      for(const line of chunk.split('\n')){
+      if(done) break;
+      buf+=decoder.decode(value,{stream:true});
+      const lines=buf.split('\n');
+      buf=lines.pop();
+      for(const line of lines){
         if(!line.startsWith('data: ')) continue;
         try{
           const data=JSON.parse(line.slice(6));
@@ -934,12 +937,15 @@ async function sendMsg(txt){
           }
           if(data.done){
             setAnim(data.agent?'talking':'idle');
-            // Speak the response
-            if(full) speakResponse(full.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,400));
+            if(full){
+              const plain=full.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+              speakQueue(plain);
+            }
           }
         }catch(e){}
       }
-      await read();
+    }
+
     };
     await read();
 
@@ -1043,6 +1049,43 @@ async function speakResponse(text){
   }catch(e){
     console.warn('TTS error:', e);
   }
+}
+
+// Split response into sentences and TTS them sequentially so nothing gets cut off
+let _ttsQueue=[], _ttsBusy=false;
+function speakQueue(text){
+  if(!ttsEnabled||!text) return;
+  // Split on sentence boundaries, keep punctuation
+  const sentences=text.match(/[^.!?\n]+[.!?\n]+/g)||[text];
+  // Group into chunks ≤1000 chars so each TTS request is fast
+  const chunks=[];
+  let cur='';
+  for(const s of sentences){
+    if((cur+s).length>1000&&cur){ chunks.push(cur.trim()); cur=s; }
+    else cur+=s;
+  }
+  if(cur.trim()) chunks.push(cur.trim());
+  _ttsQueue.push(...chunks);
+  if(!_ttsBusy) _drainTTS();
+}
+async function _drainTTS(){
+  if(!_ttsQueue.length){ _ttsBusy=false; setAnim('idle'); return; }
+  _ttsBusy=true;
+  const chunk=_ttsQueue.shift();
+  try{
+    const res=await fetch(`${API}/voice/speak`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text:chunk,voice:'onyx',speed:1.1})
+    });
+    if(!res.ok){ _drainTTS(); return; }
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const audio=new Audio(url);
+    setAnim('talking');
+    audio.onended=()=>{ URL.revokeObjectURL(url); _drainTTS(); };
+    audio.onerror=()=>{ URL.revokeObjectURL(url); _drainTTS(); };
+    audio.play().catch(()=>_drainTTS());
+  }catch(e){ _drainTTS(); }
 }
 
 async function toggleVoice(){
