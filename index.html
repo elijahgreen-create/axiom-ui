@@ -1033,19 +1033,13 @@ async function speakResponse(text){
       body: JSON.stringify({text: text.slice(0,500), voice:'onyx', speed:1.1})
     });
     if(!res.ok) return;
-    const arrayBuffer = await res.arrayBuffer();
-    
-    // Use AudioContext for Android WebView compatibility
-    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if(audioCtx.state === 'suspended') await audioCtx.resume();
-    
-    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-    const source = audioCtx.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(audioCtx.destination);
-    source.start(0);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.onended = ()=>{ URL.revokeObjectURL(url); setAnim('idle'); };
+    audio.onerror = ()=>{ URL.revokeObjectURL(url); };
     setAnim('talking');
-    source.onended = ()=>setAnim('idle');
+    audio.play().catch(e=>console.warn('TTS play failed:',e));
   }catch(e){
     console.warn('TTS error:', e);
   }
@@ -1054,23 +1048,29 @@ async function speakResponse(text){
 async function toggleVoice(){
   const btn=document.getElementById('micBtn');
   const nav=document.getElementById('micNav');
-  
-  // Unlock audio on first user interaction
-  unlockAudio();
-  
   if(!voiceOn){
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+      alert('Microphone not available. Grant microphone permission in Android settings.');
+      return;
+    }
     try{
       const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-      mediaRec=new MediaRecorder(stream); audioChunks=[];
-      mediaRec.ondataavailable=e=>audioChunks.push(e.data);
+      const mimes=['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg','audio/mp4',''];
+      const mime=mimes.find(m=>!m||MediaRecorder.isTypeSupported(m))||'';
+      mediaRec=new MediaRecorder(stream,mime?{mimeType:mime}:{});
+      audioChunks=[];
+      mediaRec.ondataavailable=e=>{ if(e.data.size>0) audioChunks.push(e.data); };
       mediaRec.onstop=async()=>{
-        const blob=new Blob(audioChunks,{type:'audio/webm'});
-        const form=new FormData(); form.append('audio',blob,'voice.webm');
+        const type=mediaRec.mimeType||'audio/webm';
+        const blob=new Blob(audioChunks,{type});
+        const ext=type.includes('ogg')?'voice.ogg':type.includes('mp4')?'voice.mp4':'voice.webm';
+        const form=new FormData(); form.append('audio',blob,ext);
         try{
           const res=await fetch(`${API}/voice/transcribe`,{method:'POST',body:form});
           const data=await res.json();
           if(data.text){ document.getElementById('inp').value=data.text; sendMsg(); }
-        }catch(e){}
+          else if(data.error) console.warn('Transcribe:',data.error);
+        }catch(e){ console.warn('Transcribe error:',e); }
       };
       mediaRec.start();
       voiceOn=true;
@@ -1078,9 +1078,13 @@ async function toggleVoice(){
       btn.style.color='rgba(200,50,50,0.9)';
       if(nav) nav.classList.add('listening');
       setAnim('talking');
-    }catch(e){ alert('Microphone access denied: '+e.message); }
+    }catch(e){
+      console.warn('Mic error:',e);
+      alert('Microphone error: '+e.message);
+    }
   } else {
-    mediaRec?.stop(); voiceOn=false;
+    if(mediaRec&&mediaRec.state!=='inactive') mediaRec.stop();
+    voiceOn=false;
     btn.style.borderColor=''; btn.style.color='';
     if(nav) nav.classList.remove('listening');
     setAnim('idle');
