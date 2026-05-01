@@ -343,9 +343,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
   /* Header pills — hide some on small screens */
   .pill.ctx { display: none; }
 
-  /* Briefing panel full width */
-  #briefing { width: calc(100% - 20px); left: 10px; right: 10px; top: 54px; }
-
   /* Bubbles full width */
   .msg-body { max-width: 100%; }
 }
@@ -363,23 +360,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
   color:rgba(90,122,138,0.7);text-transform:uppercase;}
 
 /* ── MORNING BRIEFING ── */
-#briefing{
-  position:absolute;top:12px;right:16px;
-  width:320px;max-height:70%;overflow-y:auto;
-  background:rgba(7,13,22,0.75);border:1px solid rgba(232,152,10,0.2);
-  backdrop-filter:blur(20px);padding:14px;
-  display:none;pointer-events:all;
-}
-#briefing::-webkit-scrollbar{width:1px;}
-#briefing::-webkit-scrollbar-thumb{background:rgba(232,152,10,0.3);}
-#briefing.show{display:block;}
-.brief-date{font-size:7px;letter-spacing:0.2em;color:rgba(232,152,10,0.6);margin-bottom:4px;}
-.brief-title{font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:0.25em;
-  color:rgba(224,216,200,0.9);margin-bottom:10px;border-bottom:1px solid rgba(232,152,10,0.15);padding-bottom:6px;}
+.brief-date{font-size:7px;letter-spacing:0.2em;color:rgba(232,152,10,0.6);margin-bottom:8px;text-transform:uppercase;}
 .brief-body{font-size:11px;line-height:1.85;color:rgba(192,216,224,0.75);white-space:pre-wrap;}
-.brief-close{position:absolute;top:8px;right:10px;cursor:pointer;
-  color:rgba(90,122,138,0.5);font-size:14px;}
-.brief-close:hover{color:rgba(232,152,10,0.8);}
 
 /* ── ANIM STATE BADGE ── */
 #animState{
@@ -429,9 +411,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
       <div style="width:6px;height:6px;border-radius:50%;background:rgba(29,170,85,0.9);box-shadow:0 0 5px rgba(29,170,85,0.8);"></div>
       <span style="font-size:9px;letter-spacing:0.15em;color:rgba(29,170,85,0.9);">ONLINE</span>
     </div>
-    <div style="padding:8px 16px;border-bottom:1px solid rgba(42,143,168,0.1);display:flex;align-items:center;gap:8px;">
-      <div style="width:6px;height:6px;border-radius:50%;background:rgba(232,152,10,0.8);"></div>
-      <span id="memPill" style="font-size:9px;letter-spacing:0.15em;color:rgba(232,152,10,0.8);display:none;">0 Memories</span>
+    <div id="usageRow" style="display:none;padding:6px 16px 8px;border-bottom:1px solid rgba(42,143,168,0.1);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:7px;letter-spacing:0.12em;color:rgba(90,122,138,0.7);">MESSAGES TODAY</span>
+        <span id="usageText" style="font-size:8px;letter-spacing:0.1em;color:rgba(192,216,224,0.8);">—</span>
+      </div>
+      <div style="height:2px;background:rgba(42,143,168,0.12);border-radius:1px;overflow:hidden;">
+        <div id="usageBar" style="height:100%;background:linear-gradient(90deg,rgba(42,143,168,0.7),rgba(232,152,10,0.7));width:0%;transition:width 0.5s;border-radius:1px;"></div>
+      </div>
+    </div>
+    <div id="memRow" style="display:none;padding:8px 16px;border-bottom:1px solid rgba(42,143,168,0.1);align-items:center;gap:8px;">
+      <div style="width:6px;height:6px;border-radius:50%;background:rgba(232,152,10,0.8);flex-shrink:0;"></div>
+      <span id="memPill" style="font-size:9px;letter-spacing:0.15em;color:rgba(232,152,10,0.8);">0 Memories</span>
     </div>
     <div style="padding:8px 16px;border-bottom:1px solid rgba(42,143,168,0.1);display:flex;align-items:center;gap:8px;">
       <div style="width:6px;height:6px;border-radius:50%;background:rgba(232,152,10,0.9);"></div>
@@ -441,7 +432,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
       <span style="font-size:15px;">👤</span>
       <span style="font-size:9px;letter-spacing:0.15em;color:rgba(192,216,224,0.85);">PREFERENCES</span>
     </div>
-    <div onclick="toggleMenu();" style="padding:11px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid rgba(42,143,168,0.1);transition:background 0.1s;" onmouseover="this.style.background='rgba(42,143,168,0.08)'" onmouseout="this.style.background=''">
+    <div onclick="openSettings();toggleMenu();" style="padding:11px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid rgba(42,143,168,0.1);transition:background 0.1s;" onmouseover="this.style.background='rgba(42,143,168,0.08)'" onmouseout="this.style.background=''">
       <span style="font-size:15px;">⚙</span>
       <span style="font-size:9px;letter-spacing:0.15em;color:rgba(192,216,224,0.85);">SETTINGS</span>
     </div>
@@ -467,11 +458,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
   <!-- Main -->
   <main class="main">
     <!-- Morning briefing panel -->
-    <div id="briefing">
-      <div class="brief-close" onclick="toggleBriefing()">✕</div>
-      <div class="brief-date" id="briefDate">Loading briefing...</div>
-      <div class="brief-title">Morning Briefing</div>
-      <div class="brief-body" id="briefBody">Checking server...</div>
+    <div class="panel" id="briefing">
+      <div class="panel-head">
+        <span class="panel-title">☀ Morning Briefing</span>
+        <span class="panel-close" onclick="toggleBriefing()">✕</span>
+      </div>
+      <div class="panel-body">
+        <div class="brief-date" id="briefDate"></div>
+        <div class="brief-body" id="briefBody">Loading briefing...</div>
+      </div>
     </div>
 
     <!-- GMAIL PANEL -->
@@ -619,6 +614,31 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
       </div>
     </div>
 
+    <!-- SETTINGS PANEL -->
+    <div class="panel" id="panel-settings" style="z-index:51;">
+      <div class="panel-head">
+        <span class="panel-title">⚙ Settings</span>
+        <span class="panel-close" onclick="document.getElementById('panel-settings').classList.remove('show')">✕</span>
+      </div>
+      <div class="panel-body">
+        <div style="font-size:8px;letter-spacing:0.2em;color:#7aaabb;margin-bottom:10px;text-transform:uppercase;">Audio</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(42,143,168,0.1);">
+          <span style="font-size:11px;color:#c0d8e8;">Voice Responses (TTS)</span>
+          <div id="tts-toggle" onclick="toggleTTS()" style="width:36px;height:20px;border-radius:10px;background:rgba(29,170,85,0.6);border:1px solid rgba(29,170,85,0.4);cursor:pointer;position:relative;transition:background 0.2s;">
+            <div id="tts-knob" style="position:absolute;top:2px;left:16px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left 0.2s;"></div>
+          </div>
+        </div>
+        <div style="font-size:8px;letter-spacing:0.2em;color:#7aaabb;margin:16px 0 10px;text-transform:uppercase;border-top:1px solid rgba(42,143,168,0.15);padding-top:14px;">Session</div>
+        <button onclick="clearChat()" style="width:100%;padding:10px;background:transparent;border:1px solid rgba(42,143,168,0.3);color:#c0d8e8;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:0.15em;cursor:pointer;text-transform:uppercase;margin-bottom:8px;">Clear Chat History</button>
+        <div style="font-size:8px;letter-spacing:0.2em;color:#7aaabb;margin:16px 0 10px;text-transform:uppercase;border-top:1px solid rgba(42,143,168,0.15);padding-top:14px;">About</div>
+        <div style="font-size:10px;color:#7aaabb;line-height:2.2;">
+          <div>Version: Build 004</div>
+          <div>Model: Claude Sonnet</div>
+          <div id="settings-tier" style="color:#c0d8e8;"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Messages -->
     <div id="msgWrap"></div>
 
@@ -659,14 +679,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04080f;}
 // ══════════════════════════════════════════════════════════════
 // LOCKED SCENE VALUES
 // ══════════════════════════════════════════════════════════════
-var ROTATION_X=-1.3708,ROTATION_Y=0,ROTATION_Z=0;
-var MODEL_SCALE=105.88;
-var CAM_X=-4.2217,CAM_Y=438.2658,CAM_Z=-38.9520;
-var CAM_FOV=32;
-var LOOK_X=-4.4,LOOK_Y=292.9,LOOK_Z=-56.9524;
-var BG_X=49,BG_Y=-460,BG_Z=-175;
-var BG_W=960,BG_H=485,BG_RX=-1.0,BG_RY=0.03;
-var L_AMB=0,L_KEY=1.4,L_EXP=1.1;
+const ROTATION_X  = -1.3708; const ROTATION_Y = 0; const ROTATION_Z = 0;
+const MODEL_SCALE = 105.88;
+const CAM_X=-4.2217; const CAM_Y=438.2658; const CAM_Z=-38.9520;
+const CAM_FOV=32;
+const LOOK_X=-4.4; const LOOK_Y=292.9; const LOOK_Z=-56.9524;
+const BG_X=49; const BG_Y=-460; const BG_Z=-175;
+const BG_W=960; const BG_H=485; const BG_RX=-1.0; const BG_RY=0.03;
+const L_AMB=0; const L_KEY=1.4; const L_EXP=1.1;
 
 const BASE   = 'https://162.243.225.72.nip.io/static/';
 const API    = 'https://162.243.225.72.nip.io';
@@ -682,7 +702,6 @@ function getDallasBg() {
 // THREE.JS SCENE
 // ══════════════════════════════════════════════════════════════
 let scene, cam, renderer, mixer, clock;
-let sceneModel=null, sceneBg=null, sceneAmb=null, sceneKey=null;
 let anims={}, curAnim='idle', curAction=null;
 
 function prog(p,t){
@@ -720,9 +739,9 @@ async function initScene(){
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=L_EXP;
 
-  sceneAmb=new THREE.AmbientLight(0x1a2a4a,L_AMB); scene.add(sceneAmb);
-  sceneKey=new THREE.DirectionalLight(0xffe0a0,L_KEY);
-  sceneKey.position.set(5,10,5); sceneKey.castShadow=true; scene.add(sceneKey);
+  scene.add(new THREE.AmbientLight(0x1a2a4a,L_AMB));
+  const key=new THREE.DirectionalLight(0xffe0a0,L_KEY);
+  key.position.set(5,10,5); key.castShadow=true; scene.add(key);
   const fill=new THREE.DirectionalLight(0x4488cc,0.8);
   fill.position.set(-5,3,-3); scene.add(fill);
   const rim=new THREE.DirectionalLight(0xff8820,0.4);
@@ -742,10 +761,10 @@ async function initScene(){
 
   if(bgTex){
     bgTex.encoding=THREE.sRGBEncoding;
-    sceneBg=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:bgTex,depthWrite:false}));
-    sceneBg.position.set(BG_X,BG_Y,BG_Z); sceneBg.scale.set(BG_W,BG_H,1);
-    sceneBg.rotation.x=BG_RX; sceneBg.rotation.y=BG_RY;
-    scene.add(sceneBg);
+    const bg=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:bgTex,depthWrite:false}));
+    bg.position.set(BG_X,BG_Y,BG_Z); bg.scale.set(BG_W,BG_H,1);
+    bg.rotation.x=BG_RX; bg.rotation.y=BG_RY;
+    scene.add(bg);
   }
 
   // Character
@@ -761,13 +780,13 @@ async function initScene(){
 
   prog(76,'Setting up character...');
   if(idleGLTF){
-    sceneModel=idleGLTF.scene;
-    sceneModel.rotation.set(ROTATION_X,ROTATION_Y,ROTATION_Z);
-    sceneModel.scale.setScalar(MODEL_SCALE);
-    sceneModel.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
-    scene.add(sceneModel);
+    const model=idleGLTF.scene;
+    model.rotation.set(ROTATION_X,ROTATION_Y,ROTATION_Z);
+    model.scale.setScalar(MODEL_SCALE);
+    model.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
+    scene.add(model);
 
-    mixer=new THREE.AnimationMixer(sceneModel);
+    mixer=new THREE.AnimationMixer(model);
     if(idleGLTF.animations.length>0){
       anims.idle=mixer.clipAction(idleGLTF.animations[0]);
       anims.idle.play(); curAction=anims.idle;
@@ -980,10 +999,12 @@ async function loadStatus(){
   try{
     const res=await fetch(`${API}/status`);
     const data=await res.json();
-    if(data.memory) document.getElementById('memPill').innerHTML=
-      `<div class="pill-dot" style="background:rgba(232,152,10,0.8)"></div>${data.memory.memories} Memories`;
-    if(data.context) document.getElementById('ctxPill').innerHTML=
-      `<div class="pill-dot" style="background:rgba(42,143,168,0.8)"></div>${data.context.mode.replace('_',' ')}`;
+    if(data.memory){
+      const row=document.getElementById('memRow');
+      const pill=document.getElementById('memPill');
+      if(row) row.style.display='flex';
+      if(pill) pill.textContent=data.memory.memories+' Memories';
+    }
   }catch(e){}
 }
 
@@ -1055,13 +1076,13 @@ async function toggleVoice(){
       voiceOn=true;
       btn.style.borderColor='rgba(200,50,50,0.8)';
       btn.style.color='rgba(200,50,50,0.9)';
-      nav.classList.add('listening');
+      if(nav) nav.classList.add('listening');
       setAnim('talking');
-    }catch(e){ alert('Microphone access denied'); }
+    }catch(e){ alert('Microphone access denied: '+e.message); }
   } else {
     mediaRec?.stop(); voiceOn=false;
     btn.style.borderColor=''; btn.style.color='';
-    nav.classList.remove('listening');
+    if(nav) nav.classList.remove('listening');
     setAnim('idle');
   }
 }
@@ -1074,6 +1095,7 @@ function toggleMenu(){
   menuOpen = !menuOpen;
   const el = document.getElementById('hamMenu');
   el.style.display = menuOpen ? 'block' : 'none';
+  if(menuOpen) loadUsage();
   const btn1 = document.getElementById('menuBtn');
   const btn2 = document.getElementById('menuBtnNav');
   if(btn1) btn1.textContent = menuOpen ? '✕' : '≡';
@@ -1139,7 +1161,8 @@ function setNav(el, view){
     activePanel = null;
   } else if(view==='brief'){
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
-    toggleBriefing();
+    document.getElementById('briefing').classList.add('show');
+    if(!briefingLoaded) loadBriefing();
   } else {
     openPanel(view);
   }
@@ -1624,55 +1647,49 @@ async function checkAuth(){
 }
 
 async function signOut(){
-  await sb.auth.signOut();
+  try{ await sb.auth.signOut(); }catch(e){}
   window.location.href = 'login.html';
 }
 
+// ══════════════════════════════════════════════════════════════
+// SETTINGS + USAGE
+// ══════════════════════════════════════════════════════════════
+function openSettings(){
+  document.getElementById('panel-settings').classList.add('show');
+  const el=document.getElementById('settings-tier');
+  if(el) el.textContent='Tier: '+(currentTier||'free').toUpperCase();
+}
 
-async function loadLayout(){
+function toggleTTS(){
+  ttsEnabled=!ttsEnabled;
+  const tog=document.getElementById('tts-toggle');
+  const knob=document.getElementById('tts-knob');
+  if(tog) tog.style.background=ttsEnabled?'rgba(29,170,85,0.6)':'rgba(90,90,90,0.5)';
+  if(knob) knob.style.left=ttsEnabled?'16px':'2px';
+}
+
+function clearChat(){
+  document.getElementById('msgWrap').innerHTML='';
+  started=false;
+  document.getElementById('empty').classList.remove('gone');
+  document.getElementById('panel-settings').classList.remove('show');
+}
+
+async function loadUsage(){
+  if(!currentUser) return;
   try{
-    const r=await fetch(API+'/layout');
-    if(!r.ok) return;
-    const d=await r.json();
-    const keys=['ROTATION_X','ROTATION_Y','ROTATION_Z','MODEL_SCALE','CAM_X','CAM_Y','CAM_Z','CAM_FOV','LOOK_X','LOOK_Y','LOOK_Z','BG_X','BG_Y','BG_Z','BG_W','BG_H','BG_RX','BG_RY','L_AMB','L_KEY','L_EXP'];
-    for(const k of keys){ if(d[k]!==undefined) window[k]=d[k]; }
+    const res=await fetch(`${API}/users/${currentUser.id}/usage`);
+    const data=await res.json();
+    if(data.messages_today!==undefined){
+      const row=document.getElementById('usageRow');
+      const txt=document.getElementById('usageText');
+      const bar=document.getElementById('usageBar');
+      if(row) row.style.display='block';
+      const lim=typeof data.daily_limit==='number'?data.daily_limit:null;
+      if(txt) txt.textContent=lim?`${data.messages_today} / ${lim} msgs`:`${data.messages_today} msgs`;
+      if(bar&&lim) bar.style.width=Math.min(100,Math.round((data.messages_today/lim)*100))+'%';
+    }
   }catch(e){}
-}
-
-function applyLayout(){
-  if(sceneModel){ sceneModel.rotation.set(ROTATION_X,ROTATION_Y,ROTATION_Z); sceneModel.scale.setScalar(MODEL_SCALE); }
-  if(cam){ cam.position.set(CAM_X,CAM_Y,CAM_Z); cam.lookAt(LOOK_X,LOOK_Y,LOOK_Z); cam.fov=CAM_FOV; cam.updateProjectionMatrix(); }
-  if(sceneBg){ sceneBg.position.set(BG_X,BG_Y,BG_Z); sceneBg.scale.set(BG_W,BG_H,1); sceneBg.rotation.x=BG_RX; sceneBg.rotation.y=BG_RY; }
-  if(sceneAmb) sceneAmb.intensity=L_AMB;
-  if(sceneKey) sceneKey.intensity=L_KEY;
-  if(renderer) renderer.toneMappingExposure=L_EXP;
-}
-
-function updateLayout(k,v){
-  window[k]=v;
-  const sl=document.getElementById('sl_'+k);
-  const nm=document.getElementById('num_'+k);
-  if(sl&&document.activeElement!==sl) sl.value=v;
-  if(nm&&document.activeElement!==nm) nm.value=v;
-  applyLayout();
-}
-
-async function saveLayout(){
-  const btn=document.getElementById('layoutSaveBtn');
-  const data={email:currentUser&&currentUser.email?currentUser.email:'',ROTATION_X,ROTATION_Y,ROTATION_Z,MODEL_SCALE,CAM_X,CAM_Y,CAM_Z,CAM_FOV,LOOK_X,LOOK_Y,LOOK_Z,BG_X,BG_Y,BG_Z,BG_W,BG_H,BG_RX,BG_RY,L_AMB,L_KEY,L_EXP};
-  try{
-    const r=await fetch(API+'/layout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-    const j=await r.json();
-    if(j.saved){btn.textContent='LOCKED';setTimeout(()=>btn.textContent='SAVE & LOCK',2000);}
-    else btn.textContent='ERR: '+(j.error||'failed');
-  }catch(e){btn.textContent='ERROR';}
-}
-
-function initLayoutPanel(){
-  if(currentTier!=='god') return;
-  const keys=['ROTATION_X','ROTATION_Y','ROTATION_Z','MODEL_SCALE','CAM_X','CAM_Y','CAM_Z','CAM_FOV','LOOK_X','LOOK_Y','LOOK_Z','BG_X','BG_Y','BG_Z','BG_W','BG_H','BG_RX','BG_RY','L_AMB','L_KEY','L_EXP'];
-  for(const k of keys){ const sl=document.getElementById('sl_'+k); const nm=document.getElementById('num_'+k); if(sl) sl.value=window[k]; if(nm) nm.value=window[k]; }
-  document.addEventListener('keydown',function(e){ if(e.key==='`'){ var p=document.getElementById('layoutPanel'); p.style.display=p.style.display==='none'?'block':'none'; } });
 }
 
 async function boot(){
@@ -1687,9 +1704,7 @@ async function boot(){
   }
   if(!authed) return;
   prog(8,'Starting...');
-  await loadLayout();
   await initScene();
-  initLayoutPanel();
   prog(95,'Loading data...');
   loadStatus();
   loadBriefing();
@@ -1705,14 +1720,5 @@ boot().catch(e=>{
 });
 
 </script>
-
-<div id="layoutPanel" style="display:none;position:fixed;top:20px;right:20px;width:300px;max-height:85vh;overflow-y:auto;background:rgba(8,12,22,0.97);border:1px solid rgba(232,152,26,0.35);border-radius:8px;padding:14px;z-index:9999;font-family:monospace;font-size:11px;color:#e8d87a;backdrop-filter:blur(8px)">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-    <span style="font-size:12px;letter-spacing:0.12em;color:#e8981a">&#x2B21; LAYOUT EDITOR</span>
-    <button onclick="document.getElementById('layoutPanel').style.display='none'" style="background:none;border:none;color:#888;cursor:pointer;font-size:14px">&#x2715;</button>
-  </div>
-  <div style="color:#555;font-size:9px;margin-bottom:8px">Press ` to toggle | God mode only</div>
-<div style="color:#e8981a;font-size:10px;letter-spacing:0.12em;margin:10px 0 4px;border-bottom:1px solid rgba(232,152,26,0.2);padding-bottom:3px">CHARACTER</div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">ROTATION_X</span><input type="number" id="num_ROTATION_X" step="0.001" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('ROTATION_X',+this.value)"></div><input type="range" id="sl_ROTATION_X" min="-3.15" max="3.15" step="0.001" style="width:100%;accent-color:#e8981a" oninput="updateLayout('ROTATION_X',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">ROTATION_Y</span><input type="number" id="num_ROTATION_Y" step="0.001" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('ROTATION_Y',+this.value)"></div><input type="range" id="sl_ROTATION_Y" min="-3.15" max="3.15" step="0.001" style="width:100%;accent-color:#e8981a" oninput="updateLayout('ROTATION_Y',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">ROTATION_Z</span><input type="number" id="num_ROTATION_Z" step="0.001" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('ROTATION_Z',+this.value)"></div><input type="range" id="sl_ROTATION_Z" min="-3.15" max="3.15" step="0.001" style="width:100%;accent-color:#e8981a" oninput="updateLayout('ROTATION_Z',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">MODEL_SCALE</span><input type="number" id="num_MODEL_SCALE" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('MODEL_SCALE',+this.value)"></div><input type="range" id="sl_MODEL_SCALE" min="1" max="500" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('MODEL_SCALE',+this.value)"></div><div style="color:#e8981a;font-size:10px;letter-spacing:0.12em;margin:10px 0 4px;border-bottom:1px solid rgba(232,152,26,0.2);padding-bottom:3px">CAMERA</div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">CAM_X</span><input type="number" id="num_CAM_X" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('CAM_X',+this.value)"></div><input type="range" id="sl_CAM_X" min="-500" max="500" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('CAM_X',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">CAM_Y</span><input type="number" id="num_CAM_Y" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('CAM_Y',+this.value)"></div><input type="range" id="sl_CAM_Y" min="-500" max="1000" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('CAM_Y',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">CAM_Z</span><input type="number" id="num_CAM_Z" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('CAM_Z',+this.value)"></div><input type="range" id="sl_CAM_Z" min="-500" max="500" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('CAM_Z',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">CAM_FOV</span><input type="number" id="num_CAM_FOV" step="0.1" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('CAM_FOV',+this.value)"></div><input type="range" id="sl_CAM_FOV" min="5" max="120" step="0.1" style="width:100%;accent-color:#e8981a" oninput="updateLayout('CAM_FOV',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">LOOK_X</span><input type="number" id="num_LOOK_X" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('LOOK_X',+this.value)"></div><input type="range" id="sl_LOOK_X" min="-500" max="500" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('LOOK_X',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">LOOK_Y</span><input type="number" id="num_LOOK_Y" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('LOOK_Y',+this.value)"></div><input type="range" id="sl_LOOK_Y" min="-500" max="1000" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('LOOK_Y',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">LOOK_Z</span><input type="number" id="num_LOOK_Z" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('LOOK_Z',+this.value)"></div><input type="range" id="sl_LOOK_Z" min="-500" max="500" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('LOOK_Z',+this.value)"></div><div style="color:#e8981a;font-size:10px;letter-spacing:0.12em;margin:10px 0 4px;border-bottom:1px solid rgba(232,152,26,0.2);padding-bottom:3px">BACKGROUND</div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_X</span><input type="number" id="num_BG_X" step="0.5" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_X',+this.value)"></div><input type="range" id="sl_BG_X" min="-500" max="500" step="0.5" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_X',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_Y</span><input type="number" id="num_BG_Y" step="0.5" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_Y',+this.value)"></div><input type="range" id="sl_BG_Y" min="-1000" max="500" step="0.5" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_Y',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_Z</span><input type="number" id="num_BG_Z" step="0.5" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_Z',+this.value)"></div><input type="range" id="sl_BG_Z" min="-500" max="500" step="0.5" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_Z',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_W</span><input type="number" id="num_BG_W" step="0.5" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_W',+this.value)"></div><input type="range" id="sl_BG_W" min="100" max="2000" step="0.5" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_W',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_H</span><input type="number" id="num_BG_H" step="0.5" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_H',+this.value)"></div><input type="range" id="sl_BG_H" min="100" max="2000" step="0.5" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_H',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_RX</span><input type="number" id="num_BG_RX" step="0.001" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_RX',+this.value)"></div><input type="range" id="sl_BG_RX" min="-3.15" max="3.15" step="0.001" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_RX',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">BG_RY</span><input type="number" id="num_BG_RY" step="0.001" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('BG_RY',+this.value)"></div><input type="range" id="sl_BG_RY" min="-3.15" max="3.15" step="0.001" style="width:100%;accent-color:#e8981a" oninput="updateLayout('BG_RY',+this.value)"></div><div style="color:#e8981a;font-size:10px;letter-spacing:0.12em;margin:10px 0 4px;border-bottom:1px solid rgba(232,152,26,0.2);padding-bottom:3px">LIGHTING</div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">L_AMB</span><input type="number" id="num_L_AMB" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('L_AMB',+this.value)"></div><input type="range" id="sl_L_AMB" min="0" max="5" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('L_AMB',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">L_KEY</span><input type="number" id="num_L_KEY" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('L_KEY',+this.value)"></div><input type="range" id="sl_L_KEY" min="0" max="5" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('L_KEY',+this.value)"></div><div style="margin:5px 0"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:#aaa">L_EXP</span><input type="number" id="num_L_EXP" step="0.01" style="width:72px;background:#0a0f19;border:1px solid #333;color:#e8d87a;padding:2px 4px;font-family:monospace;font-size:10px" oninput="updateLayout('L_EXP',+this.value)"></div><input type="range" id="sl_L_EXP" min="0" max="5" step="0.01" style="width:100%;accent-color:#e8981a" oninput="updateLayout('L_EXP',+this.value)"></div>  <button id="layoutSaveBtn" onclick="saveLayout()" style="width:100%;padding:7px;background:rgba(232,152,26,0.15);border:1px solid rgba(232,152,26,0.4);color:#e8981a;cursor:pointer;border-radius:4px;margin-top:10px;font-family:monospace;font-size:11px;letter-spacing:0.1em">SAVE &amp; LOCK</button>
-</div>
 </body>
 </html>
